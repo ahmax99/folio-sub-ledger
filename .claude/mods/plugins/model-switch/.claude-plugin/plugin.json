@@ -1,0 +1,8 @@
+{
+  "name": "model-switch",
+  "version": "0.1.0",
+  "description": "A band above the prompt with one-click model and effort buttons. Each button runs /model or /effort for you. /switchbar shows or hides it.",
+  "author": { "name": "ahmax99" },
+  "types": "./types/index.d.ts",
+  "license": "MIT"
+}

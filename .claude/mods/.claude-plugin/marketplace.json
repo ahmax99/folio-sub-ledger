@@ -1,0 +1,46 @@
+{
+  "name": "folio-mods",
+  "owner": {
+    "name": "ahmax99"
+  },
+  "metadata": {
+    "description": "Claude Code mods for this repo, copied from ~/.claude/mods on 2026-10-12."
+  },
+  "plugins": [
+    {
+      "name": "savvy-progress",
+      "source": "./plugins/savvy-progress",
+      "description": "johnnyvizz/claude-kit@272a877: progress bar and subagent panel"
+    },
+    {
+      "name": "skins",
+      "source": "./plugins/skins",
+      "description": "hellosverre/claude-skins@dccf562: themes and tool-call cards, /skin"
+    },
+    {
+      "name": "filetree",
+      "source": "./plugins/filetree",
+      "description": "data-goblin/claude-code-filetree@bf8de32: file tree pane"
+    },
+    {
+      "name": "cache-tax",
+      "source": "./plugins/cache-tax",
+      "description": "karanb192/cache-tax@06cac47: cold-cache guard and /keepwarm"
+    },
+    {
+      "name": "blast-radius",
+      "source": "./plugins/blast-radius",
+      "description": "anthropics/claude-code-playground@569c528: holds risky shell commands"
+    },
+    {
+      "name": "replay-theater",
+      "source": "./plugins/replay-theater",
+      "description": "anthropics/claude-code-playground@569c528: replays the last turn's edits"
+    },
+    {
+      "name": "model-switch",
+      "source": "./plugins/model-switch",
+      "description": "ahmax99: one-click model and effort buttons above the prompt, /switchbar"
+    }
+  ]
+}
