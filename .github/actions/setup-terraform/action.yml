@@ -1,0 +1,22 @@
+name: 'Setup Terraform'
+description: 'Installs the Terraform version pinned in .terraform-version (the same file tenv reads locally)'
+
+inputs:
+  terraform-wrapper:
+    description: 'Whether to install the setup-terraform stdout/stderr wrapper'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Read pinned Terraform version
+      id: version
+      shell: bash
+      run: echo "version=$(tr -d '[:space:]' < "$GITHUB_WORKSPACE/.terraform-version")" >> "$GITHUB_OUTPUT"
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      with:
+        terraform_version: ${{ steps.version.outputs.version }}
+        terraform_wrapper: ${{ inputs.terraform-wrapper }}

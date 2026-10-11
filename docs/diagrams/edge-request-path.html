@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How a request reaches an origin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1280px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+    .diagram { overflow-x: auto; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · System flow · edge request path</p>
+    <h1>How a request reaches an origin</h1>
+    <div class="diagram">
+    <svg viewBox="0 0 1024 824" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="edge-request-path-title edge-request-path-desc">
+      <title id="edge-request-path-title">How a request reaches an origin</title>
+      <desc id="edge-request-path-desc">System flow diagram in three zones. From the public internet, a user's browser and an unsigned direct caller. At the edge, Route 53 and the CloudFront distribution carrying CDN, WAF and TLS, where the first matching path behavior wins. In AWS, four origins: two S3 buckets for immutable build output and public files, the Elysia Lambda Function URL guarded by AWS_IAM SigV4, and the Next.js BFF. Eight numbered steps trace DNS resolution, the four cache behaviors in match order, the BFF's server-side call to the Lambda origin, and the 403 an unsigned caller receives.</desc>
+      <defs>
+        <marker id="edge-request-path-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="edge-request-path-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="edge-request-path-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        <marker id="edge-request-path-arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#4f5d75" stroke-width="1.2"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+      <!-- ZONES (painted before arrows and nodes) -->
+      <rect x="40" y="224" width="240" height="480" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <rect x="56" y="228" width="96" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="104" y="237" fill="rgba(45,49,66,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">PUBLIC INTERNET</text>
+
+      <rect x="328" y="224" width="240" height="272" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <rect x="344" y="228" width="40" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="364" y="237" fill="rgba(45,49,66,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">EDGE</text>
+
+      <rect x="728" y="112" width="256" height="512" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <rect x="744" y="116" width="76" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="782" y="125" fill="rgba(45,49,66,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">AWS ORIGINS</text>
+
+      <!-- CONNECTORS -->
+      <path d="M 248,296 H 360" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#edge-request-path-arrow)"/>
+      <path d="M 448,336 V 384" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#edge-request-path-arrow-link)"/>
+      <path d="M 536,400 H 576 Q 584,400 584,392 V 192 Q 584,184 592,184 H 760" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#edge-request-path-arrow)"/>
+      <path d="M 536,416 H 624 Q 632,416 632,408 V 304 Q 632,296 640,296 H 760" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#edge-request-path-arrow)"/>
+      <path d="M 536,432 H 760" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#edge-request-path-arrow-accent)"/>
+      <path d="M 536,448 H 672 Q 680,448 680,456 V 544 Q 680,552 688,552 H 760" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#edge-request-path-arrow)"/>
+      <path d="M 856,512 V 464" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#edge-request-path-arrow-link)"/>
+      <path d="M 248,632 H 704 Q 712,632 712,624 V 560 a 8,8 0 0,1 0,-16 V 464 Q 712,456 720,456 H 760" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#edge-request-path-arrow)"/>
+
+      <!-- CONNECTOR LABELS -->
+      <rect x="260" y="276" width="64" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="292" y="285" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">1 · DNS</text>
+      <rect x="456" y="354" width="76" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="494" y="363" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">2 · HTTPS</text>
+      <rect x="630" y="164" width="92" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="676" y="173" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">3 · /_NEXT/*</text>
+      <rect x="650" y="276" width="100" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="700" y="285" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">4 · /STATIC/*</text>
+      <rect x="660" y="412" width="80" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="700" y="421" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">5 · /API/*</text>
+      <rect x="568" y="494" width="104" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="620" y="503" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">6 · /* DEFAULT</text>
+      <rect x="864" y="482" width="104" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="916" y="491" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">7 · X-ID-TOKEN</text>
+      <rect x="412" y="612" width="128" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="476" y="621" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">8 · 403 · UNSIGNED</text>
+
+      <!-- EDITORIAL CALLOUTS -->
+      <text x="72" y="540" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', serif">order is a security boundary — the first matching pattern wins</text>
+      <path d="M 408,532 Q 428,502 444,470" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <circle cx="448" cy="464" r="2" fill="#2d3142"/>
+
+      <text x="984" y="672" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', serif" text-anchor="end">only CloudFront can invoke the Function URL</text>
+      <path d="M 724,664 Q 718,630 713,606" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <circle cx="712" cy="600" r="2" fill="#2d3142"/>
+
+      <!-- PUBLIC INTERNET -->
+      <rect x="72" y="256" width="176" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="72" y="256" width="176" height="80" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+      <rect x="80" y="264" width="28" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.40)" stroke-width="0.8"/>
+      <text x="94" y="273" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+      <text x="160" y="294" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">User</text>
+      <text x="160" y="310" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">browser</text>
+      <text x="160" y="324" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">HTML + HttpOnly cookie</text>
+
+      <rect x="72" y="592" width="176" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="72" y="592" width="176" height="80" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+      <rect x="80" y="600" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+      <text x="100" y="609" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">UNSIGNED</text>
+      <text x="160" y="630" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Direct caller</text>
+      <text x="160" y="646" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">no SigV4 signature</text>
+      <text x="160" y="660" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">bypasses the edge</text>
+
+      <!-- EDGE -->
+      <rect x="360" y="256" width="176" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="360" y="256" width="176" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <rect x="368" y="264" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+      <text x="382" y="273" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DNS</text>
+      <text x="448" y="294" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Route 53</text>
+      <text x="448" y="310" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">apex + www</text>
+      <text x="448" y="324" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">alias → CloudFront</text>
+
+      <rect x="360" y="384" width="176" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="360" y="384" width="176" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <rect x="368" y="392" width="32" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.22)" stroke-width="0.8"/>
+      <text x="384" y="401" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EDGE</text>
+      <text x="448" y="422" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">CloudFront</text>
+      <text x="448" y="438" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">CDN · WAF · TLS</text>
+      <text x="448" y="452" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">first match wins</text>
+
+      <!-- AWS ORIGINS -->
+      <rect x="760" y="144" width="192" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="760" y="144" width="192" height="80" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="768" y="152" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+      <text x="782" y="161" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">S3</text>
+      <text x="856" y="182" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">S3 · build output</text>
+      <text x="856" y="198" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">hash-based filenames</text>
+      <text x="856" y="212" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">TTL 1 day – 1 year</text>
+
+      <rect x="760" y="256" width="192" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="760" y="256" width="192" height="80" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="768" y="264" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+      <text x="782" y="273" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">S3</text>
+      <text x="856" y="294" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">S3 · public files</text>
+      <text x="856" y="310" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">images, fonts</text>
+      <text x="856" y="324" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">gzip + brotli</text>
+
+      <rect x="760" y="384" width="192" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="760" y="384" width="192" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <rect x="768" y="392" width="28" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="782" y="401" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">IAM</text>
+      <text x="856" y="422" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Elysia Lambda URL</text>
+      <text x="856" y="438" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AWS_IAM · SigV4 verified</text>
+      <text x="856" y="452" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">cache disabled</text>
+
+      <rect x="760" y="512" width="192" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="760" y="512" width="192" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="768" y="520" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="782" y="529" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">BFF</text>
+      <text x="856" y="550" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Next.js BFF</text>
+      <text x="856" y="566" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">SSR + auth gateway</text>
+      <text x="856" y="580" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">cache limited / dynamic</text>
+
+      <!-- LEGEND -->
+      <line x1="40" y1="744" x2="984" y2="744" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="760" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+
+      <rect x="40" y="776" width="14" height="10" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="60" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Focal · IAM-guarded origin</text>
+      <rect x="200" y="776" width="14" height="10" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="220" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Object store</text>
+      <rect x="304" y="776" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="324" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Compute origin</text>
+      <rect x="416" y="776" width="14" height="10" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="436" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">AWS managed</text>
+      <rect x="520" y="776" width="14" height="10" rx="2" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+      <text x="540" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Public internet</text>
+      <rect x="632" y="776" width="14" height="10" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="652" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Unsigned caller</text>
+      <line x1="744" y1="782" x2="772" y2="782" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#edge-request-path-arrow)"/>
+      <text x="780" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Path behavior</text>
+      <line x1="864" y1="782" x2="892" y2="782" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#edge-request-path-arrow-accent)"/>
+      <text x="900" y="784" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Signed route</text>
+    </svg>
+    </div>
+  </div>
+</body>
+</html>
