@@ -94,7 +94,11 @@ If the feature touches cost basis, lots, disposals, gains, transfers, classifica
 
 If the feature touches classification, prompts, model tiers, confidence thresholds or precedent search, spawn `subagent_type: "ai-eval-engineer"` in **Eval design** mode with the spec path (in the same parallel batch as step 4 when both apply). Fold its **Acceptance criteria to add** into the spec's Acceptance Criteria and its failure modes into Open Questions / Risks, so the gates exist before any code does. Skip this step for features with no AI content.
 
-### 6. Report back
+### 6. Compliance review (data-handling features only)
+
+If the feature touches tenant or client data, personal data, exports, retention or deletion, roles and permissions, audit logs, logging or error reporting, AI data flows, search indexes, or a new third party or region, spawn `subagent_type: "compliance-risk-officer"` in **Spec review** mode with the spec path (in the same parallel batch as steps 4–5 when they apply). Fold its **Requirements to add** into the spec's Acceptance Criteria and its **Risks** and **Questions for the owner** into Open Questions / Risks. If its verdict is **Not ready**, tell the user which decision blocks the spec before suggesting `/plan`.
+
+### 7. Report back
 
 Print the spec path and a one-line summary, then tell the user:
 
