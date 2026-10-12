@@ -21,6 +21,11 @@ Multi-agent harness inspired by the generator/evaluator pattern. Slash commands 
 
 - `/run-backlog [issue-number]` — manual trigger for the `backlog-runner` loop (`.claude/skills/backlog-runner/`, built with `loop-maker`): discovers `ready-for-agent` GitHub issues and orchestrates the same `/spec → /plan → /implement → /qa` commands above, advancing each issue one phase at a time and pausing at human gates (after spec, after plan, before merge). Gate and budget specifics live in `.claude/skills/backlog-runner/HUMAN-GATES.md`, not here.
 
+## Product loop (optional, upstream of the backlog)
+
+- `/run-sprint` — manual trigger for the `sprint-runner` loop (`.claude/skills/sprint-runner/`, built with `loop-maker`'s conventions): plans a sprint from `docs/product/roadmap.md` with the `product-manager` agent, turns the human-approved plan into `ready-for-agent` issues for `backlog-runner`, posts standups, and closes the sprint with a review and retro. One phase per run; gates and budget in `.claude/skills/sprint-runner/HUMAN-GATES.md`. Put it on a cadence with `/loop 24h /run-sprint`.
+- `product-manager` agent — PM / Product Owner / Scrum Master. Dispatch it directly for a problem brief (`docs/product/briefs/`), RICE prioritisation, or a proposed roadmap; `sprint-runner` dispatches it for sprint plans, standups and reviews. It never edits the roadmap unattended and never writes to GitHub.
+
 ## Quality Commands
 
 - `/review [files]` — Code-review orchestrator: spawns the security and correctness reviewers (no plan needed). Works on the current branch vs `origin/main`.

@@ -92,6 +92,10 @@ docs/specs/**
 .agent-state.json
 .qa-report.md
 
+# sprint-runner ephemeral loop state (drafts + last standup digest)
+/.claude/sprint-state/*
+!/.claude/sprint-state/.gitkeep
+
 # backlog-runner per-issue worktrees (native tool or superpowers fallback)
 /.worktrees/
 /.claude/worktrees/
