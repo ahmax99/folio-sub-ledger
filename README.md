@@ -1,6 +1,8 @@
-# Boilerplate Template
+# Folio Sub-Ledger
 
-Modern full-stack monorepo boilerplate built with Turborepo, Bun, and TypeScript.
+Multi-tenant crypto sub-ledger for accounting firms: import client wallet and exchange history, classify transactions with AI (with evidence), reconcile against on-chain balances, and compute FIFO cost basis.
+
+Bootstrapped from [ahmax99/boilerplate-template](https://github.com/ahmax99/boilerplate-template). The sections below still describe the starter's stack; they will be updated as Folio replaces pieces of it (TanStack Start web app, SQS worker with Bedrock via the AI SDK, OpenSearch precedent search).
 
 ## Tech Stack
 
@@ -90,7 +92,7 @@ the code changes.
 
 ### Apps (`apps/`)
 
-#### `backend-boilerplate`
+#### `api`
 
 RESTful API built with Elysia and Bun runtime.
 
@@ -104,7 +106,7 @@ RESTful API built with Elysia and Bun runtime.
 
 **Tech:** Elysia, Prisma, CASL, AWS SDK
 
-#### `nextjs-boilerplate`
+#### `web`
 
 Modern full-stack Next.js application with authentication and file uploads.
 
@@ -181,7 +183,7 @@ bun run dev
 Start a specific app:
 
 ```bash
-turbo dev --filter=backend-boilerplate
+turbo dev --filter=api
 ```
 
 ### Build
@@ -207,7 +209,7 @@ Type checking, oxc formatting/linting, package-version syncing and update checks
 Each package requiring environment variables includes an `.env.example` file:
 
 - **`shared/neon`** - Requires `DATABASE_URL` for Neon PostgreSQL
-- **`apps/backend-boilerplate`** and **`apps/nextjs-boilerplate`** - See app-specific `.env.example` for full configuration
+- **`apps/api`** and **`apps/web`** - See app-specific `.env.example` for full configuration
 
 Copy `.env.example` to `.env` in each package and fill in your credentials.
 

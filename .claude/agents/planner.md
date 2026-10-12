@@ -64,7 +64,7 @@ Use this exact template, writing to `.claude/plans/<slug>.md` via the `Write` to
 
 **Files to modify/create:**
 
-- `apps/backend-boilerplate/src/modules/<name>/<name>.service.ts` — <what changes>
+- `apps/api/src/modules/<name>/<name>.service.ts` — <what changes>
 
 **Details:**
 <Specific implementation details — which patterns to follow, which existing module is the template. Name the exact Zod schema, service method signature, and route.>

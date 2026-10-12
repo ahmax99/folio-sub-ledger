@@ -21,8 +21,8 @@ trap cleanup EXIT
 
 docker create --name "$CONTAINER_NAME" "$IMAGE_URI"
 mkdir -p .next
-docker cp "$CONTAINER_NAME":/app/apps/nextjs-boilerplate/.next/static .next/static
-docker cp "$CONTAINER_NAME":/app/apps/nextjs-boilerplate/public public
+docker cp "$CONTAINER_NAME":/app/apps/web/.next/static .next/static
+docker cp "$CONTAINER_NAME":/app/apps/web/public public
 
 echo "⬆️  Uploading /_next/static/* (immutable hashed assets)..."
 aws s3 sync .next/static/ "s3://${STATIC_ASSETS_BUCKET}/_next/static/" \

@@ -95,24 +95,13 @@ in the steps below:
 - **Resend**: API key.
 - **Sentry**: **two** DSNs per environment — one backend project, one frontend
   project.
+- A fresh `session_secret` per environment: `openssl rand -base64 32`.
 
 ### 4. Local tooling (for the one manual step per environment)
 
-[tenv](https://github.com/tofuutils/tenv) (installs the Terraform version pinned
-in `.terraform-version`, the same file CI reads) and CLI credentials for the target member account — used only
+Terraform ≥ 1.14 and CLI credentials for the target member account — used only
 to create that environment's state bucket. Everything after that runs through
 GitHub Actions.
-
-Install the pinned Terraform once, and again whenever `.terraform-version`
-changes:
-
-```bash
-tenv tf install     # reads .terraform-version from the repo root
-terraform version   # must match .terraform-version
-```
-
-If `terraform version` doesn't match, a system-installed `terraform` is
-shadowing tenv's shim — put tenv first on `PATH` or uninstall the system one.
 
 Authenticate via the org's IAM Identity Center (SSO), not long-lived keys. The
 org repo's [CLI access (Identity Center SSO)](https://github.com/ahmax99/ahmax99-aws-org#cli-access-identity-center-sso)
@@ -203,6 +192,7 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `TF_VAR_google_client_id`     | secret   | dev OAuth client                   | separate prod OAuth client             |
 | `TF_VAR_google_client_secret` | secret   | dev OAuth client                   | prod OAuth client                      |
 | `TF_VAR_resend_api_key`       | secret   | Resend key                         | prod Resend key                        |
+| `TF_VAR_session_secret`       | secret   | fresh `openssl rand -base64 32`    | fresh, distinct from dev               |
 | `TF_VAR_backend_sentry_dsn`   | secret   | dev backend Sentry project         | prod backend Sentry project            |
 | `TF_VAR_frontend_sentry_dsn`  | secret   | dev frontend Sentry project        | prod frontend Sentry project           |
 

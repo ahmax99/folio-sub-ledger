@@ -31,3 +31,6 @@ frontend_sentry_dsn = "https://your-frontend-sentry-dsn"
 # Google OAuth (create credentials at console.cloud.google.com)
 google_client_id     = ""
 google_client_secret = ""
+
+# Session
+session_secret = "" # Generate with: openssl rand -base64 32

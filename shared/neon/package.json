@@ -17,16 +17,15 @@
     "db:seed": "bun --bun prisma db seed"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.2.0",
+    "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^7.10.0",
     "@prisma/client": "^7.10.0",
-    "dotenv": "^18.0.5",
-    "ws": "^8.22.0"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@shared/typescript-config": "workspace:*",
-    "@types/node": "^26.6.4",
-    "@types/ws": "^8.18.2",
+    "@types/node": "^26.4.1",
+    "@types/ws": "^8.18.1",
     "prisma": "^7.10.0",
     "typescript": "^7.0.2"
   }

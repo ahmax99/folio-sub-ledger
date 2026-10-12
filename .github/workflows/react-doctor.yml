@@ -4,13 +4,13 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'apps/nextjs-boilerplate/**'
+      - 'apps/web/**'
       - '.github/workflows/react-doctor.yml'
   push:
     branches:
       - main
     paths:
-      - 'apps/nextjs-boilerplate/**'
+      - 'apps/web/**'
       - '.github/workflows/react-doctor.yml'
 
 permissions:

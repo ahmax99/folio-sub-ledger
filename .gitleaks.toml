@@ -1,4 +1,4 @@
-title = "gitleaks config for boilerplate-template"
+title = "gitleaks config for folio-sub-ledger"
 
 # Layer allowlist exceptions on top of gitleaks' built-in rule set rather than
 # redefining it (https://github.com/gitleaks/gitleaks#configuration).

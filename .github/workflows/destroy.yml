@@ -68,6 +68,7 @@ jobs:
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}
       TF_VAR_resend_api_key: ${{ secrets.TF_VAR_resend_api_key }}
+      TF_VAR_session_secret: ${{ secrets.TF_VAR_session_secret }}
       TF_VAR_backend_sentry_dsn: ${{ secrets.TF_VAR_backend_sentry_dsn }}
       TF_VAR_frontend_sentry_dsn: ${{ secrets.TF_VAR_frontend_sentry_dsn }}
       TF_VAR_central_ecr_account_id: ${{ vars.CENTRAL_ECR_ACCOUNT_ID }}
@@ -83,9 +84,10 @@ jobs:
           ref: main
 
       - name: Setup Terraform
-        uses: ./.github/actions/setup-terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform-wrapper: false
+          terraform_version: '~> 1.14'
+          terraform_wrapper: false
 
       - name: Configure AWS credentials (apply role)
         uses: aws-actions/configure-aws-credentials@v6

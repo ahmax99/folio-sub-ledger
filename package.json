@@ -1,9 +1,9 @@
 {
-  "name": "boilerplate-template",
+  "name": "folio-sub-ledger",
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ahmax99/boilerplate-template.git"
+    "url": "https://github.com/ahmax99/folio-sub-ledger.git"
   },
   "workspaces": [
     "apps/*",
@@ -26,12 +26,12 @@
     "graphify:serve": "$HOME/.local/bin/graphify-mcp graphify-out/graph.json"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
-    "@commitlint/config-conventional": "^21.2.3",
-    "lefthook": "^2.1.16",
-    "oxfmt": "^0.71.0",
-    "oxlint": "^1.86.0",
-    "turbo": "^2.11.7",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "lefthook": "^2.1.12",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
+    "turbo": "^2.10.12",
     "typescript": "^7.0.2"
   },
   "overrides": {

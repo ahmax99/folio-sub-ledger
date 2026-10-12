@@ -79,6 +79,12 @@ variable "google_client_secret" {
   sensitive   = true
 }
 
+variable "session_secret" {
+  description = "Session secret for signing cookies (generated with: openssl rand -base64 32)"
+  type        = string
+  sensitive   = true
+}
+
 variable "central_ecr_account_id" {
   description = "Account ID of the shared-services account hosting the central ECR repositories (created by the org repo, not this one)"
   type        = string

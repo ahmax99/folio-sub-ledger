@@ -126,18 +126,6 @@
     "terraform-skill@antonbabenko": true,
     "context-mode@context-mode": false,
     "impeccable@impeccable": true,
-    "diagram-design@diagram-design": true,
-    "skins@folio-mods": true,
-    "savvy-progress@folio-mods": true,
-    "model-switch@folio-mods": true,
-    "filetree@folio-mods": true,
-    "blast-radius@folio-mods": true,
-    "replay-theater@folio-mods": true,
-    "cache-tax@folio-mods": true
-  },
-  "extraKnownMarketplaces": {
-    "folio-mods": {
-      "source": { "source": "directory", "path": "./.claude/mods" }
-    }
+    "diagram-design@diagram-design": true
   }
 }

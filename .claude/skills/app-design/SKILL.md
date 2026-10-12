@@ -35,7 +35,7 @@ When an app derived from this boilerplate needs its design language defined:
 
 1. Run `/impeccable init`. It interviews for audience/brand-vs-product register
    and writes `PRODUCT.md` + `DESIGN.md`. Run it from the app directory
-   (e.g. `apps/nextjs-boilerplate`), not the monorepo root, so the context
+   (e.g. `apps/web`), not the monorepo root, so the context
    lands next to the code it describes.
 2. **Optional aesthetic seed:** if the user names a reference product ("feel
    like Linear/Vercel/Raycast"), fetch the matching `DESIGN.md` from

@@ -21,7 +21,7 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 
 ## Correctness checklist
 
-**Backend (`apps/backend-boilerplate`):**
+**Backend (`apps/api`):**
 
 - Service methods wrap their async work in `catchAsyncError(...)` and return `ResultAsync<T, AppError>` — they never `throw` to the caller. Failures inside the wrapped body are signalled with `throw new AppError('NOT_FOUND' | 'FORBIDDEN' | ..., msg)` using codes from `@shared/config` (`errorDefinition`).
 - Controllers wrap every service call in `handleApiError(...)` so the mounted `errorHandler` plugin can convert the `AppError` to an HTTP response. No raw `try/catch` in controllers, no internal stack traces leaked.
@@ -31,7 +31,7 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 - Multi-step writes that must be atomic use `prisma.$transaction([...])`.
 - Edge cases handled: missing records (`NOT_FOUND`), empty arrays, null values, max limits.
 
-**Frontend (`apps/nextjs-boilerplate`):**
+**Frontend (`apps/web`):**
 
 - Browser code never calls the Elysia backend directly — it goes through Next.js route handlers / server components / server actions, which call the `ky` clients in `src/lib/serverApiClient.ts` (`serverApiClient` for public GETs, `serverAuthApiClient` for authenticated calls).
 - Route handlers stay thin: call a feature's `server/api` function and `NextResponse.json` the result.

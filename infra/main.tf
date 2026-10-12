@@ -239,11 +239,6 @@ module "backend" {
   )
 }
 
-resource "random_password" "session_secret" {
-  length  = 48
-  special = false
-}
-
 module "frontend" {
   source = "./modules/lambda"
 
@@ -277,7 +272,7 @@ module "frontend" {
     NODE_ENV             = "production"
     RESEND_API_KEY       = var.resend_api_key
     SENTRY_DSN           = var.frontend_sentry_dsn
-    SESSION_SECRET       = random_password.session_secret.result
+    SESSION_SECRET       = var.session_secret
   }
 
   enable_function_url    = true
@@ -561,3 +556,4 @@ module "codedeploy_frontend" {
     }
   )
 }
+

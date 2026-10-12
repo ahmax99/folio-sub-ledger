@@ -4,15 +4,15 @@
 
 Turborepo monorepo on **Bun** (package manager + runtime). Two apps and shared packages:
 
-- `apps/backend-boilerplate` — Elysia REST API (Bun runtime), deployed as a Lambda container.
-- `apps/nextjs-boilerplate` — Next.js 16 / React 19 app that acts as a **BFF** (Backend-for-Frontend) in front of the Elysia API.
+- `apps/api` — Elysia REST API (Bun runtime), deployed as a Lambda container.
+- `apps/web` — Next.js 16 / React 19 app that acts as a **BFF** (Backend-for-Frontend) in front of the Elysia API.
 - `shared/config` — Zod schemas (`*.model.ts`), shared error definitions. Published as `@shared/config`.
 - `shared/neon` — Prisma client for Neon serverless Postgres. Published as `@shared/neon`.
 - `shared/typescript-config` — base tsconfigs extended via `extends`.
 
 Workspaces are `apps/*` and `shared/*`. Cross-package deps use `workspace:*`.
 
-## Backend (`apps/backend-boilerplate`)
+## Backend (`apps/api`)
 
 Elysia app composed from plugins. Entry is `src/index.ts`: load secrets → mount logger/helmet/cors → `.use(routes)`.
 
@@ -37,7 +37,7 @@ Routes are aggregated in `src/routes/index.ts` under prefix `/api/v1`; OpenAPI/S
 
 Secrets: in production, `loadSecrets()` pulls `DATABASE_URL` from AWS Secrets Manager (`DATABASE_URL_SECRET_NAME`); in dev it reads `.env`. Env is validated with `@t3-oss/env-core` in `src/config/env.ts`.
 
-## Frontend (`apps/nextjs-boilerplate`)
+## Frontend (`apps/web`)
 
 Next.js App Router. The app is a **BFF**: browser code never calls the Elysia backend directly — it calls Next.js route handlers / server components, which forward to Elysia server-side with the auth token attached.
 
@@ -73,19 +73,19 @@ Four invariants hold that design together. Each exists because the alternative b
 
 Where each concern lives:
 
-| Concern                           | File                                                       |
-| --------------------------------- | ---------------------------------------------------------- |
-| Session/PKCE schemas              | `features/auth/schemas/auth.schema.ts`                     |
-| Cookie & iron-session config      | `features/auth/constants/{cookie,session}.ts`              |
-| Session cookie accessors          | `features/auth/server/services/session.ts`                 |
-| Login / callback / logout logic   | `features/auth/server/services/auth.ts`                    |
-| Refresh-token → ID-token exchange | `features/auth/server/services/token.ts`                   |
-| PKCE generators                   | `features/auth/utils/pkce.ts`                              |
-| Route handlers                    | `app/api/auth/{login,callback,logout}/route.ts`            |
-| BFF → backend clients             | `lib/serverApiClient.ts`                                   |
-| Edge route guard                  | `proxy.ts`                                                 |
-| Backend JWT verification          | `apps/backend-boilerplate/src/modules/auth/auth.plugin.ts` |
-| CASL permissions                  | `modules/auth/permission.ts` (both apps)                   |
+| Concern                           | File                                            |
+| --------------------------------- | ----------------------------------------------- |
+| Session/PKCE schemas              | `features/auth/schemas/auth.schema.ts`          |
+| Cookie & iron-session config      | `features/auth/constants/{cookie,session}.ts`   |
+| Session cookie accessors          | `features/auth/server/services/session.ts`      |
+| Login / callback / logout logic   | `features/auth/server/services/auth.ts`         |
+| Refresh-token → ID-token exchange | `features/auth/server/services/token.ts`        |
+| PKCE generators                   | `features/auth/utils/pkce.ts`                   |
+| Route handlers                    | `app/api/auth/{login,callback,logout}/route.ts` |
+| BFF → backend clients             | `lib/serverApiClient.ts`                        |
+| Edge route guard                  | `proxy.ts`                                      |
+| Backend JWT verification          | `apps/api/src/modules/auth/auth.plugin.ts`      |
+| CASL permissions                  | `modules/auth/permission.ts` (both apps)        |
 
 Authorization mirrors the backend with CASL (`@casl/react`, `src/lib/casl.ts`, `PermissionProvider`).
 

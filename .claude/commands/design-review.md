@@ -13,9 +13,9 @@ duplicate it here.
 ## Prerequisites
 
 1. Identify the changed UI surface: `git diff origin/main --stat` filtered to
-   `apps/nextjs-boilerplate/src/` — note the pages/components touched and which
+   `apps/web/src/` — note the pages/components touched and which
    routes render them.
-2. Ensure the dev server is running (`turbo dev --filter=nextjs-boilerplate`,
+2. Ensure the dev server is running (`turbo dev --filter=web`,
    default http://localhost:3000). Start it in the background if it isn't.
 3. This review leans on the impeccable plugin. If `/impeccable` is unavailable,
    say so and run only the manual phases below.

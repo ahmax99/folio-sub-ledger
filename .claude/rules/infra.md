@@ -37,7 +37,7 @@ Invariants:
 
 ## Conventions
 
-- Pin versions: providers in each module's `versions.tf`, Terraform version in the repo-root `.terraform-version` — the single pin read by tenv locally and by `.github/actions/setup-terraform` in CI.
+- Pin versions: providers in each module's `versions.tf`, Terraform version matches CI (`~> 1.14`).
 - Every `variable` has `type` and `description`; add `validation` blocks where a bad value would only surface at apply time.
 - **No `default` on `variable` blocks.** Every value must be supplied explicitly via `vars/*.tfvars` / `TF_VAR_*`, including an explicit empty string for an environment that doesn't use it. A default lets an unset value silently fall through instead of showing up in the plan/tfvars as a deliberate choice.
 - No secret values in `vars/*.tfvars` (they're committed). Secrets live in AWS Secrets Manager and are referenced by ARN/name; the apps load them at runtime.

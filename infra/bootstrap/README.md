@@ -13,7 +13,7 @@ This is the **only** resource the bring-up creates outside the CI pipeline. Ever
 ## Prerequisites
 
 1. CLI credentials via the org's IAM Identity Center (SSO) — set `AWS_PROFILE` to the target account (`ahmax99-dev` / `ahmax99-prod`) and run `aws sso login`. The one-time `~/.aws/config` block and account IDs live in the [org repo's CLI-access section](https://github.com/ahmax99/ahmax99-aws-org#cli-access-identity-center-sso).
-2. [tenv](https://github.com/tofuutils/tenv) installed — it installs the Terraform version pinned in the repo-root `.terraform-version`. Run `tenv tf install` and confirm with `terraform version` (see the [runbook's local tooling step](../../docs/runbook.md#4-local-tooling-for-the-one-manual-step-per-environment))
+2. Terraform >= 1.14.0 installed
 
 ## Important Notes
 
