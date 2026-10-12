@@ -4,3 +4,7 @@ title = "gitleaks config for folio-sub-ledger"
 # redefining it (https://github.com/gitleaks/gitleaks#configuration).
 [extend]
 useDefault = true
+
+[allowlist]
+description = "SonarCloud project key, an identifier rather than a secret"
+regexes = ['''ahmax99_folio-sub-ledger''']
