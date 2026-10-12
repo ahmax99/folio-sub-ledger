@@ -55,8 +55,6 @@ Single message, two parallel Task tool calls:
 
 4. `subagent_type: "cicd-reviewer"` — same prompt shape, **only if the Phase 1 diff list contains `.github/**` files**. Include it in the same parallel batch.
 
-5. `subagent_type: "accounting-domain-expert"` — same prompt shape, **only if the Phase 1 diff list contains domain files — any path matching `(?i)(lot|disposal|ledger|cost-?basis|journal|reconcil|classif|transfer|proposal|precedent|export|gain)` or `shared/neon/prisma/schema.prisma`**. Include it in the same parallel batch.
-
 ## Phase 3 — Synthesize
 
 Order issues **by file (in diff order) and within each file by line number**. Severity is an inline tag, not a section header.
@@ -83,7 +81,6 @@ Order issues **by file (in diff order) and within each file by line number**. Se
 - Code quality: X/5  (correctness-reviewer)
 - Infrastructure: X/5  (infra-reviewer — omit when the diff has no infra/** files)
 - CI/CD: X/5  (cicd-reviewer — omit when the diff has no .github/** files)
-- Accounting: X/5  (accounting-domain-expert — omit when the diff has no domain files)
 
 ### Issues
 
