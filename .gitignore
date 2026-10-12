@@ -99,3 +99,6 @@ docs/specs/**
 # backlog-runner per-issue worktrees (native tool or superpowers fallback)
 /.worktrees/
 /.claude/worktrees/
+
+# UX research raw notes and transcripts (may contain participant PII)
+/docs/research/raw/

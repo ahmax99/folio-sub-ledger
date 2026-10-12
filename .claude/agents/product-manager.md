@@ -39,7 +39,7 @@ Your invocation prompt names the mode.
 
 ### 1. Problem brief
 
-Turn a raw idea into a brief that `/spec` or the roadmap can consume. Write `docs/product/briefs/<YYYY-MM-DD-slug>.md`:
+Turn a raw idea into a brief that `/spec` or the roadmap can consume. Read `docs/research/insights/` and `docs/research/personas.md` first and cite any insight that supports or contradicts the idea; if there is none, say the pain is unvalidated and name the research that would validate it (the `ux-researcher` agent writes research plans). Write `docs/product/briefs/<YYYY-MM-DD-slug>.md`:
 
 1. **Who** — which persona, specifically.
 2. **Pain** — how often, how bad, what they do today.

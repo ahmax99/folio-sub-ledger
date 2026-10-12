@@ -7,8 +7,9 @@ Conduct a design review of the current UI changes (this branch vs `origin/main`,
 or the scope the user names).
 
 This command reviews **design quality** — visual hierarchy, consistency,
-responsiveness, accessibility, polish. Code correctness is `/qa`'s job; don't
-duplicate it here.
+responsiveness, accessibility, polish — and, through the `ux-researcher`
+agent, **usability**: whether a persona can complete the job the changed UI
+serves. Code correctness is `/qa`'s job; don't duplicate it here.
 
 ## Prerequisites
 
@@ -34,6 +35,15 @@ duplicate it here.
    rules (semantic tokens, no raw hex, component composition) and repo placement
    rules (atomic-design layers, feature folders, CVA, `data-slot`).
 
+5. **Task walkthrough (ux-researcher)** — spawn `subagent_type:
+   "ux-researcher"` with mode "Task walkthrough", the dev server URL, the
+   changed routes, and the active spec's acceptance criteria if one exists.
+   Run it after phase 3 has finished, not in parallel: it uses the same
+   Playwright browser.
+   Its findings use Nielsen severity (4–1); merge them into the report below
+   as 4 → Blockers, 3 → High-Priority, 2 → Medium-Priority, 1 → Nitpicks,
+   each tagged `[Usability]`.
+
 ## Report
 
 Produce a markdown report with findings categorized as:
@@ -45,4 +55,6 @@ Produce a markdown report with findings categorized as:
 - **Nitpicks** — prefix with "Nit:"; polish suggestions
 
 For each finding: the route/component, what's wrong, and the concrete fix.
-Lead the report with a one-paragraph overall verdict.
+Lead the report with a one-paragraph overall verdict that covers both design
+quality and the walkthrough's task results, and include the walkthrough's task
+table and its "Open questions for real users" at the end.
