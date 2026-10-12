@@ -38,7 +38,9 @@ The **Phase 1 deterministic gates** shared by `/qa`, `/review`, and `/pre-commit
 - `infra-reviewer` — Terraform/HCL diffs: IAM least privilege, public exposure, state safety, destructive-change risk, module conventions. Emits **Infrastructure**. (Spawned by `/qa` and `/review` only when the diff touches `infra/**`.)
 - `cicd-reviewer` — GitHub Actions / CI-CD diffs: least-privilege `GITHUB_TOKEN`, action SHA-pinning, expression injection, fork-safety, OIDC usage, concurrency/timeout hygiene, deploy-pipeline invariants, DORA-metric impact. Emits **CI/CD**. (Spawned by `/qa` and `/review` only when the diff touches `.github/**`.) It doubles as a standalone **DevOps engineer** agent — dispatch it directly to audit, improve, or author workflows and DORA instrumentation.
 
-So `/qa` produces five scores from three reviewers (plus Infrastructure and/or CI/CD when the diff touches `infra/**` or `.github/**`); `/review` produces four (it drops acceptance-criteria; same conditional additions).
+- `accounting-domain-expert` — crypto accounting & tax correctness for diffs touching cost basis, lots, disposals, transfer matching, classification, reconciliation, journal entries or exports. Emits **Accounting**. (Spawned by `/qa` and `/review` only when the diff touches domain files — the path pattern lives in those commands.) It doubles as a standalone **domain advisor**: dispatch it to review a spec or plan before `/plan`, answer an accounting-policy question (writes a `Status: Proposed` decision to `docs/domain/decisions/`), or write hand-computed worked examples to `docs/domain/examples/`.
+
+So `/qa` produces five scores from three reviewers (plus Infrastructure, CI/CD and/or Accounting when the diff touches `infra/**`, `.github/**` or domain files); `/review` produces four (it drops acceptance-criteria; same conditional additions).
 
 ## Hooks (automatic)
 

@@ -4,7 +4,7 @@ model: sonnet
 
 # QA
 
-You are a **QA orchestrator**. You run deterministic quality gates in this session, spawn three reviewer subagents in parallel, and synthesize their reports into a unified verdict. You never review code yourself in this session — that's the subagents' job.
+You are a **QA orchestrator**. You run deterministic quality gates in this session, spawn the reviewer subagents in parallel, and synthesize their reports into a unified verdict. You never review code yourself in this session — that's the subagents' job.
 
 ## Input
 
@@ -71,6 +71,8 @@ In a single message with three parallel Task tool calls, invoke:
 
 5. `subagent_type: "cicd-reviewer"` — same prompt shape, **only if the Phase 1 diff list contains `.github/**` files**. Include it in the same parallel batch.
 
+6. `subagent_type: "accounting-domain-expert"` — same prompt shape, **only if the Phase 1 diff list contains domain files — any path matching `(?i)(lot|disposal|ledger|cost-?basis|journal|reconcil|classif|transfer|proposal|precedent|export|gain)` or `shared/neon/prisma/schema.prisma`**. Include it in the same parallel batch.
+
 Do not pass code excerpts — the subagents read the diff themselves.
 
 ## Phase 3 — Synthesize
@@ -99,6 +101,7 @@ Merge the three returned reports into one unified report. **Scores are copied ve
 - Code quality: X/5  (correctness-reviewer)
 - Infrastructure: X/5  (infra-reviewer — omit when the diff has no infra/** files)
 - CI/CD: X/5  (cicd-reviewer — omit when the diff has no .github/** files)
+- Accounting: X/5  (accounting-domain-expert — omit when the diff has no domain files)
 
 ### Issues (file-ordered, severity inline)
 
