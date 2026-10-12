@@ -90,7 +90,11 @@ Keep it focused on _what_ and _why_. The _how_ (file paths, method signatures, o
 
 If the feature touches cost basis, lots, disposals, gains, transfers, classification, reconciliation, journal entries or reports, spawn `subagent_type: "accounting-domain-expert"` with the spec path and today's date, asking for a spec review. Fold its **Acceptance criteria to add** into the spec's Acceptance Criteria and its **Policy questions** into Open Questions / Risks. If its verdict is **Not ready**, tell the user which policy decision blocks the spec before suggesting `/plan`. Skip this step for features with no accounting content.
 
-### 5. Report back
+### 5. Eval design (AI features only)
+
+If the feature touches classification, prompts, model tiers, confidence thresholds or precedent search, spawn `subagent_type: "ai-eval-engineer"` in **Eval design** mode with the spec path (in the same parallel batch as step 4 when both apply). Fold its **Acceptance criteria to add** into the spec's Acceptance Criteria and its failure modes into Open Questions / Risks, so the gates exist before any code does. Skip this step for features with no AI content.
+
+### 6. Report back
 
 Print the spec path and a one-line summary, then tell the user:
 

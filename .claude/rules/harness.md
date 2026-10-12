@@ -45,7 +45,9 @@ The **Phase 1 deterministic gates** shared by `/qa`, `/review`, and `/pre-commit
 - `infra-reviewer` — Terraform/HCL diffs: IAM least privilege, public exposure, state safety, destructive-change risk, module conventions. Emits **Infrastructure**. (Spawned by `/qa` and `/review` only when the diff touches `infra/**`.)
 - `cicd-reviewer` — GitHub Actions / CI-CD diffs: least-privilege `GITHUB_TOKEN`, action SHA-pinning, expression injection, fork-safety, OIDC usage, concurrency/timeout hygiene, deploy-pipeline invariants, DORA-metric impact. Emits **CI/CD**. (Spawned by `/qa` and `/review` only when the diff touches `.github/**`.) It doubles as a standalone **DevOps engineer** agent — dispatch it directly to audit, improve, or author workflows and DORA instrumentation.
 
-So `/qa` produces five scores from three reviewers (plus Infrastructure and/or CI/CD when the diff touches `infra/**` or `.github/**`); `/review` produces four (it drops acceptance-criteria; same conditional additions).
+- `ai-eval-engineer` — AI quality for diffs touching prompts, model tiers, the proposal schema, retrieval or `evals/**`: requires baseline-vs-candidate eval evidence and enforces the per-category recall gate. Emits **AI quality**. (Spawned by `/qa` and `/review` only when the diff touches AI files — the path pattern lives in those commands.) Also spawned by `/spec` in eval-design mode for AI features, and dispatchable directly to curate the golden set (`evals/`) or write calibration and spend reports (`docs/evals/reports/`).
+
+So `/qa` produces five scores from three reviewers (plus Infrastructure, CI/CD and/or AI quality when the diff touches `infra/**`, `.github/**` or AI files); `/review` produces four (it drops acceptance-criteria; same conditional additions).
 
 ## Hooks (automatic)
 

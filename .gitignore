@@ -102,3 +102,6 @@ docs/specs/**
 
 # UX research raw notes and transcripts (may contain participant PII)
 /docs/research/raw/
+
+# exported review decisions for eval calibration (may contain tenant data)
+/evals/data/
