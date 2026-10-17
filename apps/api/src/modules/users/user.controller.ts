@@ -1,3 +1,4 @@
+import { subject } from '@casl/ability'
 import { fromTypes, openapi } from '@elysiajs/openapi'
 import { PostModel, UserModel } from '@shared/config'
 import { Elysia } from 'elysia'
@@ -55,16 +56,24 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/presigned-url',
-    async ({ request, query, user, uploadService }) =>
-      handleApiError(
+    async ({ request, query, user, userService, uploadService }) => {
+      const dbUser = await handleApiError(
+        userService.getMe(user.cognitoSub, user.role)
+      )
+
+      return handleApiError(
         uploadService.getPresignedUrl(
           'account',
           request,
           query.filename,
           query.contentType,
-          getUserPermissions(user)
+          getUserPermissions(user, dbUser.id).can(
+            'update',
+            subject('User', dbUser)
+          )
         )
-      ),
+      )
+    },
     {
       query: PostModel.uploadImageQuery,
       auth: true,
@@ -99,10 +108,15 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .put(
     '/:id',
-    async ({ params, body, user, userService }) =>
-      handleApiError(
-        userService.update(params.id, body, getUserPermissions(user))
-      ),
+    async ({ params, body, user, userService }) => {
+      const dbUser = await handleApiError(
+        userService.getMe(user.cognitoSub, user.role)
+      )
+
+      return handleApiError(
+        userService.update(params.id, body, getUserPermissions(user, dbUser.id))
+      )
+    },
     {
       params: UserModel.userIdParams,
       body: UserModel.updateUserBody,

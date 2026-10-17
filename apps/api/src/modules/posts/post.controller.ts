@@ -48,7 +48,7 @@ export const postController = new Elysia({ prefix: '/posts' })
           request,
           query.filename,
           query.contentType,
-          getUserPermissions(user)
+          getUserPermissions(user).can('create', 'Post')
         )
       ),
     {
