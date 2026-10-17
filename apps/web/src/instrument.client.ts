@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/tanstackstart-react'
 
-// The DSN comes from a runtime endpoint, not the bundle, so one built image can be promoted across environments.
 fetch('/api/config')
   .then((response) => {
     if (!response.ok) throw new Error(`/api/config ${response.status}`)
