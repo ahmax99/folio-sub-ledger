@@ -7,12 +7,12 @@ if [[ -z "$IMAGE_URI" ]] || [[ -z "$STATIC_ASSETS_BUCKET" ]] || [[ -z "$CLOUDFRO
   exit 1
 fi
 
-echo "📦 Extracting Next.js static assets from Docker image"
+echo "📦 Extracting web static assets from Docker image"
 echo "Image: $IMAGE_URI"
 echo "Bucket: $STATIC_ASSETS_BUCKET"
 echo "Distribution: $CLOUDFRONT_DISTRIBUTION_ID"
 
-CONTAINER_NAME="nextjs-extract-$$"
+CONTAINER_NAME="web-extract-$$"
 
 cleanup() {
   docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
@@ -20,17 +20,16 @@ cleanup() {
 trap cleanup EXIT
 
 docker create --name "$CONTAINER_NAME" "$IMAGE_URI"
-mkdir -p .next
-docker cp "$CONTAINER_NAME":/app/apps/nextjs-boilerplate/.next/static .next/static
-docker cp "$CONTAINER_NAME":/app/apps/nextjs-boilerplate/public public
+# Nitro's public dir holds Vite's hashed bundles under assets/ plus the app's public/ files at the root
+docker cp "$CONTAINER_NAME":/app/apps/web/.output/public web-public
 
-echo "⬆️  Uploading /_next/static/* (immutable hashed assets)..."
-aws s3 sync .next/static/ "s3://${STATIC_ASSETS_BUCKET}/_next/static/" \
+echo "⬆️  Uploading /assets/* (immutable hashed assets)..."
+aws s3 sync web-public/assets/ "s3://${STATIC_ASSETS_BUCKET}/assets/" \
   --cache-control "public, max-age=31536000, immutable" \
   --region "$AWS_REGION"
 
 echo "⬆️  Uploading /static/* (public assets)..."
-aws s3 sync public/ "s3://${STATIC_ASSETS_BUCKET}/static/" \
+aws s3 sync web-public/ "s3://${STATIC_ASSETS_BUCKET}/static/" --exclude "assets/*" \
   --cache-control "public, max-age=604800" \
   --region "$AWS_REGION"
 

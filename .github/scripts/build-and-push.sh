@@ -19,7 +19,7 @@ echo "Backend pushed: ${ECR_BACKEND_URL}:latest"
 echo "==> Building frontend image..."
 docker build --platform linux/amd64 \
   -t "${ECR_FRONTEND_URL}:latest" \
-  -f apps/nextjs-boilerplate/Dockerfile \
+  -f apps/web/Dockerfile \
   .
 
 echo "==> Pushing frontend image..."

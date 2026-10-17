@@ -16,7 +16,7 @@
   "sortImports": {
     "groups": [
       "builtin",
-      "react-next",
+      "react-router",
       "external",
       "alias",
       "parent",
@@ -24,17 +24,24 @@
     ],
     "customGroups": [
       {
-        "groupName": "react-next",
-        "elementNamePattern": ["react", "next", "next/**"]
+        "groupName": "react-router",
+        "elementNamePattern": [
+          "react",
+          "react/**",
+          "react-dom/**",
+          "@tanstack/**"
+        ]
       },
-      { "groupName": "alias", "elementNamePattern": ["@/**"] }
+      {
+        "groupName": "alias",
+        "elementNamePattern": ["@/**"]
+      }
     ],
     "newlinesBetween": true
   },
   "sortTailwindcss": true,
   "ignorePatterns": [
     "**/routeTree.gen.ts",
-    "**/next-env.d.ts",
     "**/*.d.ts",
     "**/generated/**",
     "**/graphify-out/**",

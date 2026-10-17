@@ -77,7 +77,7 @@ output "cloudfront_domain_name" {
 }
 
 output "static_assets_bucket_name" {
-  description = "S3 bucket to upload Next.js static assets"
+  description = "S3 bucket to upload the web app's static assets"
   value       = module.s3_static_assets.bucket_name
 }
 

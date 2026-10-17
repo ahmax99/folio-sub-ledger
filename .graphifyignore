@@ -19,7 +19,9 @@
 **/bootstrap
 node_modules/
 .turbo/
-.next/
+.output/
+.nitro/
+.tanstack/
 dist/
 build/
 graphify-out/

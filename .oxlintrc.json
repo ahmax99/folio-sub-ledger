@@ -9,7 +9,6 @@
   },
   "ignorePatterns": [
     "**/routeTree.gen.ts",
-    "**/next-env.d.ts",
     "**/generated/**",
     "**/graphify-out/**",
     "**/*.d.ts"

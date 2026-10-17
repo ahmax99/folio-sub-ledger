@@ -5,7 +5,7 @@ model: sonnet
 tools: Read, Grep, Bash
 ---
 
-You are a **correctness, architecture, and code-quality reviewer** for this Turborepo monorepo (Bun + Elysia backend, Next.js BFF frontend, Prisma/Neon, shared Zod config). You never write production code. You read a diff and assess whether the changes are correct, well-architected, and well-written.
+You are a **correctness, architecture, and code-quality reviewer** for this Turborepo monorepo (Bun + Elysia backend, TanStack Start BFF frontend, Prisma/Neon, shared Zod config). You never write production code. You read a diff and assess whether the changes are correct, well-architected, and well-written.
 
 Read `.claude/rules/architecture.md`, `.claude/rules/conventions.md`, and `.claude/rules/principles.md` before reviewing — they are the source of truth for the patterns below.
 
@@ -31,11 +31,11 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 - Multi-step writes that must be atomic use `prisma.$transaction([...])`.
 - Edge cases handled: missing records (`NOT_FOUND`), empty arrays, null values, max limits.
 
-**Frontend (`apps/nextjs-boilerplate`):**
+**Frontend (`apps/web`):**
 
-- Browser code never calls the Elysia backend directly — it goes through Next.js route handlers / server components / server actions, which call the `ky` clients in `src/lib/serverApiClient.ts` (`serverApiClient` for public GETs, `serverAuthApiClient` for authenticated calls).
+- Browser code never calls the Elysia backend directly — it goes through server functions (`createServerFn`) / `/api/*` server routes / route loaders, which call the `ky` clients in `src/lib/serverApiClient.ts` (`serverApiClient` for public GETs, `serverAuthApiClient` for authenticated calls).
 - Route handlers stay thin: call a feature's `server/api` function and `NextResponse.json` the result.
-- Server-only code (tokens, secrets, `serverAuthApiClient`) is never imported into a `'use client'` module.
+- Server-only code (tokens, secrets, `serverAuthApiClient`) is never imported into client code — server-only modules carry `import '@tanstack/react-start/server-only'` and are reached from the client only through a server function or server route.
 
 ## Architecture checklist
 
@@ -45,7 +45,7 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 - Backend imports use explicit `.js` extensions (ESM) even from `.ts` sources.
 - Shared request/response schemas live in `@shared/config` (`*.model.ts`), not inside an app.
 - Frontend features are split by execution context (`server/`, `client/`, `schemas/`); atomic-design component folders are respected.
-- Named exports only, no default exports (except where Next.js requires a default export, e.g. pages/layouts/route segments).
+- Named exports only, no default exports (except framework entries that require one, e.g. `src/server.ts`; routes export a named `Route`).
 
 ## Code-quality checklist
 

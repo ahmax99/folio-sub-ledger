@@ -32,7 +32,7 @@ resource "aws_cloudfront_origin_access_control" "maintenance" {
 # Cache Policies
 # -----------------------------------------------------------
 
-# Immutable static assets (/_next/static/*)
+# Immutable static assets (/assets/* — Vite's content-hashed bundles)
 resource "aws_cloudfront_cache_policy" "static_immutable" {
   name        = "${var.name_prefix}-static-immutable"
   default_ttl = 86400    # 1 day
@@ -125,7 +125,7 @@ resource "aws_cloudfront_distribution" "this" {
   aliases             = compact([var.domain_name])
 
   # ----------
-  # Origin: S3 static assets (/_next/static/*, /static/*)
+  # Origin: S3 static assets (/assets/*, /static/*)
   # ----------
   origin {
     origin_id                = "s3-static"
@@ -179,11 +179,11 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   # ----------
-  # Behavior 1: /_next/static/* — immutable hashed assets from S3
+  # Behavior 1: /assets/* — immutable hashed assets from S3
   # Priority order: more specific paths first
   # ----------
   ordered_cache_behavior {
-    path_pattern             = "/_next/static/*"
+    path_pattern             = "/assets/*"
     target_origin_id         = var.maintenance_mode ? "maintenance-s3" : "s3-static"
     viewer_protocol_policy   = "redirect-to-https"
     allowed_methods          = ["GET", "HEAD"]
@@ -246,7 +246,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   # ----------
-  # Default behavior: /* — frontend Lambda (Next.js SSR/BFF)
+  # Default behavior: /* — frontend Lambda (TanStack Start SSR/BFF)
   # ----------
   default_cache_behavior {
     target_origin_id         = var.maintenance_mode ? "maintenance-s3" : "frontend-lambda"

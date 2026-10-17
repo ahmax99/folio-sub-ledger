@@ -6,7 +6,7 @@ For provider/module facts (resource arguments, module inputs, latest versions), 
 
 ## Deployment topology
 
-CloudFront in front of an S3 static origin, the Next.js BFF Lambda and the Elysia Lambda Function URL, with Cognito for identity and Neon for data:
+CloudFront in front of an S3 static origin, the TanStack Start BFF Lambda and the Elysia Lambda Function URL, with Cognito for identity and Neon for data:
 
 - [Edge request path](../../docs/diagrams/edge-request-path.html) — DNS through the four CloudFront cache behaviors to each origin, and the SigV4/IAM guard on the Function URL.
 - [MVP topology](../../docs/diagrams/aws-mvp-topology.html) — the same shape plus the image-delivery pipeline and the blue/green alias shift.
@@ -14,7 +14,7 @@ CloudFront in front of an S3 static origin, the Next.js BFF Lambda and the Elysi
 
 Invariants:
 
-- **Application-layer auth.** The Next.js BFF decides which routes require login — don't push Cognito to the edge for the whole site.
+- **Application-layer auth.** The TanStack Start BFF decides which routes require login — don't push Cognito to the edge for the whole site.
 - **Cache-behavior order is a security boundary.** CloudFront takes the first matching pattern, so a broader pattern placed earlier silently bypasses a stricter one below it. `/_next/*` and `/static/*` cache hard; `/api/*` and `/auth/*` must not cache, and must forward auth headers and cookies.
 - **The Function URL is reachable only from CloudFront.** `AWS_IAM` auth plus SigV4 signing at the edge; an unsigned caller gets 403. Never relax it to `NONE`.
 - **Tokens never reach the browser.** HttpOnly cookies only, never `localStorage`; JWT verification happens in the Elysia backend, not at the edge.

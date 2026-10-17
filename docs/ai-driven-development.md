@@ -95,14 +95,14 @@ The full phase-by-phase mapping — which plugin fits where, and what wins on co
 
 The agent isn't guessing how this codebase works — it reads a set of rule files on every task. You generally won't edit these, but it helps to know they exist:
 
-| File                            | What it encodes                                                                                                        |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `CLAUDE.md`                     | Entry point: commands, the hard rules, and imports of the rules below.                                                 |
-| `.claude/rules/architecture.md` | _Where things live_ — the Elysia plugin/controller/service triad, the Next.js BFF boundary, the shared packages.       |
-| `.claude/rules/conventions.md`  | _How to write code here_ — validation at the boundary, the neverthrow `Result` flow, auth/CASL, exports.               |
-| `.claude/rules/principles.md`   | _Why_ — clean-code + _A Philosophy of Software Design_. (Tech-stack docs win on conflict.)                             |
-| `.claude/rules/code-review.md`  | The checklist the reviewers grade against.                                                                             |
-| `.claude/rules/infra.md`        | Terraform conventions — layout, environments-as-config, state safety, and the local gates that mirror the CI pipeline. |
+| File                            | What it encodes                                                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                     | Entry point: commands, the hard rules, and imports of the rules below.                                                  |
+| `.claude/rules/architecture.md` | _Where things live_ — the Elysia plugin/controller/service triad, the TanStack Start BFF boundary, the shared packages. |
+| `.claude/rules/conventions.md`  | _How to write code here_ — validation at the boundary, the neverthrow `Result` flow, auth/CASL, exports.                |
+| `.claude/rules/principles.md`   | _Why_ — clean-code + _A Philosophy of Software Design_. (Tech-stack docs win on conflict.)                              |
+| `.claude/rules/code-review.md`  | The checklist the reviewers grade against.                                                                              |
+| `.claude/rules/infra.md`        | Terraform conventions — layout, environments-as-config, state safety, and the local gates that mirror the CI pipeline.  |
 
 Two safety nets run automatically while you work: edited files are auto-formatted with oxfmt/oxlint, secret-bearing files and destructive shell commands are blocked, and a type-check gates the end of each turn. You don't invoke these — they just run.
 

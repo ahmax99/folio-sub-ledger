@@ -18,8 +18,8 @@ Modern full-stack monorepo boilerplate built with Turborepo, Bun, and TypeScript
 
 ### Frontend
 
-- **[Next.js](https://nextjs.org/)** - React framework with App Router
-- **[React](https://react.dev/)** - UI library with Server Components
+- **[TanStack Start](https://tanstack.com/start)** - Full-stack React framework (TanStack Router, Vite, Nitro SSR)
+- **[React](https://react.dev/)** - UI library
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[shadcn/ui](https://ui.shadcn.com/)** - Re-usable component library
 - **[React Hook Form](https://react-hook-form.com/)** - Form validation
@@ -104,9 +104,9 @@ RESTful API built with Elysia and Bun runtime.
 
 **Tech:** Elysia, Prisma, CASL, AWS SDK
 
-#### `nextjs-boilerplate`
+#### `web`
 
-Modern full-stack Next.js application with authentication and file uploads.
+Full-stack TanStack Start application (BFF in front of the Elysia API) with authentication and file uploads.
 
 **Features:**
 
@@ -116,7 +116,7 @@ Modern full-stack Next.js application with authentication and file uploads.
 - Transactional emails with Resend
 - Error monitoring with Sentry
 
-**Tech:** Next.js 16, React 19, CASL, Tailwind CSS 4, shadcn/ui, React Hook Form, Zod, Zustand
+**Tech:** TanStack Start 1, Vite 8, React 19, CASL, Tailwind CSS 4, shadcn/ui, React Hook Form, Zod, Zustand
 
 ### Shared Packages (`shared/`)
 
@@ -207,7 +207,7 @@ Type checking, oxc formatting/linting, package-version syncing and update checks
 Each package requiring environment variables includes an `.env.example` file:
 
 - **`shared/neon`** - Requires `DATABASE_URL` for Neon PostgreSQL
-- **`apps/backend-boilerplate`** and **`apps/nextjs-boilerplate`** - See app-specific `.env.example` for full configuration
+- **`apps/backend-boilerplate`** and **`apps/web`** - See app-specific `.env.example` for full configuration
 
 Copy `.env.example` to `.env` in each package and fill in your credentials.
 

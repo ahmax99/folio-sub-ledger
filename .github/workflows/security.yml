@@ -95,7 +95,7 @@ jobs:
       matrix:
         dockerfile:
           - apps/backend-boilerplate/Dockerfile
-          - apps/nextjs-boilerplate/Dockerfile
+          - apps/web/Dockerfile
 
     steps:
       - name: Checkout

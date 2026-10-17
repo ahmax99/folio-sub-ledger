@@ -68,7 +68,7 @@ Use this template:
 ## Affected Areas
 
 - [ ] `apps/backend-boilerplate` (which module/triad)
-- [ ] `apps/nextjs-boilerplate` (which feature/route)
+- [ ] `apps/web` (which feature/route)
 - [ ] `shared/config` (which schema)
 - [ ] `shared/neon` (schema/migration)
 

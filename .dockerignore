@@ -20,13 +20,14 @@ coverage
 .vercel
 
 # Build outputs
-.next/
+.output/
+.nitro/
+.tanstack/
 out/
 build
 dist
 storybook-static
 tsconfig.tsbuildinfo
-next-env.d.ts
 
 # Debug
 npm-debug.log*
