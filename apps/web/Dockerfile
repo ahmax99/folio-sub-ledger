@@ -4,6 +4,10 @@ ARG NODE_VERSION=24
 # -------------------
 FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION} AS bun-base
 
+# Outside /root, which the Lambda runtime user cannot read
+ENV BUN_INSTALL="/usr/local/bun"
+ENV PATH="$BUN_INSTALL/bin:$PATH"
+
 # Install unzip (required by Bun installer) and Bun runtime, clean up in same layer
 COPY .bun-version /tmp/.bun-version
 ADD --chmod=755 https://bun.sh/install /tmp/bun-install.sh
@@ -12,8 +16,6 @@ RUN dnf install -y unzip && \
     rm /tmp/bun-install.sh /tmp/.bun-version && \
     dnf clean all && \
     rm -rf /var/cache/dnf/*
-ENV BUN_INSTALL="/root/.bun"
-ENV PATH="$BUN_INSTALL/bin:$PATH"
 
 WORKDIR /app
 
