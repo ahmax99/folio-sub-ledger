@@ -22,7 +22,6 @@ export default defineConfig({
     tanstackStart({ srcDirectory: 'src' }),
     viteReact(),
     babel({ presets: [reactCompilerPreset()] }),
-    // Default (node) preset: the Lambda Web Adapter fronts `node .output/server/index.mjs`.
     nitro({ routeRules: { '/**': { headers: SECURITY_HEADERS } } })
   ]
 })
