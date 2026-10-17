@@ -51,7 +51,7 @@ Capture each exit code and stdout/stderr.
 
 ## Phase 2 — Spawn reviewers (parallel Task batch)
 
-In a single message with three parallel Task tool calls, invoke:
+In a single message with parallel Task tool calls, invoke:
 
 1. `subagent_type: "security-reviewer"` — prompt:
 
@@ -70,6 +70,8 @@ In a single message with three parallel Task tool calls, invoke:
 4. `subagent_type: "infra-reviewer"` — same prompt shape, **only if the Phase 1 diff list contains `infra/**` files**. Include it in the same parallel batch.
 
 5. `subagent_type: "cicd-reviewer"` — same prompt shape, **only if the Phase 1 diff list contains `.github/**` files**. Include it in the same parallel batch.
+
+6. `subagent_type: "ai-eval-engineer"` — same prompt shape plus a first line `MODE=review`, **only if the Phase 1 diff list contains AI files — `evals/**`, or any path matching `(?i)(prompt|bedrock|llm|classif|proposal|precedent|embedding|opensearch|model-tier|token-budget)`**. Include it in the same parallel batch.
 
 Do not pass code excerpts — the subagents read the diff themselves.
 
@@ -99,6 +101,7 @@ Merge the three returned reports into one unified report. **Scores are copied ve
 - Code quality: X/5  (correctness-reviewer)
 - Infrastructure: X/5  (infra-reviewer — omit when the diff has no infra/** files)
 - CI/CD: X/5  (cicd-reviewer — omit when the diff has no .github/** files)
+- AI quality: X/5  (ai-eval-engineer — omit when the diff has no AI files)
 
 ### Issues (file-ordered, severity inline)
 
