@@ -4,7 +4,6 @@ ARG NODE_VERSION=24
 # -------------------
 FROM public.ecr.aws/lambda/nodejs:${NODE_VERSION} AS bun-base
 
-# Outside /root, which the Lambda runtime user cannot read
 ENV BUN_INSTALL="/usr/local/bun"
 ENV PATH="$BUN_INSTALL/bin:$PATH"
 
