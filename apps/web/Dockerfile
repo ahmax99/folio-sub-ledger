@@ -83,4 +83,4 @@ WORKDIR /app/apps/web
 
 # Override ENTRYPOINT for AWS Lambda base image; the Lambda Web Adapter proxies to this server on $PORT
 ENTRYPOINT []
-CMD ["bun", ".output/server/index.mjs"]
+CMD ["bun", "--no-install", ".output/server/index.mjs"]
