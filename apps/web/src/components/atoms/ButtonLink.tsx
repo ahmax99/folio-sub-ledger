@@ -11,13 +11,6 @@ import { LoadingSwap } from '../molecules/LoadingSwap'
 import { Button } from './Button'
 import type { buttonVariants } from './Button.variants'
 
-type ButtonLinkProps = Omit<LinkComponentProps, 'children'> &
-  VariantProps<typeof buttonVariants> & {
-    children?: React.ReactNode
-    disabled?: boolean
-    isLoading?: boolean
-  }
-
 function ButtonLink({
   variant = 'default',
   size = 'default',
@@ -26,7 +19,12 @@ function ButtonLink({
   isLoading = false,
   children,
   ...props
-}: ButtonLinkProps) {
+}: Omit<LinkComponentProps, 'children'> &
+  VariantProps<typeof buttonVariants> & {
+    children?: React.ReactNode
+    disabled?: boolean
+    isLoading?: boolean
+  }) {
   return (
     <Button
       aria-disabled={disabled ?? isLoading}

@@ -20,7 +20,6 @@ cleanup() {
 trap cleanup EXIT
 
 docker create --name "$CONTAINER_NAME" "$IMAGE_URI"
-# Nitro's public dir holds Vite's hashed bundles under assets/ plus the app's public/ files at the root
 docker cp "$CONTAINER_NAME":/app/apps/web/.output/public web-public
 
 echo "⬆️  Uploading /assets/* (immutable hashed assets)..."

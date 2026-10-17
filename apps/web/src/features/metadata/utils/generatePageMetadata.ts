@@ -5,7 +5,6 @@ interface GeneratePageMetadataProps {
   description?: string
 }
 
-// Returns a route `head()` value; child routes' tags override the root's by name/property.
 export const generatePageMetadata = ({
   title,
   description = SITE_DESCRIPTION

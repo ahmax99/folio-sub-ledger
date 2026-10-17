@@ -5,7 +5,6 @@ import { env } from '@/config/env'
 
 const isDevelopment = env.NODE_ENV === 'development'
 
-// pino-pretty as an in-process stream, not a worker transport: transports resolve their target at runtime, which breaks once Vite/Nitro bundle the server.
 const devStream = isDevelopment
   ? pretty({
       colorize: true,

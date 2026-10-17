@@ -10,7 +10,6 @@ import {
 import { PKCE_CONFIG, SESSION_CONFIG } from '../../constants/session'
 import type { PKCEData, SessionData } from '../../schemas/auth.schema'
 
-// Reads the incoming request's cookies and queues Set-Cookie on the current response.
 const requestCookieJar: CookieJar = {
   read: (name) => getCookie(name),
   write: (name, value, options) =>

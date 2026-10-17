@@ -30,7 +30,6 @@ export const AbilityProvider = ({
     params.delete('error')
     const query = params.size ? `?${params}` : ''
 
-    // Same-page cleanup of the consumed ?error param, not a navigation.
     router.history.replace(`${pathname}${query}`)
   }, [error, pathname, router, searchStr])
 

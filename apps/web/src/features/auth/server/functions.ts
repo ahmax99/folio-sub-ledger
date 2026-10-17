@@ -6,7 +6,6 @@ import { getMe } from './api'
 import { handleLogout } from './services/auth'
 import { getSessionData } from './services/session'
 
-// Signed-out visitors and an unreachable backend both resolve to null, so public pages still render.
 export const fetchOptionalUser = createServerFn().handler(async () => {
   const session = await getSessionData()
   if (!session.refreshToken) return null
@@ -14,7 +13,6 @@ export const fetchOptionalUser = createServerFn().handler(async () => {
   return (await catchAsyncError(getMe())).unwrapOr(null)
 })
 
-// null means signed out (the caller redirects to login); a backend failure propagates to the error boundary.
 export const fetchRequiredUser = createServerFn().handler(async () => {
   const session = await getSessionData()
   if (!session.refreshToken) return null

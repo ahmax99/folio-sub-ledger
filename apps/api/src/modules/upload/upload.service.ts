@@ -8,7 +8,6 @@ import { s3Client } from '@/lib/s3.js'
 import { sanitizeFilename } from '@/utils/sanitizeFilename.js'
 
 export const UploadService = {
-  // Callers decide `allowed` from the ability, since what an upload is for (a post, a profile) differs per route.
   getPresignedUrl: (
     folder: string,
     request: Request,
