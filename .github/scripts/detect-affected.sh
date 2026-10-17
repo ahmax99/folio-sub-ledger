@@ -6,8 +6,8 @@ if [[ -z "${GITHUB_OUTPUT:-}" ]]; then
   exit 1
 fi
 
-BACKEND_PACKAGE="backend-boilerplate"
-FRONTEND_PACKAGE="nextjs-boilerplate"
+BACKEND_PACKAGE="api"
+FRONTEND_PACKAGE="web"
 
 deploy_both() {
   echo "backend=true" >> "$GITHUB_OUTPUT"

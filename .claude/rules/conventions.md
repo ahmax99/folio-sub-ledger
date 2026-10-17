@@ -6,7 +6,7 @@ description: Code conventions, patterns, and style requirements
 
 The concrete "how to write code here" rules. `architecture.md` covers _where things live_; `principles.md` covers _why_. `oxfmt` owns pure style (single quotes, no semicolons, 2-space, 80 cols, no trailing commas) — these are the conventions it can't enforce.
 
-- The backend uses ESM with explicit `.js` import extensions (`import { x } from './foo.js'`) even though sources are `.ts` — match this in `apps/backend-boilerplate`.
+- The backend uses ESM with explicit `.js` import extensions (`import { x } from './foo.js'`) even though sources are `.ts` — match this in `apps/api`.
 - Prefer the neverthrow `Result` pattern in backend services over throwing across layers; only throw `AppError` inside the `catchAsyncError`-wrapped body.
 - Put shared types/schemas in `@shared/config` so both apps stay in sync.
 
@@ -31,24 +31,24 @@ The auth/authorization mechanics (Cognito JWT via `authPlugin`, `getUserPermissi
 
 ## Exports
 
-Always use named exports, never default exports — except where Next.js requires a default export (pages, layouts, route segments, middleware).
+Always use named exports, never default exports — except where a framework entry requires one (`src/server.ts`, `vite.config.ts`). TanStack routes export a named `Route`.
 
-## Frontend Components (nextjs-boilerplate)
+## Frontend Components (web)
 
 - Use CVA (`class-variance-authority`) for variant systems in atoms and organisms; co-export `<Name>Variants` alongside the component for consumers that need raw class strings.
 - Mark each component's root element with `data-slot="<component-name>"` (e.g. `data-slot="button"`) to enable parent styling via attribute selectors.
 - Compose subcomponents (e.g. `Card`, `CardHeader`, `CardContent`) as separate named exports from a single file — not separate files.
-- Atoms and molecules carry no `'use client'` directive by default; add it only when event handlers, hooks, or browser APIs are genuinely required.
-- Feature-specific components go in `features/<name>/client/components/` (client) or `features/<name>/server/components/` (server); never in `src/components/`.
-- Server components (`features/<name>/server/components/`) must have no `'use client'`, no React hooks, and no browser APIs.
+- Every component is isomorphic (SSR then hydrated). `'use client'` is a no-op under TanStack Start; existing ones are kept as a readability marker for interactive components, but don't rely on it for any boundary.
+- Feature-specific components go in `features/<name>/client/components/` (interactive) or `features/<name>/components/` (presentational, fed by loader data); never in `src/components/`.
+- Presentational components (`features/<name>/components/`) have no React hooks, no browser APIs, and no server-only imports (`env`, `serverApiClient`, services).
 
-## Rendering (nextjs-boilerplate)
+## Rendering and data (web)
 
-Cache Components is enabled (`cacheComponents: true` in `next.config.ts`). It replaces the old route-segment config for controlling rendering.
-
-- **Never use `export const dynamic = 'force-dynamic'`** (nor the sibling segment configs `revalidate`, `fetchCache`, `dynamicParams` used for the same purpose). Under Cache Components these are the wrong tool — dynamic-ness is driven by _accessing request data_, not by a segment flag.
-- To opt a Server Component into dynamic rendering, access request data at the top of the component **before** any non-deterministic call: `await connection()`, `cookies()`, `headers()`, or `await params` / `searchParams`. This access must precede any `Date.now()`, `Math.random()`, or uncached `fetch()` in that render, or the production build fails to prerender (`used Date.now() before accessing … Request data`). See `app/(public)/(main)/posts/page.tsx` calling `await connection()` before `fetchAllPosts()`.
-- Wrap genuinely cacheable work in `'use cache'` rather than forcing the whole route dynamic.
+- Page data comes from a route `loader` that calls a server function (`createServerFn` in `features/<name>/server/functions.ts`), never from fetching inside a component. Validate server-function input with `.validator(<Zod schema>)` — it is an external boundary like any route.
+- Session-dependent context (the current `user`) is resolved once in the layout route's `beforeLoad` (`_main`, `_authorized`) and read with `Route.useRouteContext()`.
+- After a mutation, refresh loader data with `router.invalidate()`; navigate with `useNavigate()` / `<Link to>` (typed routes), never `window.location` except for off-site or full-document redirects (`reloadDocument` on links to `/api/auth/*`).
+- Server routes return `Response` objects; for redirects use `redirectResponse()` from `lib/redirectResponse.ts`, not `Response.redirect()` (its immutable headers drop the session's `Set-Cookie`).
+- Search params a page depends on are declared with `validateSearch` on its route.
 
 ## Error Handling
 

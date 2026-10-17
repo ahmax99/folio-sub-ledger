@@ -1,0 +1,23 @@
+:root {
+  --font-sans: 'Geist Variable', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'Geist Mono Variable', monospace;
+}
+
+.dark {
+  --font-sans: 'Geist Variable', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'Geist Mono Variable', monospace;
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}

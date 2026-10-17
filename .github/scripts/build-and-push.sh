@@ -8,7 +8,7 @@ set -euo pipefail
 echo "==> Building backend image..."
 docker build --platform linux/amd64 \
   -t "${ECR_BACKEND_URL}:latest" \
-  -f apps/backend-boilerplate/Dockerfile \
+  -f apps/api/Dockerfile \
   --build-arg DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder?schema=public" \
   .
 
@@ -19,7 +19,7 @@ echo "Backend pushed: ${ECR_BACKEND_URL}:latest"
 echo "==> Building frontend image..."
 docker build --platform linux/amd64 \
   -t "${ECR_FRONTEND_URL}:latest" \
-  -f apps/nextjs-boilerplate/Dockerfile \
+  -f apps/web/Dockerfile \
   .
 
 echo "==> Pushing frontend image..."

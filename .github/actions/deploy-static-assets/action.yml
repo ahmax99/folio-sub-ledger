@@ -1,5 +1,5 @@
 name: 'Deploy Static Assets to S3 + Invalidate CloudFront'
-description: 'Extracts Next.js static assets from Docker image, syncs to S3, and invalidates CloudFront cache'
+description: 'Extracts the web app static assets from the Docker image, syncs to S3, and invalidates CloudFront cache'
 
 inputs:
   image-uri:

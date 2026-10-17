@@ -31,7 +31,7 @@ jobs:
           filters: |
             neon:
               - 'shared/neon/**'
-              - 'apps/backend-boilerplate/**'
+              - 'apps/api/**'
               - '.github/workflows/neon-workflow.yml'
 
   setup:

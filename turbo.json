@@ -6,7 +6,9 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "!.next/**",
+        "!.output/**",
+        "!.nitro/**",
+        "!.tanstack/**",
         "!dist/**",
         "!build/**",
         "!out/**",
@@ -14,7 +16,7 @@
         "!.env.*",
         "!**/.turbo/**"
       ],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "outputs": [".output/**", "dist/**"],
       "env": ["DATABASE_URL"],
       "cache": true
     },

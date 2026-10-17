@@ -12,20 +12,21 @@ Foundation config for all packages. Key settings:
 | -------------------------------- | --------- | -------------------------------------------------------------- |
 | `target` / `lib`                 | `ES2022`  | Matches Bun's runtime capabilities.                            |
 | `module`                         | `ESNext`  | ESM output; pairs with `moduleResolution: bundler`.            |
-| `moduleResolution`               | `bundler` | Resolves bare specifiers the way Bun and Next.js do.           |
+| `moduleResolution`               | `bundler` | Resolves bare specifiers the way Bun and Vite do.              |
 | `strict`                         | `true`    | Catches nullability, implicit `any`, and other common bugs.    |
 | `noUncheckedIndexedAccess`       | `true`    | Array/object index accesses return `T \| undefined`, not `T`.  |
 | `isolatedModules`                | `true`    | Required for single-file transpilation (Bun, esbuild, SWC).    |
 | `declaration` + `declarationMap` | `true`    | Emits `.d.ts` + source maps for cross-package type navigation. |
 | `incremental`                    | `false`   | Disabled — Turborepo manages caching at a higher level.        |
 
-### `nextjs.json`
+### `react-app.json`
 
-Extends `base.json` with Next.js-specific settings:
+Extends `base.json` for the Vite-built React app (TanStack Start):
 
-- `jsx: "preserve"` — Next.js transforms JSX itself via SWC.
-- `allowJs: true` — Next.js config files (`.js`) live alongside TypeScript sources.
-- `noEmit: true` — `tsc` is type-check only; Next.js handles the actual build.
+- `jsx: "react-jsx"` — the automatic JSX runtime Vite compiles to.
+- `allowJs: true` — JS config files live alongside TypeScript sources.
+- `noEmit: true`, `declaration: false` — `tsc` is type-check only; Vite handles the actual build.
+- `types: ["vite/client"]` — `import.meta.env` and `?url` asset imports.
 
 ## Usage
 
@@ -45,17 +46,16 @@ Extend the right config in your package's `tsconfig.json`:
 }
 ```
 
-**Next.js app** (`nextjs.json`):
+**TanStack Start app** (`react-app.json`):
 
 ```json
 {
-  "extends": "@shared/typescript-config/nextjs.json",
+  "extends": "@shared/typescript-config/react-app.json",
   "compilerOptions": {
-    "paths": { "@/*": ["./src/*"] },
-    "plugins": [{ "name": "next" }]
+    "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts"],
-  "exclude": ["node_modules", ".next"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", ".output", ".nitro", ".tanstack"]
 }
 ```
 

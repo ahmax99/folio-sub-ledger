@@ -114,7 +114,7 @@ worktree list` for a path already associated with this issue (e.g. one
   Immediately after the worktree exists and before any `/spec`/`/plan`/
   `/implement` step runs in it, copy this repo's three gitignored per-app env
   files from the main worktree into the same relative paths in the new
-  worktree: `apps/backend-boilerplate/.env`, `apps/nextjs-boilerplate/.env`,
+  worktree: `apps/api/.env`, `apps/web/.env`,
   `shared/neon/.env`. A worktree only contains tracked files, so these
   gitignored files are otherwise absent — and `/implement`'s gates (`bun run
 check-types`, the dev server) need them. This is a filesystem copy into an

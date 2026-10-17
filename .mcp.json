@@ -8,10 +8,6 @@
         "PATH": "${HOME}/.local/bin:${PATH}"
       }
     },
-    "next-devtools": {
-      "command": "bunx",
-      "args": ["-y", "next-devtools-mcp@latest"]
-    },
     "terraform": {
       "command": "docker",
       "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]

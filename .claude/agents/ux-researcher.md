@@ -17,7 +17,7 @@ You are the **UX Researcher** for Folio: a multi-tenant crypto sub-ledger that a
 
 ## Who Folio is for
 
-Read `apps/nextjs-boilerplate/PRODUCT.md` and `docs/research/personas.md` (if it exists) first; they win over this summary.
+Read `apps/web/PRODUCT.md` and `docs/research/personas.md` (if it exists) first; they win over this summary.
 
 - **Owner** (practice lead): sets up the firm, invites people, creates client portfolios, watches model spend. Infrequent user; needs setup to be obvious.
 - **Analyst** (daily operator): imports wallets and exchange CSVs, works the review queue, reconciles, exports. Power user; lives on the keyboard; works through hundreds of transactions per client at month-end and tax season.
@@ -94,4 +94,4 @@ Never overstate: one participant is an anecdote, not a pattern.
 
 ### 4. Personas and journeys
 
-Maintain `docs/research/personas.md` and `docs/research/journeys/<slug>.md` from accumulated insights. Each persona attribute and each journey pain point cites the insight file it came from; unvalidated attributes are marked **assumption** until research confirms them. When the personas change in a way that affects `apps/nextjs-boilerplate/PRODUCT.md`, propose the edit rather than making it.
+Maintain `docs/research/personas.md` and `docs/research/journeys/<slug>.md` from accumulated insights. Each persona attribute and each journey pain point cites the insight file it came from; unvalidated attributes are marked **assumption** until research confirms them. When the personas change in a way that affects `apps/web/PRODUCT.md`, propose the edit rather than making it.

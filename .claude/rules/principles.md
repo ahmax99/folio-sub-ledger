@@ -6,7 +6,7 @@ description: Engineering principles — clean code + A Philosophy of Software De
 
 These are the non-negotiable design principles for this repo, drawn from _clean code_ and John Ousterhout's _A Philosophy of Software Design_. They guide every implementation and every review.
 
-> **Precedence rule:** if an official tech-stack doc (Elysia, Next.js, Prisma, Zod, CASL, oxlint/oxfmt) recommends something that conflicts with a principle here, **follow the tech-stack doc** and note the deviation. These principles lose to framework idioms, not the other way around. They also lose to `.claude/rules/architecture.md` and `conventions.md`, which describe what this codebase actually does.
+> **Precedence rule:** if an official tech-stack doc (Elysia, TanStack Start, Prisma, Zod, CASL, oxlint/oxfmt) recommends something that conflicts with a principle here, **follow the tech-stack doc** and note the deviation. These principles lose to framework idioms, not the other way around. They also lose to `.claude/rules/architecture.md` and `conventions.md`, which describe what this codebase actually does.
 
 ## Complexity is the enemy
 
