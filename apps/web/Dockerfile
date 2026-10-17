@@ -56,7 +56,7 @@ COPY --from=prepare /app/out/json/ .
 RUN bun install
 # Copy source code
 COPY --from=prepare /app/out/full/ .
-# Build the TanStack Start app (Nitro node-server output in .output/)
+# Build the TanStack Start app (Nitro bun-preset output in .output/)
 RUN bunx --bun turbo build --filter=web
 
 # -------------------
@@ -82,4 +82,4 @@ WORKDIR /app/apps/web
 
 # Override ENTRYPOINT for AWS Lambda base image; the Lambda Web Adapter proxies to this server on $PORT
 ENTRYPOINT []
-CMD ["node", ".output/server/index.mjs"]
+CMD ["bun", ".output/server/index.mjs"]

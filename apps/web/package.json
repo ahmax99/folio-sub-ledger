@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "NODE_ENV=production vite build",
+    "build": "NODE_ENV=production bun --bun vite build",
     "check-types": "tsc --noEmit",
     "dev": "vite dev",
-    "start": "node .output/server/index.mjs",
+    "start": "bun .output/server/index.mjs",
     "doctor": "bunx react-doctor@latest"
   },
   "dependencies": {

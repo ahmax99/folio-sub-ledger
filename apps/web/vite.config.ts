@@ -22,6 +22,9 @@ export default defineConfig({
     tanstackStart({ srcDirectory: 'src' }),
     viteReact(),
     babel({ presets: [reactCompilerPreset()] }),
-    nitro({ routeRules: { '/**': { headers: SECURITY_HEADERS } } })
+    nitro({
+      preset: 'bun',
+      routeRules: { '/**': { headers: SECURITY_HEADERS } }
+    })
   ]
 })
