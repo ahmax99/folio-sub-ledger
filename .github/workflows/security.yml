@@ -139,7 +139,10 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Security audit
-        run: bun audit --audit-level=high
+        # GHSA-vfj7-8cjw-p6xm (braces <=3.0.3): no patched release exists. Reached only via
+        # shadcn's CLI (fast-glob > micromatch > braces) with developer-authored glob patterns,
+        # never untrusted input. Drop the ignore once braces ships a fix.
+        run: bun audit --audit-level=high --ignore=GHSA-vfj7-8cjw-p6xm
 
   sbom-check:
     name: SBOM & Vulnerability Check
