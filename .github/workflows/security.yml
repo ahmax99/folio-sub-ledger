@@ -94,7 +94,7 @@ jobs:
     strategy:
       matrix:
         dockerfile:
-          - apps/backend-boilerplate/Dockerfile
+          - apps/api/Dockerfile
           - apps/web/Dockerfile
 
     steps:

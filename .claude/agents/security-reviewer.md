@@ -25,7 +25,7 @@ Your invocation prompt will include:
 
 ## Checklist
 
-**Backend (`apps/backend-boilerplate`):**
+**Backend (`apps/api`):**
 
 - **Authentication:** every route that requires a session declares the `auth: true` macro (provided by `authPlugin`). The plugin verifies the Cognito JWT (`jose`) from the `Authorization: Bearer` header, falling back to `X-Id-Token`. A mutating or user-scoped route without `auth: true` is a finding.
 - **Authorization (CASL):** the resolved `ability` is actually enforced — `accessibleBy(ability).ofType('<Model>')` in list `where` clauses, and `ability.can('<action>', subject('<Model>', record))` before single-resource reads/mutations. A route that authenticates but never consults the ability is broken authorization.

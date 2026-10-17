@@ -21,7 +21,7 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 
 ## Correctness checklist
 
-**Backend (`apps/backend-boilerplate`):**
+**Backend (`apps/api`):**
 
 - Service methods wrap their async work in `catchAsyncError(...)` and return `ResultAsync<T, AppError>` — they never `throw` to the caller. Failures inside the wrapped body are signalled with `throw new AppError('NOT_FOUND' | 'FORBIDDEN' | ..., msg)` using codes from `@shared/config` (`errorDefinition`).
 - Controllers wrap every service call in `handleApiError(...)` so the mounted `errorHandler` plugin can convert the `AppError` to an HTTP response. No raw `try/catch` in controllers, no internal stack traces leaked.

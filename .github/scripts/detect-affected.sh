@@ -6,7 +6,7 @@ if [[ -z "${GITHUB_OUTPUT:-}" ]]; then
   exit 1
 fi
 
-BACKEND_PACKAGE="backend-boilerplate"
+BACKEND_PACKAGE="api"
 FRONTEND_PACKAGE="web"
 
 deploy_both() {

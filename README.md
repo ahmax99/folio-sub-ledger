@@ -90,7 +90,7 @@ the code changes.
 
 ### Apps (`apps/`)
 
-#### `backend-boilerplate`
+#### `api`
 
 RESTful API built with Elysia and Bun runtime.
 
@@ -181,7 +181,7 @@ bun run dev
 Start a specific app:
 
 ```bash
-turbo dev --filter=backend-boilerplate
+turbo dev --filter=api
 ```
 
 ### Build
@@ -207,7 +207,7 @@ Type checking, oxc formatting/linting, package-version syncing and update checks
 Each package requiring environment variables includes an `.env.example` file:
 
 - **`shared/neon`** - Requires `DATABASE_URL` for Neon PostgreSQL
-- **`apps/backend-boilerplate`** and **`apps/web`** - See app-specific `.env.example` for full configuration
+- **`apps/api`** and **`apps/web`** - See app-specific `.env.example` for full configuration
 
 Copy `.env.example` to `.env` in each package and fill in your credentials.
 

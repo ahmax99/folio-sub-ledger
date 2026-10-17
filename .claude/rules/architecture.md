@@ -4,7 +4,7 @@
 
 Turborepo monorepo on **Bun** (package manager + runtime). Two apps and shared packages:
 
-- `apps/backend-boilerplate` — Elysia REST API (Bun runtime), deployed as a Lambda container.
+- `apps/api` — Elysia REST API (Bun runtime), deployed as a Lambda container.
 - `apps/web` — TanStack Start v1 / React 19 app (Vite + Nitro) that acts as a **BFF** (Backend-for-Frontend) in front of the Elysia API.
 - `shared/config` — Zod schemas (`*.model.ts`), shared error definitions. Published as `@shared/config`.
 - `shared/neon` — Prisma client for Neon serverless Postgres. Published as `@shared/neon`.
@@ -12,7 +12,7 @@ Turborepo monorepo on **Bun** (package manager + runtime). Two apps and shared p
 
 Workspaces are `apps/*` and `shared/*`. Cross-package deps use `workspace:*`.
 
-## Backend (`apps/backend-boilerplate`)
+## Backend (`apps/api`)
 
 Elysia app composed from plugins. Entry is `src/index.ts`: load secrets → mount logger/helmet/cors → `.use(routes)`.
 
@@ -78,19 +78,19 @@ Four invariants hold that design together. Each exists because the alternative b
 
 Where each concern lives:
 
-| Concern                           | File                                                       |
-| --------------------------------- | ---------------------------------------------------------- |
-| Session/PKCE schemas              | `features/auth/schemas/auth.schema.ts`                     |
-| Cookie & iron-session config      | `features/auth/constants/{cookie,session}.ts`              |
-| Session cookie accessors          | `features/auth/server/services/session.ts`                 |
-| Login / callback / logout logic   | `features/auth/server/services/auth.ts`                    |
-| Refresh-token → ID-token exchange | `features/auth/server/services/token.ts`                   |
-| PKCE generators                   | `features/auth/utils/pkce.ts`                              |
-| Route handlers                    | `routes/api/auth/{login,callback,logout}.ts`               |
-| BFF → backend clients             | `lib/serverApiClient.ts`                                   |
-| Edge route guard                  | `features/auth/server/middleware/routeGuard.ts`            |
-| Backend JWT verification          | `apps/backend-boilerplate/src/modules/auth/auth.plugin.ts` |
-| CASL permissions                  | `modules/auth/permission.ts` (both apps)                   |
+| Concern                           | File                                            |
+| --------------------------------- | ----------------------------------------------- |
+| Session/PKCE schemas              | `features/auth/schemas/auth.schema.ts`          |
+| Cookie & iron-session config      | `features/auth/constants/{cookie,session}.ts`   |
+| Session cookie accessors          | `features/auth/server/services/session.ts`      |
+| Login / callback / logout logic   | `features/auth/server/services/auth.ts`         |
+| Refresh-token → ID-token exchange | `features/auth/server/services/token.ts`        |
+| PKCE generators                   | `features/auth/utils/pkce.ts`                   |
+| Route handlers                    | `routes/api/auth/{login,callback,logout}.ts`    |
+| BFF → backend clients             | `lib/serverApiClient.ts`                        |
+| Edge route guard                  | `features/auth/server/middleware/routeGuard.ts` |
+| Backend JWT verification          | `apps/api/src/modules/auth/auth.plugin.ts`      |
+| CASL permissions                  | `modules/auth/permission.ts` (both apps)        |
 
 Authorization mirrors the backend with CASL (`@casl/react`, `src/lib/casl.ts`, `PermissionProvider`).
 

@@ -43,7 +43,7 @@ COPY apps/ ./apps/
 COPY shared/ ./shared/
 
 # Prune to target workspace (creates /app/out/json and /app/out/full)
-RUN bunx --bun turbo prune backend-boilerplate --docker
+RUN bunx --bun turbo prune api --docker
 
 # -------------------
 # Builder stage
@@ -60,7 +60,7 @@ RUN bun install
 # Copy source code
 COPY --from=prepare /app/out/full/ .
 # Build the project
-RUN bunx --bun turbo build --filter=backend-boilerplate
+RUN bunx --bun turbo build --filter=api
 
 # -------------------
 # Production dependencies stage
@@ -87,9 +87,9 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/package.json ./package.json
 
 # Copy built application
-COPY --from=builder /app/apps/backend-boilerplate/dist ./apps/backend-boilerplate/dist
-COPY --from=builder /app/apps/backend-boilerplate/package.json ./apps/backend-boilerplate/package.json
-COPY --from=prod-deps /app/apps/backend-boilerplate/node_modules ./apps/backend-boilerplate/node_modules
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
 
 # Copy workspace packages (config, neon) with their dependencies
 COPY --from=builder /app/shared/config/dist ./shared/config/dist
@@ -109,7 +109,7 @@ ENV NODE_ENV=production
 RUN chown -R 1000:1000 /app
 USER 1000
 
-WORKDIR /app/apps/backend-boilerplate
+WORKDIR /app/apps/api
 
 # Override ENTRYPOINT for AWS Lambda base image and run with Bun
 ENTRYPOINT []

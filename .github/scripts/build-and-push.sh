@@ -8,7 +8,7 @@ set -euo pipefail
 echo "==> Building backend image..."
 docker build --platform linux/amd64 \
   -t "${ECR_BACKEND_URL}:latest" \
-  -f apps/backend-boilerplate/Dockerfile \
+  -f apps/api/Dockerfile \
   --build-arg DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder?schema=public" \
   .
 

@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Full script list is in each `package.json`. Run from the repo root unless noted. Turbo respects the task graph (`dependsOn`), so building an app builds its `@shared/*` deps first. Non-obvious ones:
 
 ```bash
-turbo dev --filter=backend-boilerplate   # run one app (swap for web)
+turbo dev --filter=api   # run one app (swap for web)
 turbo build --filter=@shared/neon        # build one package
 bun run check-types                      # tsc --noEmit across all packages
 bun run check-format                     # oxlint + oxfmt --check (lint + format, no writes)

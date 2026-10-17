@@ -33,7 +33,7 @@ For each schema change, evaluate:
 **Application compatibility:**
 
 - [ ] Is the Prisma client regenerated? (`turbo db:generate --filter=@shared/neon`, which is also neon's `prebuild`)
-- [ ] Are the affected `*.service.ts` methods updated to match the schema change? (services in `apps/backend-boilerplate/src/modules/*` query `prisma` directly)
+- [ ] Are the affected `*.service.ts` methods updated to match the schema change? (services in `apps/api/src/modules/*` query `prisma` directly)
 - [ ] Are the `@shared/config` Zod models updated for new/changed fields so both apps stay in sync?
 - [ ] Does any code still reference removed columns?
 
