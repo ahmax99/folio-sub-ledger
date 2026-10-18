@@ -29,7 +29,7 @@
     "jose": "^6.2.12",
     "neverthrow": "^8.2.0",
     "pino": "^10.4.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@shared/typescript-config": "workspace:*",
