@@ -10,7 +10,7 @@ import { UserInfo } from '@/features/account/components/UserInfo'
 import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 
-export interface AccountSearch {
+interface AccountSearch {
   tab?: AccountTab
 }
 
