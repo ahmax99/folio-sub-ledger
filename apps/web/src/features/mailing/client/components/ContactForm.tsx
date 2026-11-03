@@ -1,25 +1,29 @@
 'use client'
 
+import {
+  type getFormData,
+  mergeForm,
+  useTransform
+} from '@tanstack/react-form-start'
+
 import { useAppForm } from '@/lib/form'
 
-import {
-  ContactFormModel,
-  type ContactFormSchema
-} from '../../schemas/contactForm.schema'
+import { contactFormOptions } from '../../schemas/contactForm.schema'
+import { submitContactForm } from '../../server/api/sendContactEmail'
 import { useSendContact } from '../hooks/useSendContact'
 
-const defaultValues: ContactFormSchema = {
-  name: '',
-  email: '',
-  subject: '',
-  message: ''
+interface ContactFormProps {
+  serverState: Awaited<ReturnType<typeof getFormData>>
 }
 
-export const ContactForm = () => {
+export const ContactForm = ({ serverState }: Readonly<ContactFormProps>) => {
   const sendContact = useSendContact()
   const form = useAppForm({
-    defaultValues,
-    validators: { onChange: ContactFormModel.contact },
+    ...contactFormOptions,
+    transform: useTransform(
+      (baseForm) => mergeForm(baseForm, serverState),
+      [serverState]
+    ),
     onSubmit: async ({ value }) => {
       await sendContact.mutateAsync(value)
     }
@@ -27,7 +31,11 @@ export const ContactForm = () => {
 
   return (
     <form.AppForm>
-      <form.FormCard description="Get in touch with us" title="Contact Us">
+      <form.FormCard
+        action={submitContactForm.url}
+        description="Get in touch with us"
+        title="Contact Us"
+      >
         <form.AppField name="name">
           {(field) => <field.Input label="Name" placeholder="Your full name" />}
         </form.AppField>

@@ -1,3 +1,6 @@
+import { useStore } from '@tanstack/react-form'
+import { useEffect, useRef } from 'react'
+
 import { useFieldContext } from '@/lib/formContext'
 
 import { Input } from '../atoms/Input'
@@ -23,14 +26,34 @@ type ControlProps<T extends React.ElementType> = Omit<
   'id' | 'name' | 'value' | 'onChange' | 'onBlur' | 'aria-invalid'
 > & { label: string }
 
-const useFieldInvalid = () => {
+type ServerErrorMap = { fields?: Record<string, unknown> } | undefined
+
+const toErrorItems = (errors: unknown[]): FieldErrorItem[] =>
+  errors
+    .flat()
+    .map((error) =>
+      typeof error === 'string' ? { message: error } : (error as FieldErrorItem)
+    )
+
+const useFieldErrors = () => {
   const field = useFieldContext()
-  return field.state.meta.isTouched && !field.state.meta.isValid
+  const { meta } = field.state
+  const pendingServerErrors = useStore(
+    field.form.store,
+    (state) => (state.errorMap.onServer as ServerErrorMap)?.fields?.[field.name]
+  )
+  const hasServerError = meta.errorMap.onServer !== undefined
+
+  if (!meta.isValid && (meta.isTouched || hasServerError))
+    return toErrorItems(meta.errors)
+
+  return pendingServerErrors ? toErrorItems([pendingServerErrors]) : []
 }
 
 const FormField = ({ label, children }: Readonly<FormFieldProps>) => {
   const field = useFieldContext()
-  const isInvalid = useFieldInvalid()
+  const errors = useFieldErrors()
+  const isInvalid = errors.length > 0
 
   return (
     <Field data-invalid={isInvalid}>
@@ -42,9 +65,7 @@ const FormField = ({ label, children }: Readonly<FormFieldProps>) => {
       </FieldLabel>
       <FieldContent>
         {children}
-        {isInvalid && (
-          <FieldError errors={field.state.meta.errors as FieldErrorItem[]} />
-        )}
+        {isInvalid && <FieldError errors={errors} />}
       </FieldContent>
     </Field>
   )
@@ -55,7 +76,7 @@ const FormInput = ({
   ...props
 }: Readonly<ControlProps<typeof Input>>) => {
   const field = useFieldContext<string>()
-  const isInvalid = useFieldInvalid()
+  const isInvalid = useFieldErrors().length > 0
 
   return (
     <FormField label={label}>
@@ -77,7 +98,7 @@ const FormTextarea = ({
   ...props
 }: Readonly<ControlProps<typeof Textarea>>) => {
   const field = useFieldContext<string>()
-  const isInvalid = useFieldInvalid()
+  const isInvalid = useFieldErrors().length > 0
 
   return (
     <FormField label={label}>
@@ -99,11 +120,18 @@ const FormFileInput = ({
   ...props
 }: Readonly<Omit<ControlProps<typeof Input>, 'type'>>) => {
   const field = useFieldContext<File | null>()
-  const isInvalid = useFieldInvalid()
+  const isInvalid = useFieldErrors().length > 0
+  const inputRef = useRef<HTMLInputElement>(null)
+  const hasFile = field.state.value !== null
+
+  useEffect(() => {
+    if (!hasFile && inputRef.current) inputRef.current.value = ''
+  }, [hasFile])
 
   return (
     <FormField label={label}>
       <Input
+        ref={inputRef}
         {...props}
         aria-invalid={isInvalid}
         id={field.name}

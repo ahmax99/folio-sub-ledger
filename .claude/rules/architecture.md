@@ -58,7 +58,7 @@ TanStack Start (file-based TanStack Router, SSR via Nitro). The app is a **BFF**
 - `lib/queries.ts` — the feature's query-key factory and `queryOptions`, shared by loaders and components. Mutations are `useMutation` hooks in `client/hooks/`; failures are reported once by the `MutationCache` in `src/lib/queryClient.ts`, so hooks don't handle errors themselves.
 - `schemas/` — Zod; `lib/`, `utils/`, `constants/`, `providers/`.
 
-**Forms** use TanStack Form through `useAppForm` (`src/lib/form.ts`, built with `createFormHook`): fields render as `<form.AppField name>{(field) => <field.Input label />}</form.AppField>` and the layout as `form.FormCard` / `form.Form` + `form.SubmitButton` (organisms `FormField.tsx` / `FormCard.tsx`). Pass the Zod schema as `validators: { onChange: schema }`; errors show once a field is touched. `onSubmit` awaits a mutation's `mutateAsync`.
+**Forms** use TanStack Form through `useAppForm` (`src/lib/form.ts`, built with `createFormHook`): fields render as `<form.AppField name>{(field) => <field.Input label />}</form.AppField>` and the layout as `form.FormCard` / `form.Form` + `form.SubmitButton` (organisms `FormField.tsx` / `FormCard.tsx`). Pass the Zod schema as `validators: { onChange: schema }`; errors show once a field is touched. `onSubmit` awaits a mutation's `mutateAsync`. Backend validation failures come back as `{ error: { message, fields } }` (`ErrorModel` in `@shared/config`) and `form.Form` puts `fields` on the matching inputs. A form that must work without JavaScript passes `action` to `form.Form` and validates with `createServerValidate` (see the contact form).
 
 **Component system** (`src/components/`): Atomic-design layers for cross-feature shared UI:
 

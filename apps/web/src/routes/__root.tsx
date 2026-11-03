@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { QueryClient } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -23,6 +24,7 @@ const RootDocument = ({
     <body>
       {children}
       <Toaster position="bottom-right" richColors />
+      <ReactQueryDevtools buttonPosition="bottom-left" />
       <Scripts />
     </body>
   </html>

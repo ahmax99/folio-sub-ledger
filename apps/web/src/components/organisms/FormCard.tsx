@@ -1,5 +1,7 @@
-import { useStore } from '@tanstack/react-form'
+import { type AnyFormApi, useStore } from '@tanstack/react-form'
+import { useEffect } from 'react'
 
+import { mapToAppError } from '@/features/error/lib/mapToAppError'
 import { useFormContext } from '@/lib/formContext'
 import { cn } from '@/utils/mergeClass'
 
@@ -14,26 +16,44 @@ import {
 import { LoadingSwap } from '../molecules/LoadingSwap'
 
 interface FormProps {
+  action?: string
   className?: string
   children: React.ReactNode
 }
 
 interface FormCardProps {
+  action?: string
   title: string
   description: string
   children: React.ReactNode
 }
 
-const Form = ({ className, children }: Readonly<FormProps>) => {
+const Form = ({ action, className, children }: Readonly<FormProps>) => {
   const form = useFormContext()
+
+  useEffect(() => {
+    const anyForm: AnyFormApi = form
+    const { onServer } = anyForm.state.errorMap
+    if (!onServer) return
+
+    anyForm.setErrorMap({ onServer })
+    for (const name of Object.keys(anyForm.state.fieldMeta))
+      anyForm.setFieldMeta(name, (meta) => ({ ...meta, isTouched: true }))
+  }, [form])
 
   return (
     <form
+      action={action}
       className={cn('space-y-4', className)}
+      encType={action ? 'multipart/form-data' : undefined}
+      method={action ? 'post' : undefined}
       noValidate
       onSubmit={(event) => {
         event.preventDefault()
-        form.handleSubmit().catch(() => undefined)
+        form.handleSubmit().catch((error: unknown) => {
+          const { fields } = mapToAppError(error)
+          if (fields) form.setErrorMap({ onServer: { fields } })
+        })
       }}
     >
       {children}
@@ -42,6 +62,7 @@ const Form = ({ className, children }: Readonly<FormProps>) => {
 }
 
 const FormCard = ({
+  action,
   title,
   description,
   children
@@ -53,7 +74,7 @@ const FormCard = ({
     </CardHeader>
 
     <CardContent>
-      <Form>{children}</Form>
+      <Form action={action}>{children}</Form>
     </CardContent>
   </Card>
 )

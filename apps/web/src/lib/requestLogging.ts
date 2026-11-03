@@ -1,3 +1,4 @@
+import type { ErrorBody } from '@shared/config'
 import type { Logger } from 'pino'
 
 import { logger } from '@/config/logger'
@@ -42,10 +43,11 @@ export const withRequestLogging =
           },
           'Request failed'
         )
-        return Response.json(
-          { error: { message: error.message } },
-          { status: error.status }
-        )
+        const body: ErrorBody = {
+          error: { message: error.message, fields: error.fields }
+        }
+
+        return Response.json(body, { status: error.status })
       }
     )
   }

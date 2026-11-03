@@ -1,3 +1,4 @@
+import { getFormData } from '@tanstack/react-form-start'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { PageTemplate } from '@/components/layout'
@@ -6,11 +7,12 @@ import { generatePageMetadata } from '@/features/metadata/utils/generatePageMeta
 
 const ContactPage = () => (
   <PageTemplate alignment="center">
-    <ContactForm />
+    <ContactForm serverState={Route.useLoaderData()} />
   </PageTemplate>
 )
 
 export const Route = createFileRoute('/_main/contact')({
+  loader: () => getFormData(),
   head: () =>
     generatePageMetadata({
       title: 'Contact',
