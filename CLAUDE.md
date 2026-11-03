@@ -27,7 +27,7 @@ turbo db:generate --filter=@shared/neon   # prisma generate — runs as neon's p
 cd shared/neon && bun --bun prisma migrate dev --name <name>   # interactive
 ```
 
-Tests run with **Vitest** via `bun run test`. `apps/api` integration tests need `TEST_DATABASE_URL`, a dedicated Postgres database that is never the dev database (setup in `apps/api/README.md`). The `PR Checks` workflow runs type-check, `check-format` and the tests on every PR. CI also runs SonarQube, dependency security audits (`bun audit` + SBOM/Grype), secret scanning (gitleaks), and React Doctor. Type-checking and the linter/formatter also run locally (Lefthook pre-commit hook, `/pre-commit`, and the per-step gates in `/implement`).
+Tests run with **Vitest** via `bun run test`. `apps/api` integration tests need `TEST_DATABASE_URL`, a dedicated Postgres database that is never the dev database (setup in `apps/api/README.md`). The `PR Checks` workflow runs the tests on every PR. CI also runs SonarQube, dependency security audits (`bun audit` + SBOM/Grype), secret scanning (gitleaks), and React Doctor. Type-checking and the linter/formatter run locally only (Lefthook pre-commit hook, `/pre-commit`, and the per-step gates in `/implement`).
 
 ### Tooling notes
 
