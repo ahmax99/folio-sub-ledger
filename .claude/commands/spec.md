@@ -98,7 +98,11 @@ If the feature touches classification, prompts, model tiers, confidence threshol
 
 If the feature touches tenant or client data, personal data, exports, retention or deletion, roles and permissions, audit logs, logging or error reporting, AI data flows, search indexes, or a new third party or region, spawn `subagent_type: "compliance-risk-officer"` in **Spec review** mode with the spec path (in the same parallel batch as steps 4–5 when they apply). Fold its **Requirements to add** into the spec's Acceptance Criteria and its **Risks** and **Questions for the owner** into Open Questions / Risks. If its verdict is **Not ready**, tell the user which decision blocks the spec before suggesting `/plan`.
 
-### 7. Report back
+### 7. Design (UI features only)
+
+If the feature adds or changes a screen, spawn `subagent_type: "product-designer"` in **Design** mode with the spec path (in the same parallel batch as steps 4–6 when they apply). Add its frame links to the spec under a `## Design` section, fold its **Acceptance criteria to add** into Acceptance Criteria and its **Open design questions** into Open Questions / Risks. Skip this step for features with no UI.
+
+### 8. Report back
 
 Print the spec path and a one-line summary, then tell the user:
 
