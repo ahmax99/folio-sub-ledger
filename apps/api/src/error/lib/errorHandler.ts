@@ -1,3 +1,4 @@
+import type { FieldErrors } from '@shared/config'
 import { Elysia, ValidationError } from 'elysia'
 
 import { logger } from '@/config/logger.js'
@@ -5,19 +6,12 @@ import { AppError } from '@/error/lib/AppError.js'
 import { captureError } from '@/error/utils/captureError.js'
 import { mapToAppError } from '@/error/utils/catchError.js'
 
-const toBadRequest = (error: ValidationError) => {
-  const issues = error.all.flatMap((issue) =>
-    'path' in issue
-      ? [[issue.path.replace(/^\//, ''), issue.message] as const]
-      : []
-  )
-  const summary = issues.map(([field, message]) => `${field}: ${message}`)
+const toBadRequest = ({ all }: ValidationError) => {
+  const fields: FieldErrors = {}
+  for (const issue of all)
+    if ('path' in issue) fields[issue.path.replace(/^\//, '')] ??= issue.message
 
-  return new AppError(
-    'BAD_REQUEST',
-    summary.join('; ') || undefined,
-    Object.fromEntries([...issues].reverse())
-  )
+  return new AppError('BAD_REQUEST', 'Invalid request', fields)
 }
 
 export const errorHandler = new Elysia({ name: 'error-handler' })
