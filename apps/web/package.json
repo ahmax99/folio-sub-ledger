@@ -7,7 +7,8 @@
     "check-types": "tsc --noEmit",
     "dev": "vite dev",
     "start": "bun .output/server/index.mjs",
-    "doctor": "bunx react-doctor@latest"
+    "doctor": "bunx react-doctor@latest",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1157.0",
@@ -61,7 +62,8 @@
     "shadcn": "^4.22.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
-    "vite": "^8.3.5"
+    "vite": "^8.3.5",
+    "vitest": "5.0.5"
   },
   "ignoreScripts": [
     "unrs-resolver"
