@@ -24,7 +24,6 @@ export default defineConfig(({ command }) => ({
     tanstackStart({ srcDirectory: 'src' }),
     viteReact(),
     babel({ presets: [reactCompilerPreset()] }),
-    // Must follow Start + React; AlertDialog needs portals, router needs class error boundaries
     redact({ features: { activity: false, fragmentRefs: false } }),
     nitro({
       preset: 'bun',
