@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { prisma } from '@shared/neon'
 import { describe, expect, it } from 'vitest'
 
@@ -76,6 +78,48 @@ describe('user controller', () => {
     const res = await getMe(authHeaders)
 
     expect(res.status).toBe(404)
+  })
+
+  it.each([
+    ['GET', '/users'],
+    ['GET', '/users/me'],
+    ['GET', '/users/presigned-url?filename=a.png&contentType=image/png'],
+    ['GET', `/users/${randomUUID()}`],
+    ['PUT', `/users/${randomUUID()}`],
+    ['DELETE', `/users/${randomUUID()}`]
+  ])(
+    'refuses %s %s for an identity without a user record',
+    async (method, path) => {
+      const res = await userController.handle(
+        new Request(`http://localhost${path}`, {
+          method,
+          headers: authHeaders,
+          ...(method === 'PUT' && {
+            body: JSON.stringify({ name: 'New Name' })
+          })
+        })
+      )
+
+      expect([403, 404]).toContain(res.status)
+    }
+  )
+
+  it('DELETE /users/:id by an Owner removes the user and their organization', async () => {
+    const org = await seedOwner()
+    const user = await prisma.user.findFirstOrThrow({
+      where: { orgId: org.id }
+    })
+
+    const res = await userController.handle(
+      new Request(`http://localhost/users/${user.id}`, {
+        method: 'DELETE',
+        headers: { ...authHeaders, authorization: 'Bearer member-token' }
+      })
+    )
+
+    expect(res.status).toBe(200)
+    expect(await prisma.user.count()).toBe(0)
+    expect(await prisma.organization.count()).toBe(0)
   })
 
   it('GET /users/me without a token returns 401 and creates nothing', async () => {

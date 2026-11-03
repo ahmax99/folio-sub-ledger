@@ -10,6 +10,7 @@ type Action = 'create' | 'read' | 'update' | 'delete' | 'manage'
 type AppSubjects =
   | 'all'
   | Subjects<{
+      Organization: Prisma.OrganizationGetPayload<object>
       User: Prisma.UserGetPayload<object>
     }>
 

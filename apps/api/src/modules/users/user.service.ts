@@ -52,7 +52,13 @@ export const UserService = {
 
   delete: (id: UserIdParams['id'], ability: AppAbility) =>
     findUser(id, ability, 'delete')
-      .andThrough(() => catchAsyncError(prisma.user.delete({ where: { id } })))
+      .andThrough((user) =>
+        catchAsyncError(
+          user.role === 'OWNER'
+            ? prisma.organization.delete({ where: { id: user.orgId } })
+            : prisma.user.delete({ where: { id } })
+        )
+      )
       .andThrough((user) =>
         catchAsyncError(
           cognitoClient.send(
