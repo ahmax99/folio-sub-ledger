@@ -53,7 +53,7 @@ export TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/folio_tes
 bun run test
 ```
 
-The run applies the Prisma migrations to `TEST_DATABASE_URL` first and truncates every table before each test. Without the variable it aborts before running anything. Environments that block port 5432 can rely on the `PR Checks` CI run instead.
+The run applies the Prisma migrations to `TEST_DATABASE_URL` first and truncates every table before each test. Without the variable, or when the database name doesn't end in `_test`, it aborts before running anything. Environments that block port 5432 can rely on the `PR Checks` CI run instead.
 
 ## API Documentation
 

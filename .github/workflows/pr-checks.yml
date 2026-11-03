@@ -16,6 +16,7 @@ jobs:
     name: Type-check, lint and test
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: ${{ !startsWith(github.head_ref, 'release-please--branches--') }}
     services:
       postgres:
         image: postgres:17-alpine
