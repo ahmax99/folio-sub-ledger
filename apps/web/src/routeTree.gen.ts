@@ -19,19 +19,11 @@ import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthorizedAccountIndexRouteImport } from './routes/_authorized/account/index'
 import { Route as AuthorizedAccountEditRouteImport } from './routes/_authorized/account/edit'
-import { Route as AuthorizedPostsCreateRouteImport } from './routes/_authorized/posts/create'
-import { Route as MainPostsIndexRouteImport } from './routes/_main/posts/index'
-import { Route as MainPostsPostIdRouteImport } from './routes/_main/posts/$postId'
 import { Route as ApiAccountIndexRouteImport } from './routes/api/account/index'
 import { Route as ApiAccountPresignedUrlRouteImport } from './routes/api/account/presigned-url'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
-import { Route as ApiCommentsIndexRouteImport } from './routes/api/comments/index'
-import { Route as ApiCommentsCommentIdRouteImport } from './routes/api/comments/$commentId'
-import { Route as ApiPostsIndexRouteImport } from './routes/api/posts/index'
-import { Route as ApiPostsPostIdRouteImport } from './routes/api/posts/$postId'
-import { Route as ApiPostsPresignedUrlRouteImport } from './routes/api/posts/presigned-url'
 
 const AuthorizedRoute = AuthorizedRouteImport.update({
   id: '/_authorized',
@@ -81,21 +73,6 @@ const AuthorizedAccountEditRoute = AuthorizedAccountEditRouteImport.update({
   path: '/account/edit',
   getParentRoute: () => AuthorizedRoute,
 } as any)
-const AuthorizedPostsCreateRoute = AuthorizedPostsCreateRouteImport.update({
-  id: '/posts/create',
-  path: '/posts/create',
-  getParentRoute: () => AuthorizedRoute,
-} as any)
-const MainPostsIndexRoute = MainPostsIndexRouteImport.update({
-  id: '/posts/',
-  path: '/posts/',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainPostsPostIdRoute = MainPostsPostIdRouteImport.update({
-  id: '/posts/$postId',
-  path: '/posts/$postId',
-  getParentRoute: () => MainRoute,
-} as any)
 const ApiAccountIndexRoute = ApiAccountIndexRouteImport.update({
   id: '/api/account/',
   path: '/api/account/',
@@ -121,31 +98,6 @@ const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
   path: '/api/auth/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCommentsIndexRoute = ApiCommentsIndexRouteImport.update({
-  id: '/api/comments/',
-  path: '/api/comments/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCommentsCommentIdRoute = ApiCommentsCommentIdRouteImport.update({
-  id: '/api/comments/$commentId',
-  path: '/api/comments/$commentId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPostsIndexRoute = ApiPostsIndexRouteImport.update({
-  id: '/api/posts/',
-  path: '/api/posts/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPostsPostIdRoute = ApiPostsPostIdRouteImport.update({
-  id: '/api/posts/$postId',
-  path: '/api/posts/$postId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPostsPresignedUrlRoute = ApiPostsPresignedUrlRouteImport.update({
-  id: '/api/posts/presigned-url',
-  path: '/api/posts/presigned-url',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
@@ -155,20 +107,12 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
-  '/posts/create': typeof AuthorizedPostsCreateRoute
-  '/posts/$postId': typeof MainPostsPostIdRoute
   '/api/account/presigned-url': typeof ApiAccountPresignedUrlRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
-  '/api/comments/$commentId': typeof ApiCommentsCommentIdRoute
-  '/api/posts/$postId': typeof ApiPostsPostIdRoute
-  '/api/posts/presigned-url': typeof ApiPostsPresignedUrlRoute
   '/account/': typeof AuthorizedAccountIndexRoute
-  '/posts/': typeof MainPostsIndexRoute
   '/api/account/': typeof ApiAccountIndexRoute
-  '/api/comments/': typeof ApiCommentsIndexRoute
-  '/api/posts/': typeof ApiPostsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
@@ -178,20 +122,12 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
-  '/posts/create': typeof AuthorizedPostsCreateRoute
-  '/posts/$postId': typeof MainPostsPostIdRoute
   '/api/account/presigned-url': typeof ApiAccountPresignedUrlRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
-  '/api/comments/$commentId': typeof ApiCommentsCommentIdRoute
-  '/api/posts/$postId': typeof ApiPostsPostIdRoute
-  '/api/posts/presigned-url': typeof ApiPostsPresignedUrlRoute
   '/account': typeof AuthorizedAccountIndexRoute
-  '/posts': typeof MainPostsIndexRoute
   '/api/account': typeof ApiAccountIndexRoute
-  '/api/comments': typeof ApiCommentsIndexRoute
-  '/api/posts': typeof ApiPostsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,20 +140,12 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/_main/': typeof MainIndexRoute
   '/_authorized/account/edit': typeof AuthorizedAccountEditRoute
-  '/_authorized/posts/create': typeof AuthorizedPostsCreateRoute
-  '/_main/posts/$postId': typeof MainPostsPostIdRoute
   '/api/account/presigned-url': typeof ApiAccountPresignedUrlRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
-  '/api/comments/$commentId': typeof ApiCommentsCommentIdRoute
-  '/api/posts/$postId': typeof ApiPostsPostIdRoute
-  '/api/posts/presigned-url': typeof ApiPostsPresignedUrlRoute
   '/_authorized/account/': typeof AuthorizedAccountIndexRoute
-  '/_main/posts/': typeof MainPostsIndexRoute
   '/api/account/': typeof ApiAccountIndexRoute
-  '/api/comments/': typeof ApiCommentsIndexRoute
-  '/api/posts/': typeof ApiPostsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,20 +157,12 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/login'
     | '/account/edit'
-    | '/posts/create'
-    | '/posts/$postId'
     | '/api/account/presigned-url'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
-    | '/api/comments/$commentId'
-    | '/api/posts/$postId'
-    | '/api/posts/presigned-url'
     | '/account/'
-    | '/posts/'
     | '/api/account/'
-    | '/api/comments/'
-    | '/api/posts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,20 +172,12 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/login'
     | '/account/edit'
-    | '/posts/create'
-    | '/posts/$postId'
     | '/api/account/presigned-url'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
-    | '/api/comments/$commentId'
-    | '/api/posts/$postId'
-    | '/api/posts/presigned-url'
     | '/account'
-    | '/posts'
     | '/api/account'
-    | '/api/comments'
-    | '/api/posts'
   id:
     | '__root__'
     | '/_authorized'
@@ -277,20 +189,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/_main/'
     | '/_authorized/account/edit'
-    | '/_authorized/posts/create'
-    | '/_main/posts/$postId'
     | '/api/account/presigned-url'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
-    | '/api/comments/$commentId'
-    | '/api/posts/$postId'
-    | '/api/posts/presigned-url'
     | '/_authorized/account/'
-    | '/_main/posts/'
     | '/api/account/'
-    | '/api/comments/'
-    | '/api/posts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -304,12 +208,7 @@ export interface RootRouteChildren {
   ApiAuthCallbackRoute: typeof ApiAuthCallbackRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
-  ApiCommentsCommentIdRoute: typeof ApiCommentsCommentIdRoute
-  ApiPostsPostIdRoute: typeof ApiPostsPostIdRoute
-  ApiPostsPresignedUrlRoute: typeof ApiPostsPresignedUrlRoute
   ApiAccountIndexRoute: typeof ApiAccountIndexRoute
-  ApiCommentsIndexRoute: typeof ApiCommentsIndexRoute
-  ApiPostsIndexRoute: typeof ApiPostsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -384,27 +283,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthorizedAccountEditRouteImport
       parentRoute: typeof AuthorizedRoute
     }
-    '/_authorized/posts/create': {
-      id: '/_authorized/posts/create'
-      path: '/posts/create'
-      fullPath: '/posts/create'
-      preLoaderRoute: typeof AuthorizedPostsCreateRouteImport
-      parentRoute: typeof AuthorizedRoute
-    }
-    '/_main/posts/': {
-      id: '/_main/posts/'
-      path: '/posts'
-      fullPath: '/posts/'
-      preLoaderRoute: typeof MainPostsIndexRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/posts/$postId': {
-      id: '/_main/posts/$postId'
-      path: '/posts/$postId'
-      fullPath: '/posts/$postId'
-      preLoaderRoute: typeof MainPostsPostIdRouteImport
-      parentRoute: typeof MainRoute
-    }
     '/api/account/': {
       id: '/api/account/'
       path: '/api/account'
@@ -440,53 +318,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthLogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/comments/': {
-      id: '/api/comments/'
-      path: '/api/comments'
-      fullPath: '/api/comments/'
-      preLoaderRoute: typeof ApiCommentsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/comments/$commentId': {
-      id: '/api/comments/$commentId'
-      path: '/api/comments/$commentId'
-      fullPath: '/api/comments/$commentId'
-      preLoaderRoute: typeof ApiCommentsCommentIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/posts/': {
-      id: '/api/posts/'
-      path: '/api/posts'
-      fullPath: '/api/posts/'
-      preLoaderRoute: typeof ApiPostsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/posts/$postId': {
-      id: '/api/posts/$postId'
-      path: '/api/posts/$postId'
-      fullPath: '/api/posts/$postId'
-      preLoaderRoute: typeof ApiPostsPostIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/posts/presigned-url': {
-      id: '/api/posts/presigned-url'
-      path: '/api/posts/presigned-url'
-      fullPath: '/api/posts/presigned-url'
-      preLoaderRoute: typeof ApiPostsPresignedUrlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 interface AuthorizedRouteChildren {
   AuthorizedAccountEditRoute: typeof AuthorizedAccountEditRoute
-  AuthorizedPostsCreateRoute: typeof AuthorizedPostsCreateRoute
   AuthorizedAccountIndexRoute: typeof AuthorizedAccountIndexRoute
 }
 
 const AuthorizedRouteChildren: AuthorizedRouteChildren = {
   AuthorizedAccountEditRoute: AuthorizedAccountEditRoute,
-  AuthorizedPostsCreateRoute: AuthorizedPostsCreateRoute,
   AuthorizedAccountIndexRoute: AuthorizedAccountIndexRoute,
 }
 
@@ -497,15 +338,11 @@ const AuthorizedRouteWithChildren = AuthorizedRoute._addFileChildren(
 interface MainRouteChildren {
   MainContactRoute: typeof MainContactRoute
   MainIndexRoute: typeof MainIndexRoute
-  MainPostsPostIdRoute: typeof MainPostsPostIdRoute
-  MainPostsIndexRoute: typeof MainPostsIndexRoute
 }
 
 const MainRouteChildren: MainRouteChildren = {
   MainContactRoute: MainContactRoute,
   MainIndexRoute: MainIndexRoute,
-  MainPostsPostIdRoute: MainPostsPostIdRoute,
-  MainPostsIndexRoute: MainPostsIndexRoute,
 }
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
@@ -521,12 +358,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthCallbackRoute: ApiAuthCallbackRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
-  ApiCommentsCommentIdRoute: ApiCommentsCommentIdRoute,
-  ApiPostsPostIdRoute: ApiPostsPostIdRoute,
-  ApiPostsPresignedUrlRoute: ApiPostsPresignedUrlRoute,
   ApiAccountIndexRoute: ApiAccountIndexRoute,
-  ApiCommentsIndexRoute: ApiCommentsIndexRoute,
-  ApiPostsIndexRoute: ApiPostsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

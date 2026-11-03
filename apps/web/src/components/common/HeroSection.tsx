@@ -7,8 +7,7 @@ function HeroSection() {
         </h1>
         <p className="text-muted-foreground mx-auto max-w-2xl text-xl leading-relaxed">
           TanStack Start BFF, Elysia API, Cognito auth, and Neon Postgres —
-          wired together and demonstrated below, ready to rename into your own
-          product.
+          wired together, ready to rename into your own product.
         </p>
       </div>
     </section>
