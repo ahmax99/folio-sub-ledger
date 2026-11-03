@@ -1,6 +1,6 @@
-# Boilerplate Template
+# Folio Sub Ledger
 
-Modern full-stack monorepo boilerplate built with Turborepo, Bun, and TypeScript.
+A multi-tenant crypto sub-ledger for accounting firms: AI-classified transactions with supporting evidence, reconciliation against sources, and FIFO cost basis. Turborepo monorepo on Bun and TypeScript. The product roadmap is in [docs/product/roadmap.md](docs/product/roadmap.md).
 
 ## Tech Stack
 
@@ -22,9 +22,9 @@ Modern full-stack monorepo boilerplate built with Turborepo, Bun, and TypeScript
 - **[React](https://react.dev/)** - UI library
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[shadcn/ui](https://ui.shadcn.com/)** - Re-usable component library
-- **[TanStack Query](https://tanstack.com/query)** - Server state and data fetching _(adopted, being phased in)_
+- **[TanStack Query](https://tanstack.com/query)** - Server state; route loaders prime it, `ky` is the HTTP transport underneath
 - **[TanStack Table](https://tanstack.com/table)** + **[Virtual](https://tanstack.com/virtual)** - Headless data grids and virtualized lists _(adopted, being phased in)_
-- **[TanStack Form](https://tanstack.com/form)** - Type-safe forms with Zod schemas from `@shared/config` _(adopted, being phased in)_
+- **[TanStack Form](https://tanstack.com/form)** - Type-safe forms with Zod schemas from `@shared/config`
 - **[TanStack Hotkeys](https://tanstack.com/hotkeys)** / **[Pacer](https://tanstack.com/pacer)** / **[Devtools](https://tanstack.com/devtools)** - Keyboard shortcuts, debouncing, dev panel _(adopted, being phased in)_
 - **[Zustand](https://zustand-demo.pmnd.rs/)** - State management
 
@@ -45,8 +45,10 @@ Modern full-stack monorepo boilerplate built with Turborepo, Bun, and TypeScript
 ### Code Quality
 
 - **[oxc](https://oxc.rs/)** (oxlint + oxfmt) - Fast linter and formatter
-- **[hadolint](https://github.com/hadolint/hadolint)** - Dockerfile linter (best-practice + security rules), local-only via the pre-commit hook (no CI gate)
-- **[Lefthook](https://lefthook.dev/)** - Git hooks (pre-commit runs oxfmt/oxlint + hadolint on staged files + `terraform fmt`)
+- **[hadolint](https://github.com/hadolint/hadolint)** - Dockerfile linter (best-practice + security rules), in the pre-commit hook and in CI
+- **[gitleaks](https://github.com/gitleaks/gitleaks)** - Secret scanning, in the pre-commit hook and in CI
+- **[react-doctor](https://github.com/millionco/react-doctor)** - React health scanner; new errors fail the PR in CI
+- **[Lefthook](https://lefthook.dev/)** - Git hooks (pre-commit runs oxfmt/oxlint, hadolint, `terraform fmt` and gitleaks on staged files)
 - **[fallow](https://docs.fallow.tools/)** - Static analysis for unused code, duplication, complexity, and architecture drift
 - **[sonarqube](https://docs.sonarsource.com)** - Continuous inspection platform used to automate code reviews and detect bugs, security vulnerabilities, and code smell
 
@@ -104,13 +106,13 @@ RESTful API built with Elysia and Bun runtime.
 
 **Features:**
 
-- Post and comment management
-- S3 presigned URL generation for image uploads
-- CASL-based authorization
+- Post, comment and user management
+- S3 presigned URL generation for image uploads, and an image proxy
+- Cognito JWT authentication and CASL-based authorization
+- Zod validation at the route boundary (failures return 400 with per-field errors)
 - OpenAPI/Swagger documentation
-- Rate limiting and bot detection
 
-**Tech:** Elysia, Prisma, CASL, AWS SDK
+**Tech:** Elysia, Prisma, CASL, neverthrow, AWS SDK
 
 #### `web`
 
@@ -124,7 +126,7 @@ Full-stack TanStack Start application (BFF in front of the Elysia API) with auth
 - Transactional emails with Resend
 - Error monitoring with Sentry
 
-**Tech:** TanStack Start 1, Vite 8, React 19, CASL, Tailwind CSS 4, shadcn/ui, TanStack Form, Zod, Zustand
+**Tech:** TanStack Start 1, Vite 8, React 19 (TanStack Redact runtime), TanStack Query, TanStack Form, ky, CASL, Tailwind CSS 4, shadcn/ui, Zod, Zustand
 
 ### Shared Packages (`shared/`)
 
@@ -134,9 +136,10 @@ Shared configuration package containing Zod schemas, type definitions, and error
 
 **Exports:**
 
-- Post and Comment validation schemas
+- Post, Comment and User validation schemas
 - Email validation utilities
-- Standardized error definitions (NOT_FOUND, UNAUTHORIZED, etc.)
+- The API error response shape (`ErrorModel`) and standardized error definitions (NOT_FOUND, UNAUTHORIZED, etc.)
+- Cognito group constants
 
 #### `@shared/neon`
 
@@ -155,19 +158,9 @@ Shared TypeScript configurations used across the monorepo.
 
 ## Getting Started
 
-### Using this template
-
-Click **Use this template → Create a new repository** on GitHub, or via the CLI:
-
-```bash
-gh repo create my-app --template ahmax99/boilerplate-template --private
-```
-
-Then clone your new repo and continue with the steps below.
-
 ### Prerequisites
 
-- **Bun** >= 1.3.8
+- **Bun** 1.4.2 (pinned in `.bun-version`)
 - **Node.js** >= 24
 
 ### Installation
@@ -233,6 +226,6 @@ described under "Deployment topology" in `.claude/rules/infra.md`.
 
 ## AI-Driven Development
 
-This template ships with a [Claude Code](https://claude.com/claude-code) harness
+This repo ships with a [Claude Code](https://claude.com/claude-code) harness
 for building features spec-first with an AI agent (`brainstorm → /spec` → `/plan` → `/implement` → `/qa`). New here? Start with
 [**docs/ai-driven-development.md**](docs/ai-driven-development.md).

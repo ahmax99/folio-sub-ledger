@@ -39,7 +39,7 @@ Your invocation prompt will include:
 
 - **BFF boundary:** browser code (any component — all are hydrated) never calls the Elysia backend directly and never receives the Cognito token. Auth'd calls go server-side through `serverAuthApiClient` (injects `X-Id-Token`, SigV4-signs to the Lambda Function URL in prod).
 - **Session:** the `iron-session` cookie (`auth_session`) stays HttpOnly; the request middleware `features/auth/server/middleware/routeGuard.ts` only gates on cookie _presence_ — real verification is the backend's job, so don't treat a passing middleware check as proof of authorization.
-- No secrets in client bundles (only `NEXT_PUBLIC_*` may reach the browser).
+- No secrets in client bundles: config is server-only `process.env` (never `VITE_*` or `import.meta.env`); the browser gets runtime config from `/api/config`.
 
 ## Scoring
 

@@ -8,7 +8,13 @@ Shared configuration package containing Zod schemas, type definitions, and error
 
 - **Post Model** - Validation schemas for post creation, updates, and image uploads
 - **Comment Model** - Validation schemas for comment creation
+- **User Model** - Validation schemas for user creation and updates
 - **Email Schema** - Email validation utilities
+- **Error Model** - The API's error response body, `{ error: { message, fields } }`, where `fields` maps form fields to validation messages
+
+### Constants
+
+- `COGNITO_GROUPS` - Cognito group names (`Users`, `Admins`) used for roles
 
 ### Error Definitions
 
@@ -19,7 +25,6 @@ Standardized error codes and messages:
 - `FORBIDDEN` - Permission denied (403)
 - `BAD_REQUEST` - Invalid request (400)
 - `RATE_LIMIT_EXCEEDED` - Too many requests (429)
-- `INVALID_EMAIL` / `DISPOSABLE_EMAIL` - Email validation errors (400)
 - `INTERNAL_ERROR` - Server error (500)
 
 ## Usage
@@ -30,11 +35,10 @@ Import schemas and error definitions in your application:
 import { PostModel, CommentModel, ERROR_DEFINITIONS } from '@shared/config'
 
 // Validate post creation
-const result = PostModel.createBody.parse({
+const result = PostModel.createPostBody.parse({
   title: 'My Post',
   content: 'Post content',
-  authorId: 'uuid-here',
-  slug: 'my-post'
+  authorId: 'uuid-here'
 })
 
 // Use error definitions

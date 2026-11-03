@@ -73,4 +73,4 @@ If migration SQL files exist, read them and check:
 [SAFE TO MIGRATE | NEEDS ATTENTION | BLOCK]
 ```
 
-To apply in development after a clean report: `cd shared/neon && bun run db:migrate` (interactive `prisma migrate dev`).
+To apply in development after a clean report: `cd shared/neon && bun --bun prisma migrate dev --name <name>` (interactive).

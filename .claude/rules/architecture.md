@@ -114,5 +114,5 @@ Classification and later agent features run in the worker Lambda (consumer of th
 
 ## Infra & deploy
 
-- `infra/` — `bootstrap/`, `backends/`, `vars/`, `modules/`. Deployment topology (CloudFront → Next BFF + S3 + Elysia Lambda + Cognito + Neon), the cache behaviors and the Lambda IAM guard are owned by `.claude/rules/infra.md`'s **Deployment topology** section — read it before changing any of them.
+- `infra/` — `bootstrap/`, `backends/`, `vars/`, `modules/`. Deployment topology (CloudFront → TanStack Start BFF + S3 + Elysia Lambda + Cognito + Neon), the cache behaviors and the Lambda IAM guard are owned by `.claude/rules/infra.md`'s **Deployment topology** section — read it before changing any of them.
 - Both apps ship a `Dockerfile` and `vercel.json`; backend deploys as a Lambda container image via CodeDeploy blue/green (see architecture doc).

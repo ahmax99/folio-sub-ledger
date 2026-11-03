@@ -66,7 +66,7 @@ Do not invoke `/qa`, `/review`, or the project's reviewer subagents (`security-r
 
 ### Reach for the right plugin
 
-`.claude/rules/harness.md` ("Where each plugin fits") maps every enabled plugin and skill to its phase — codebase orientation via `graphify` (hook-enforced: query it before grepping or reading source), UI via the `app-design` skill, Next.js specifics via the `next-devtools` MCP server and every other library's docs via `context7`, browser verification via `playwright` (there is no unit-test runner here), Terraform via `terraform-skill` + the `terraform` MCP server, root-cause debugging via `superpowers:systematic-debugging`, diff cleanup via the `code-simplifier` agent. Consult that mapping instead of improvising; it is the single source of truth.
+`.claude/rules/harness.md` ("Where each plugin fits") maps every enabled plugin and skill to its phase — codebase orientation via `graphify` (hook-enforced: query it before grepping or reading source), UI via the `app-design` skill, library docs via `context7`, browser verification via `playwright` (there is no unit-test runner here), Terraform via `terraform-skill` + the `terraform` MCP server, root-cause debugging via `superpowers:systematic-debugging`, diff cleanup via the `code-simplifier` agent. Consult that mapping instead of improvising; it is the single source of truth.
 
 ### Communicate progress
 

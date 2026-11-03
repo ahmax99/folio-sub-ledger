@@ -45,7 +45,7 @@ Both environments then deploy the **same image URI**: the repos' resource policy
 
 Image URLs are never configured by hand: workflows derive them from `vars.CENTRAL_ECR_ACCOUNT_ID` + the repo name (`deploy.yml`'s `ECR_REGISTRY` env), and Terraform derives the same URLs from `var.central_ecr_account_id` (`infra/locals.tf`), so the two can't drift.
 
-`NEXT_PUBLIC_*` values are **not** part of the build: the frontend Docker image takes no `NEXT_PUBLIC_*` build-arg (see `.claude/rules/architecture.md`'s "build once, deploy many" rule); any config the browser needs at runtime (e.g. the Sentry DSN) is fetched from a runtime `/api/config` route, not baked into the image.
+`VITE_*` values are **not** part of the build: the frontend Docker image takes no `VITE_*` build-arg (see `.claude/rules/architecture.md`'s "build once, deploy many" rule); any config the browser needs at runtime (e.g. the Sentry DSN) is fetched from a runtime `/api/config` route, not baked into the image.
 
 ## DNS
 
