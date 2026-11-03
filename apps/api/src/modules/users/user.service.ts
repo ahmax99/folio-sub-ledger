@@ -10,31 +10,32 @@ import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
 
-const findUser = (
-  id: UserIdParams['id'],
-  ability: AppAbility,
-  action: 'read' | 'update' | 'delete'
-) =>
-  authorizeResource(prisma.user.findUnique({ where: { id } }), {
-    notFound: 'User not found',
-    forbidden: `Cannot ${action} this user`,
-    can: (user) =>
-      ability.can(action, subject('User', user)) || ability.can('manage', 'all')
-  })
-
-const ensureSoleMember = (orgId: string) =>
-  catchAsyncError(prisma.user.count({ where: { orgId } })).andThen((count) =>
-    count > 1
-      ? errAsync(
-          new AppError(
-            'BAD_REQUEST',
-            'Remove the other members before deleting the firm Owner'
-          )
-        )
-      : okAsync(count)
-  )
-
 export const UserService = {
+  findUser: (
+    id: UserIdParams['id'],
+    ability: AppAbility,
+    action: 'read' | 'update' | 'delete'
+  ) =>
+    authorizeResource(prisma.user.findUnique({ where: { id } }), {
+      notFound: 'User not found',
+      forbidden: `Cannot ${action} this user`,
+      can: (user) =>
+        ability.can(action, subject('User', user)) ||
+        ability.can('manage', 'all')
+    }),
+
+  ensureSoleMember: (orgId: string) =>
+    catchAsyncError(prisma.user.count({ where: { orgId } })).andThen((count) =>
+      count > 1
+        ? errAsync(
+            new AppError(
+              'BAD_REQUEST',
+              'Remove the other members before deleting the firm Owner'
+            )
+          )
+        : okAsync(count)
+    ),
+
   getAll: (ability: AppAbility) =>
     authorizeResource(ability, {
       forbidden: 'Only admins can list users',
@@ -44,7 +45,7 @@ export const UserService = {
     ),
 
   getById: (id: UserIdParams['id'], ability: AppAbility) =>
-    findUser(id, ability, 'read'),
+    UserService.findUser(id, ability, 'read'),
 
   getMe: (cognitoSub: User['cognitoSub'], groups: User['groups']) =>
     authorizeResource(
@@ -60,14 +61,16 @@ export const UserService = {
     input: UpdateUserBody,
     ability: AppAbility
   ) =>
-    findUser(id, ability, 'update').andThen(() =>
+    UserService.findUser(id, ability, 'update').andThen(() =>
       catchAsyncError(prisma.user.update({ where: { id }, data: input }))
     ),
 
   delete: (id: UserIdParams['id'], ability: AppAbility) =>
-    findUser(id, ability, 'delete')
+    UserService.findUser(id, ability, 'delete')
       .andThrough((user) =>
-        user.role === 'OWNER' ? ensureSoleMember(user.orgId) : okAsync(user)
+        user.role === 'OWNER'
+          ? UserService.ensureSoleMember(user.orgId)
+          : okAsync(user)
       )
       .andThrough((user) =>
         catchAsyncError(
