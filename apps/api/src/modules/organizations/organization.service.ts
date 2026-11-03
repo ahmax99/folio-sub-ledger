@@ -20,15 +20,6 @@ export const OrganizationService = {
       prisma.user.findUnique({ where: { cognitoSub }, select })
     ).map((user) => user?.organization ?? null),
 
-  recoverFromRace: (
-    cognitoSub: Identity['cognitoSub']
-  ): ResultAsync<Organization, AppError> =>
-    OrganizationService.findOrganization(cognitoSub).andThen((organization) =>
-      organization
-        ? okAsync(organization)
-        : errAsync(new AppError('INTERNAL_ERROR', 'Firm setup failed'))
-    ),
-
   createFirm: (
     { cognitoSub, email, name }: Identity,
     { firmName }: SetupFirmBody
@@ -63,7 +54,14 @@ export const OrganizationService = {
             : 'unknown'
 
         return code === 'P2002'
-          ? OrganizationService.recoverFromRace(cognitoSub)
+          ? OrganizationService.findOrganization(cognitoSub).andThen(
+              (organization) =>
+                organization
+                  ? okAsync(organization)
+                  : errAsync(
+                      new AppError('INTERNAL_ERROR', 'Firm setup failed')
+                    )
+            )
           : errAsync(new AppError('INTERNAL_ERROR', 'Firm setup failed')).orTee(
               () => captureError(new Error(`Firm setup failed (${code})`))
             )
