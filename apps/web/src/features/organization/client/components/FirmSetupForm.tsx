@@ -13,7 +13,8 @@ const FirmSetupForm = () => {
     onSubmit: async ({ value }) => {
       await createFirm.mutateAsync(value)
     },
-    onSubmitInvalid: () => document.getElementById('firmName')?.focus()
+    onSubmitInvalid: () =>
+      setTimeout(() => document.getElementById('firmName')?.focus())
   })
 
   return (
