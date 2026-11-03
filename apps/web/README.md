@@ -13,8 +13,19 @@ cp .env.example .env
 2. Configure environment variables in `.env`:
 
 ```env
-# AWS Configuration
+# AWS
 AWS_REGION="us-east-1"
+
+# Backend (the Elysia API this BFF forwards to)
+BACKEND_INTERNAL_URL="http://localhost:4000/api/v1"
+
+# Cognito (OIDC login)
+COGNITO_CLIENT_ID=""
+COGNITO_DOMAIN=""
+COGNITO_USERPOOL_ID=""
+
+# Session cookies (generate with: openssl rand -base64 32)
+SESSION_SECRET=""
 
 # Email
 RESEND_API_KEY="your-resend-api-key"
@@ -68,9 +79,10 @@ src/
 ├── server.ts         # Server entry (Sentry-wrapped fetch handler)
 ├── client.tsx        # Client entry (hydration)
 ├── router.tsx        # Router factory
-├── components/       # Reusable UI components
-├── features/         # Feature-specific modules
-├── lib/             # Utility libraries and configurations
+├── config/           # Server-only env (@t3-oss/env-core)
+├── components/       # Reusable UI components (atomic design)
+├── features/         # Feature modules (server/, client/, components/, lib/queries.ts, schemas/)
+├── lib/             # Shared clients and setup (ky API clients, QueryClient, useAppForm, CASL)
 ├── styles/          # Global styles and Tailwind config
 └── utils/           # Helper functions
 ```

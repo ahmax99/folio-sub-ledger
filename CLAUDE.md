@@ -23,7 +23,7 @@ bun run check-format                     # oxlint + oxfmt --check (lint + format
 
 ```bash
 turbo db:generate --filter=@shared/neon   # prisma generate — runs as neon's prebuild
-cd shared/neon && bun run db:migrate       # prisma migrate dev (interactive)
+cd shared/neon && bun --bun prisma migrate dev --name <name>   # interactive
 ```
 
 There is **no test runner configured** in this repo yet. CI runs SonarQube, dependency security audits (`bun audit` + SBOM/Grype), secret scanning (gitleaks), and React Doctor — not unit tests. Type-checking and the linter/formatter run locally (Lefthook pre-commit hook, `/pre-commit`, and the per-step gates in `/implement`), not in CI.

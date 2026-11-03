@@ -1,6 +1,6 @@
 # AI-Driven & Spec-Driven Development
 
-This boilerplate ships with a [Claude Code](https://claude.com/claude-code) harness so you can build features _with_ an AI agent instead of just chatting at it.
+This repo ships with a [Claude Code](https://claude.com/claude-code) harness so you can build features _with_ an AI agent instead of just chatting at it.
 
 You don't need to read the harness internals to use it. Just learn the pipeline below and the order to run it in.
 
@@ -80,7 +80,7 @@ These don't need a spec or plan — run them on whatever you've changed:
 
 ## Plugin skills that supercharge each phase
 
-The project commands above are _codebase-specific_ orchestrators. This template also enables general-purpose Claude Code plugins that handle the _meta-work around_ implementation and slot into the same pipeline: brainstorming a fuzzy idea (`superpowers:brainstorming`), exploring existing code before planning (`feature-dev`), building distinctive UI (`impeccable` + the project `app-design` skill), browser-level verification (`playwright` — this repo has no unit-test runner), current library docs (`context7`), Terraform best practice (`terraform-skill` + the `terraform` MCP server), and structured shipping (`superpowers:finishing-a-development-branch`). You rarely invoke them by name; the agent reaches for them when the situation fits.
+The project commands above are _codebase-specific_ orchestrators. This repo also enables general-purpose Claude Code plugins that handle the _meta-work around_ implementation and slot into the same pipeline: brainstorming a fuzzy idea (`superpowers:brainstorming`), exploring existing code before planning (`feature-dev`), building distinctive UI (`impeccable` + the project `app-design` skill), browser-level verification (`playwright` — this repo has no unit-test runner), current library docs (`context7`), Terraform best practice (`terraform-skill` + the `terraform` MCP server), and structured shipping (`superpowers:finishing-a-development-branch`). You rarely invoke them by name; the agent reaches for them when the situation fits.
 
 The full phase-by-phase mapping — which plugin fits where, and what wins on conflict — lives in **`.claude/rules/harness.md`** ("Where each plugin fits"). That file is the single source of truth the agent loads every session; this doc deliberately doesn't duplicate the table, so update it there.
 

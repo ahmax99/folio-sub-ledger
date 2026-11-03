@@ -15,7 +15,7 @@ CloudFront in front of an S3 static origin, the TanStack Start BFF Lambda and th
 Invariants:
 
 - **Application-layer auth.** The TanStack Start BFF decides which routes require login — don't push Cognito to the edge for the whole site.
-- **Cache-behavior order is a security boundary.** CloudFront takes the first matching pattern, so a broader pattern placed earlier silently bypasses a stricter one below it. `/_next/*` and `/static/*` cache hard; `/api/*` and `/auth/*` must not cache, and must forward auth headers and cookies.
+- **Cache-behavior order is a security boundary.** CloudFront takes the first matching pattern, so a broader pattern placed earlier silently bypasses a stricter one below it. `/assets/*` and `/static/*` cache hard; `/api/*` and `/auth/*` must not cache, and must forward auth headers and cookies.
 - **The Function URL is reachable only from CloudFront.** `AWS_IAM` auth plus SigV4 signing at the edge; an unsigned caller gets 403. Never relax it to `NONE`.
 - **Tokens never reach the browser.** HttpOnly cookies only, never `localStorage`; JWT verification happens in the Elysia backend, not at the edge.
 
