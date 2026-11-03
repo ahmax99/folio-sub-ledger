@@ -30,6 +30,7 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 - `findMany` calls that can grow unbounded are paginated (`take` / `skip` / cursor).
 - Multi-step writes that must be atomic use `prisma.$transaction([...])`.
 - Edge cases handled: missing records (`NOT_FOUND`), empty arrays, null values, max limits.
+- Changed behaviour is covered by tests in the diff: each new or changed route has an `app.handle(...)` integration test, and each acceptance criterion with a **Tests first:** entry in the plan has a matching test. Logic shipped without a test is a **MEDIUM** Correctness issue.
 
 **Frontend (`apps/web`):**
 

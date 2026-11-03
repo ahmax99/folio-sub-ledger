@@ -43,6 +43,18 @@ bun run dev
 
 The server runs at `http://localhost:4000`
 
+## Tests
+
+Integration tests run against a real, dedicated Postgres database through Vitest. Start one and export its URL (never point it at the dev database):
+
+```bash
+docker run -d --rm --name folio-test-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=folio_test -p 5432:5432 postgres:17-alpine
+export TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/folio_test
+bun run test
+```
+
+The run applies the Prisma migrations to `TEST_DATABASE_URL` first and truncates every table before each test. Without the variable, or when the database name doesn't end in `_test`, it aborts before running anything. Environments that block port 5432 can rely on the `PR Checks` CI run instead.
+
 ## API Documentation
 
 Interactive API documentation is available via Swagger UI:
