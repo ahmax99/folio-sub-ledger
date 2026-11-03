@@ -8,7 +8,9 @@ import {
   PUBLIC_AUTH_ROUTES,
   PUBLIC_ROUTES
 } from '@/features/auth/lib/routes'
+import { ROLE_LABELS } from '@/features/organization/constants/role'
 
+import { Badge } from '../atoms/Badge'
 import { ButtonLink } from '../atoms/ButtonLink'
 import { Logo } from '../molecules/Logo'
 
@@ -45,6 +47,12 @@ function PageHeader({ user }: Readonly<PageHeaderProps>) {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="max-w-24 truncate text-sm font-medium sm:max-w-56">
+                  {user.organization.name}
+                </span>
+                <Badge variant="secondary">{ROLE_LABELS[user.role]}</Badge>
+              </div>
               <ButtonLink to={PROTECTED_ROUTES.ACCOUNT}>
                 Go to Account
               </ButtonLink>

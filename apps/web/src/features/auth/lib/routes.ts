@@ -1,6 +1,8 @@
 export const PROTECTED_ROUTES = {
   ACCOUNT: '/account',
-  ACCOUNT_EDIT: '/account/edit'
+  ACCOUNT_EDIT: '/account/edit',
+  FIRM_HOME: '/firm',
+  FIRM_SETUP: '/setup'
 } as const
 
 export const PUBLIC_ROUTES = {

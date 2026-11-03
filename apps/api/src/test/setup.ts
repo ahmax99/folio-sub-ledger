@@ -14,19 +14,41 @@ vi.mock('@shared/neon', async (importOriginal) => {
   }
 })
 
+const identities: Record<
+  string,
+  { sub: string; email: string; name: string; groups?: string[] }
+> = {
+  'test-token': {
+    sub: 'test-sub',
+    email: 'test@example.com',
+    name: 'Test User'
+  },
+  'other-token': {
+    sub: 'other-sub',
+    email: 'other@example.com',
+    name: 'Other User'
+  },
+  'member-token': {
+    sub: 'test-sub',
+    email: 'test@example.com',
+    name: 'Test User',
+    groups: ['Users']
+  }
+}
+
 vi.mock('@/modules/auth/jwt.js', () => ({
-  verifyToken: (token: string) =>
-    token === 'test-token'
-      ? okAsync({
-          sub: 'test-sub',
-          email: 'test@example.com',
-          'cognito:groups': []
-        })
+  verifyToken: (token: string) => {
+    const identity = identities[token]
+    return identity
+      ? okAsync({ ...identity, 'cognito:groups': identity.groups ?? [] })
       : errAsync(new AppError('UNAUTHORIZED', 'Invalid or expired token'))
+  }
 }))
 
 vi.mock('@/error/utils/captureError.js', () => ({ captureError: vi.fn() }))
-vi.mock('@/lib/cognito.js', () => ({ cognitoClient: { send: vi.fn() } }))
+vi.mock('@/lib/cognito.js', () => ({
+  cognitoClient: { send: vi.fn().mockResolvedValue({}) }
+}))
 vi.mock('@/lib/s3.js', () => ({ s3Client: { send: vi.fn() } }))
 
 const { prisma } = await import('@shared/neon')
