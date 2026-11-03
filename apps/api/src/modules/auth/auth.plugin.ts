@@ -8,6 +8,7 @@ import { verifyToken } from '@/modules/auth/jwt.js'
 export interface AuthUser {
   cognitoSub: string
   email: string
+  name: string
   role: string[]
   payload: JWTPayload
 }
@@ -39,6 +40,7 @@ export const authPlugin = new Elysia({ name: 'auth' })
           user: {
             cognitoSub: payload.sub,
             email: payload.email,
+            name: (payload.name as string | undefined) ?? payload.email,
             role: payload['cognito:groups'],
             payload
           } as AuthUser
