@@ -39,6 +39,19 @@ describe('routeGuardMiddleware', () => {
     expect(next).not.toHaveBeenCalled()
   })
 
+  it.each(['/setup', '/firm'])(
+    'redirects a signed-out visitor from %s to login',
+    (path) => {
+      const { result, next } = runGuard(path, 'router')
+
+      expect(result).toBeInstanceOf(Response)
+      expect((result as Response).headers.get('Location')).toBe(
+        `/auth/login?callbackUrl=${encodeURIComponent(path)}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    }
+  )
+
   it('lets a visitor with a session onto a protected path', () => {
     vi.mocked(getCookie).mockReturnValue('cookie')
     const { result, next } = runGuard('/account', 'router')

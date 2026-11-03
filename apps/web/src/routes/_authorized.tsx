@@ -2,9 +2,10 @@ import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
 import { PageHeader } from '@/components/layout'
 import { AbilityProvider } from '@/features/auth/client/providers/PermissionProvider'
+import { AUTHORIZED_REDIRECTS } from '@/features/auth/lib/access'
 import { getUserPermissions } from '@/features/auth/lib/permission'
 import { PUBLIC_AUTH_ROUTES } from '@/features/auth/lib/routes'
-import { fetchRequiredUser } from '@/features/auth/server/functions'
+import { fetchSessionState } from '@/features/auth/server/functions'
 import { ErrorScreenProvider } from '@/features/error/client/providers/ErrorScreenProvider'
 
 const AuthorizedLayout = () => {
@@ -24,14 +25,15 @@ const AuthorizedLayout = () => {
 
 export const Route = createFileRoute('/_authorized')({
   beforeLoad: async ({ location }) => {
-    const user = await fetchRequiredUser()
-    if (!user)
-      throw redirect({
-        to: PUBLIC_AUTH_ROUTES.LOGIN,
-        search: { callbackUrl: location.href }
-      })
+    const session = await fetchSessionState()
+    if (session.status === 'ready') return { user: session.user }
 
-    return { user }
+    const to = AUTHORIZED_REDIRECTS[session.status]
+    throw redirect(
+      to === PUBLIC_AUTH_ROUTES.LOGIN
+        ? { to, search: { callbackUrl: location.href } }
+        : { to }
+    )
   },
   component: AuthorizedLayout
 })
