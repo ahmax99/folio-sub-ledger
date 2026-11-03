@@ -69,6 +69,8 @@ Use this exact template, writing to `.claude/plans/<slug>.md` via the `Write` to
 **Details:**
 <Specific implementation details — which patterns to follow, which existing module is the template. Name the exact Zod schema, service method signature, and route.>
 
+**Tests first:** <the Vitest test(s) that must fail before this step's code exists — file path plus one line per case, e.g. `user.controller.test.ts`: "POST /users returns 409 when the email is taken". Write `None — <reason>` for steps with no testable logic (config, docs, infra, pure styling).>
+
 **Acceptance criteria:**
 
 - [ ] <Testable criterion 1>
@@ -121,6 +123,7 @@ Risks to flag:
 - **Follow existing patterns.** Reference the closest analogous module. New backend resources need the full triad (`*.plugin.ts` + `*.controller.ts` + `*.service.ts`); new schemas go in `@shared/config`.
 - **Order steps by dependency.** If step 3 needs the Zod model from step 1, list step 1 first. A typical backend order: schema in `@shared/config` → Prisma migration → service → plugin → controller → route registration.
 - **Keep acceptance criteria testable.** "Works correctly" is not testable; "returns 403 when a non-author calls PUT /posts/:id" is.
+- **Every logic step names its tests first.** Implementation is test-driven, so each step that changes behaviour lists the failing tests that define it, derived from its acceptance criteria. Backend behaviour gets an `app.handle(...)` integration test against the test database; pure web logic gets a unit test next to the module.
 - **Every step names its verification.** The `**Verify:**` line closes the loop: without a check the implementer can run, "looks done" is the only signal and every mistake waits for a human to notice. A criterion nobody can check mechanically should either get a runnable check or be rewritten until it can.
 - **Plan the smallest complete change.** Apply `principles.md`'s ladder to each step: name the existing helper, component or dependency it reuses, and put features nobody asked for under **Out of scope** instead of a step.
 - **Include the Zod schema** (in `@shared/config`) if the feature accepts external input.

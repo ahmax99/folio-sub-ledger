@@ -5,7 +5,17 @@ import { widthOf } from './markdown'
 // vector card (svg-math.ts). The parser takes the subset replies use and never throws:
 // what it does not know it shows as written.
 
-export type Role = 'ord' | 'num' | 'word' | 'fn' | 'op' | 'rel' | 'open' | 'close' | 'punct' | 'big'
+export type Role =
+  | 'ord'
+  | 'num'
+  | 'word'
+  | 'fn'
+  | 'op'
+  | 'rel'
+  | 'open'
+  | 'close'
+  | 'punct'
+  | 'big'
 
 export type Accent = 'hat' | 'bar' | 'vec' | 'tilde' | 'dot' | 'ddot' | 'under'
 
@@ -13,14 +23,26 @@ export type Accent = 'hat' | 'bar' | 'vec' | 'tilde' | 'dot' | 'ddot' | 'under'
 export type GridAlign = 'center' | 'left' | 'pairs'
 
 // `limits` sets scripts above and below (∑, lim) instead of beside.
-export type Sym = { kind: 'sym'; text: string; role: Role; italic: boolean; bold?: boolean; limits?: boolean }
+export type Sym = {
+  kind: 'sym'
+  text: string
+  role: Role
+  italic: boolean
+  bold?: boolean
+  limits?: boolean
+}
 
 export type MathNode =
   | Sym
   | { kind: 'row'; items: MathNode[] }
   | { kind: 'frac'; num: MathNode; den: MathNode; bar: boolean }
   | { kind: 'sqrt'; body: MathNode; index: MathNode | null }
-  | { kind: 'scripts'; base: MathNode; sup: MathNode | null; sub: MathNode | null }
+  | {
+      kind: 'scripts'
+      base: MathNode
+      sup: MathNode | null
+      sub: MathNode | null
+    }
   | { kind: 'fence'; open: string; close: string; body: MathNode }
   | { kind: 'grid'; rows: MathNode[][]; align: GridAlign }
   | { kind: 'accent'; mark: Accent; body: MathNode }
@@ -29,87 +51,303 @@ export type MathNode =
 // --- Symbols ------------------------------------------------------------------------
 
 const GREEK: Readonly<Record<string, string>> = {
-  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ϵ', varepsilon: 'ε', zeta: 'ζ', eta: 'η',
-  theta: 'θ', vartheta: 'ϑ', iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', omicron: 'ο',
-  pi: 'π', varpi: 'ϖ', rho: 'ρ', varrho: 'ϱ', sigma: 'σ', varsigma: 'ς', tau: 'τ', upsilon: 'υ',
-  phi: 'ϕ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
-  Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Xi: 'Ξ', Pi: 'Π', Sigma: 'Σ', Upsilon: 'Υ',
-  Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω',
+  alpha: 'α',
+  beta: 'β',
+  gamma: 'γ',
+  delta: 'δ',
+  epsilon: 'ϵ',
+  varepsilon: 'ε',
+  zeta: 'ζ',
+  eta: 'η',
+  theta: 'θ',
+  vartheta: 'ϑ',
+  iota: 'ι',
+  kappa: 'κ',
+  lambda: 'λ',
+  mu: 'μ',
+  nu: 'ν',
+  xi: 'ξ',
+  omicron: 'ο',
+  pi: 'π',
+  varpi: 'ϖ',
+  rho: 'ρ',
+  varrho: 'ϱ',
+  sigma: 'σ',
+  varsigma: 'ς',
+  tau: 'τ',
+  upsilon: 'υ',
+  phi: 'ϕ',
+  varphi: 'φ',
+  chi: 'χ',
+  psi: 'ψ',
+  omega: 'ω',
+  Gamma: 'Γ',
+  Delta: 'Δ',
+  Theta: 'Θ',
+  Lambda: 'Λ',
+  Xi: 'Ξ',
+  Pi: 'Π',
+  Sigma: 'Σ',
+  Upsilon: 'Υ',
+  Phi: 'Φ',
+  Psi: 'Ψ',
+  Omega: 'Ω'
 }
 
 const SYMBOLS: Readonly<Record<string, readonly [string, Role]>> = {
-  times: ['×', 'op'], cdot: ['⋅', 'op'], pm: ['±', 'op'], mp: ['∓', 'op'], div: ['÷', 'op'], ast: ['∗', 'op'],
-  star: ['⋆', 'op'], circ: ['∘', 'op'], bullet: ['∙', 'op'], oplus: ['⊕', 'op'], ominus: ['⊖', 'op'],
-  otimes: ['⊗', 'op'], odot: ['⊙', 'op'], cup: ['∪', 'op'], cap: ['∩', 'op'], setminus: ['∖', 'op'],
-  wedge: ['∧', 'op'], land: ['∧', 'op'], vee: ['∨', 'op'], lor: ['∨', 'op'], bmod: ['mod', 'op'],
+  times: ['×', 'op'],
+  cdot: ['⋅', 'op'],
+  pm: ['±', 'op'],
+  mp: ['∓', 'op'],
+  div: ['÷', 'op'],
+  ast: ['∗', 'op'],
+  star: ['⋆', 'op'],
+  circ: ['∘', 'op'],
+  bullet: ['∙', 'op'],
+  oplus: ['⊕', 'op'],
+  ominus: ['⊖', 'op'],
+  otimes: ['⊗', 'op'],
+  odot: ['⊙', 'op'],
+  cup: ['∪', 'op'],
+  cap: ['∩', 'op'],
+  setminus: ['∖', 'op'],
+  wedge: ['∧', 'op'],
+  land: ['∧', 'op'],
+  vee: ['∨', 'op'],
+  lor: ['∨', 'op'],
+  bmod: ['mod', 'op'],
 
-  leq: ['≤', 'rel'], le: ['≤', 'rel'], geq: ['≥', 'rel'], ge: ['≥', 'rel'], neq: ['≠', 'rel'], ne: ['≠', 'rel'],
-  approx: ['≈', 'rel'], equiv: ['≡', 'rel'], sim: ['∼', 'rel'], simeq: ['≃', 'rel'], cong: ['≅', 'rel'],
-  propto: ['∝', 'rel'], ll: ['≪', 'rel'], gg: ['≫', 'rel'], prec: ['≺', 'rel'], succ: ['≻', 'rel'],
-  in: ['∈', 'rel'], notin: ['∉', 'rel'], ni: ['∋', 'rel'], subset: ['⊂', 'rel'], subseteq: ['⊆', 'rel'],
-  supset: ['⊃', 'rel'], supseteq: ['⊇', 'rel'], subsetneq: ['⊊', 'rel'], perp: ['⊥', 'rel'],
-  parallel: ['∥', 'rel'], mid: ['∣', 'rel'], nmid: ['∤', 'rel'], models: ['⊨', 'rel'], vdash: ['⊢', 'rel'],
-  to: ['→', 'rel'], rightarrow: ['→', 'rel'], leftarrow: ['←', 'rel'], gets: ['←', 'rel'],
-  leftrightarrow: ['↔', 'rel'], Rightarrow: ['⇒', 'rel'], Leftarrow: ['⇐', 'rel'], Leftrightarrow: ['⇔', 'rel'],
-  implies: ['⟹', 'rel'], impliedby: ['⟸', 'rel'], iff: ['⟺', 'rel'], mapsto: ['↦', 'rel'],
-  longrightarrow: ['⟶', 'rel'], longleftarrow: ['⟵', 'rel'], uparrow: ['↑', 'rel'], downarrow: ['↓', 'rel'],
-  rightleftharpoons: ['⇌', 'rel'], coloneqq: ['≔', 'rel'], triangleq: ['≜', 'rel'], therefore: ['∴', 'rel'],
+  leq: ['≤', 'rel'],
+  le: ['≤', 'rel'],
+  geq: ['≥', 'rel'],
+  ge: ['≥', 'rel'],
+  neq: ['≠', 'rel'],
+  ne: ['≠', 'rel'],
+  approx: ['≈', 'rel'],
+  equiv: ['≡', 'rel'],
+  sim: ['∼', 'rel'],
+  simeq: ['≃', 'rel'],
+  cong: ['≅', 'rel'],
+  propto: ['∝', 'rel'],
+  ll: ['≪', 'rel'],
+  gg: ['≫', 'rel'],
+  prec: ['≺', 'rel'],
+  succ: ['≻', 'rel'],
+  in: ['∈', 'rel'],
+  notin: ['∉', 'rel'],
+  ni: ['∋', 'rel'],
+  subset: ['⊂', 'rel'],
+  subseteq: ['⊆', 'rel'],
+  supset: ['⊃', 'rel'],
+  supseteq: ['⊇', 'rel'],
+  subsetneq: ['⊊', 'rel'],
+  perp: ['⊥', 'rel'],
+  parallel: ['∥', 'rel'],
+  mid: ['∣', 'rel'],
+  nmid: ['∤', 'rel'],
+  models: ['⊨', 'rel'],
+  vdash: ['⊢', 'rel'],
+  to: ['→', 'rel'],
+  rightarrow: ['→', 'rel'],
+  leftarrow: ['←', 'rel'],
+  gets: ['←', 'rel'],
+  leftrightarrow: ['↔', 'rel'],
+  Rightarrow: ['⇒', 'rel'],
+  Leftarrow: ['⇐', 'rel'],
+  Leftrightarrow: ['⇔', 'rel'],
+  implies: ['⟹', 'rel'],
+  impliedby: ['⟸', 'rel'],
+  iff: ['⟺', 'rel'],
+  mapsto: ['↦', 'rel'],
+  longrightarrow: ['⟶', 'rel'],
+  longleftarrow: ['⟵', 'rel'],
+  uparrow: ['↑', 'rel'],
+  downarrow: ['↓', 'rel'],
+  rightleftharpoons: ['⇌', 'rel'],
+  coloneqq: ['≔', 'rel'],
+  triangleq: ['≜', 'rel'],
+  therefore: ['∴', 'rel'],
   because: ['∵', 'rel'],
 
-  infty: ['∞', 'ord'], partial: ['∂', 'ord'], nabla: ['∇', 'ord'], forall: ['∀', 'ord'], exists: ['∃', 'ord'],
-  nexists: ['∄', 'ord'], neg: ['¬', 'ord'], lnot: ['¬', 'ord'], emptyset: ['∅', 'ord'], varnothing: ['∅', 'ord'],
-  ldots: ['…', 'ord'], dots: ['…', 'ord'], cdots: ['⋯', 'ord'], vdots: ['⋮', 'ord'], ddots: ['⋱', 'ord'],
-  prime: ['′', 'ord'], angle: ['∠', 'ord'], triangle: ['△', 'ord'], hbar: ['ℏ', 'ord'], ell: ['ℓ', 'ord'],
-  Re: ['ℜ', 'ord'], Im: ['ℑ', 'ord'], aleph: ['ℵ', 'ord'], top: ['⊤', 'ord'], bot: ['⊥', 'ord'],
-  degree: ['°', 'ord'], square: ['□', 'ord'], dagger: ['†', 'ord'],
+  infty: ['∞', 'ord'],
+  partial: ['∂', 'ord'],
+  nabla: ['∇', 'ord'],
+  forall: ['∀', 'ord'],
+  exists: ['∃', 'ord'],
+  nexists: ['∄', 'ord'],
+  neg: ['¬', 'ord'],
+  lnot: ['¬', 'ord'],
+  emptyset: ['∅', 'ord'],
+  varnothing: ['∅', 'ord'],
+  ldots: ['…', 'ord'],
+  dots: ['…', 'ord'],
+  cdots: ['⋯', 'ord'],
+  vdots: ['⋮', 'ord'],
+  ddots: ['⋱', 'ord'],
+  prime: ['′', 'ord'],
+  angle: ['∠', 'ord'],
+  triangle: ['△', 'ord'],
+  hbar: ['ℏ', 'ord'],
+  ell: ['ℓ', 'ord'],
+  Re: ['ℜ', 'ord'],
+  Im: ['ℑ', 'ord'],
+  aleph: ['ℵ', 'ord'],
+  top: ['⊤', 'ord'],
+  bot: ['⊥', 'ord'],
+  degree: ['°', 'ord'],
+  square: ['□', 'ord'],
+  dagger: ['†', 'ord'],
 
-  langle: ['⟨', 'open'], rangle: ['⟩', 'close'], lfloor: ['⌊', 'open'], rfloor: ['⌋', 'close'],
-  lceil: ['⌈', 'open'], rceil: ['⌉', 'close'], lvert: ['|', 'open'], rvert: ['|', 'close'], vert: ['|', 'ord'],
-  lVert: ['‖', 'open'], rVert: ['‖', 'close'], Vert: ['‖', 'ord'], lbrace: ['{', 'open'], rbrace: ['}', 'close'],
-  lbrack: ['[', 'open'], rbrack: [']', 'close'],
-  '{': ['{', 'open'], '}': ['}', 'close'], '|': ['‖', 'ord'], '%': ['%', 'ord'], '$': ['$', 'ord'],
-  '&': ['&', 'ord'], '#': ['#', 'ord'], '_': ['_', 'ord'], colon: [':', 'punct'],
+  langle: ['⟨', 'open'],
+  rangle: ['⟩', 'close'],
+  lfloor: ['⌊', 'open'],
+  rfloor: ['⌋', 'close'],
+  lceil: ['⌈', 'open'],
+  rceil: ['⌉', 'close'],
+  lvert: ['|', 'open'],
+  rvert: ['|', 'close'],
+  vert: ['|', 'ord'],
+  lVert: ['‖', 'open'],
+  rVert: ['‖', 'close'],
+  Vert: ['‖', 'ord'],
+  lbrace: ['{', 'open'],
+  rbrace: ['}', 'close'],
+  lbrack: ['[', 'open'],
+  rbrack: [']', 'close'],
+  '{': ['{', 'open'],
+  '}': ['}', 'close'],
+  '|': ['‖', 'ord'],
+  '%': ['%', 'ord'],
+  $: ['$', 'ord'],
+  '&': ['&', 'ord'],
+  '#': ['#', 'ord'],
+  _: ['_', 'ord'],
+  colon: [':', 'punct']
 }
 
 const SPACES: Readonly<Record<string, number>> = {
-  ',': 1 / 6, ':': 2 / 9, '>': 2 / 9, ';': 5 / 18, '!': -1 / 6, ' ': 1 / 3, quad: 1, qquad: 2, enspace: 0.5,
-  thinspace: 1 / 6, medspace: 2 / 9, thickspace: 5 / 18, negthinspace: -1 / 6,
+  ',': 1 / 6,
+  ':': 2 / 9,
+  '>': 2 / 9,
+  ';': 5 / 18,
+  '!': -1 / 6,
+  ' ': 1 / 3,
+  quad: 1,
+  qquad: 2,
+  enspace: 0.5,
+  thinspace: 1 / 6,
+  medspace: 2 / 9,
+  thickspace: 5 / 18,
+  negthinspace: -1 / 6
 }
 
 const BIG: Readonly<Record<string, string>> = {
-  sum: '∑', prod: '∏', coprod: '∐', int: '∫', iint: '∬', iiint: '∭', oint: '∮', bigcup: '⋃', bigcap: '⋂',
-  bigoplus: '⨁', bigotimes: '⨂', bigvee: '⋁', bigwedge: '⋀',
+  sum: '∑',
+  prod: '∏',
+  coprod: '∐',
+  int: '∫',
+  iint: '∬',
+  iiint: '∭',
+  oint: '∮',
+  bigcup: '⋃',
+  bigcap: '⋂',
+  bigoplus: '⨁',
+  bigotimes: '⨂',
+  bigvee: '⋁',
+  bigwedge: '⋀'
 }
 
 const INTEGRALS = new Set(['int', 'iint', 'iiint', 'oint'])
 
 const FUNCTIONS = new Set([
-  'sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'coth',
-  'log', 'ln', 'lg', 'exp', 'deg', 'dim', 'ker', 'arg', 'hom',
+  'sin',
+  'cos',
+  'tan',
+  'cot',
+  'sec',
+  'csc',
+  'arcsin',
+  'arccos',
+  'arctan',
+  'sinh',
+  'cosh',
+  'tanh',
+  'coth',
+  'log',
+  'ln',
+  'lg',
+  'exp',
+  'deg',
+  'dim',
+  'ker',
+  'arg',
+  'hom'
 ])
 
 // Functions whose scripts sit under them in display: lim_{x→0}.
 const LIMIT_FUNCTIONS: Readonly<Record<string, string>> = {
-  lim: 'lim', liminf: 'lim inf', limsup: 'lim sup', max: 'max', min: 'min', sup: 'sup', inf: 'inf',
-  det: 'det', gcd: 'gcd', Pr: 'Pr', argmax: 'arg max', argmin: 'arg min',
+  lim: 'lim',
+  liminf: 'lim inf',
+  limsup: 'lim sup',
+  max: 'max',
+  min: 'min',
+  sup: 'sup',
+  inf: 'inf',
+  det: 'det',
+  gcd: 'gcd',
+  Pr: 'Pr',
+  argmax: 'arg max',
+  argmin: 'arg min'
 }
 
 const ACCENTS: Readonly<Record<string, Accent>> = {
-  hat: 'hat', widehat: 'hat', bar: 'bar', overline: 'bar', vec: 'vec', overrightarrow: 'vec', tilde: 'tilde',
-  widetilde: 'tilde', dot: 'dot', ddot: 'ddot', underline: 'under',
+  hat: 'hat',
+  widehat: 'hat',
+  bar: 'bar',
+  overline: 'bar',
+  vec: 'vec',
+  overrightarrow: 'vec',
+  tilde: 'tilde',
+  widetilde: 'tilde',
+  dot: 'dot',
+  ddot: 'ddot',
+  underline: 'under'
 }
 
 const NEGATED: Readonly<Record<string, string>> = {
-  '=': '≠', '∈': '∉', '<': '≮', '>': '≯', '≤': '≰', '≥': '≱', '⊂': '⊄', '⊆': '⊈', '∃': '∄', '≡': '≢',
-  '∼': '≁', '≈': '≉', '∣': '∤', '∥': '∦',
+  '=': '≠',
+  '∈': '∉',
+  '<': '≮',
+  '>': '≯',
+  '≤': '≰',
+  '≥': '≱',
+  '⊂': '⊄',
+  '⊆': '⊈',
+  '∃': '∄',
+  '≡': '≢',
+  '∼': '≁',
+  '≈': '≉',
+  '∣': '∤',
+  '∥': '∦'
 }
 
 // Capital letters in the math alphabets Unicode has; the gaps are older letterlike symbols.
-const ALPHABETS: Readonly<Record<string, { start: number; held: Readonly<Record<string, string>> }>> = {
-  mathbb: { start: 0x1d538, held: { C: 'ℂ', H: 'ℍ', N: 'ℕ', P: 'ℙ', Q: 'ℚ', R: 'ℝ', Z: 'ℤ' } },
-  mathcal: { start: 0x1d49c, held: { B: 'ℬ', E: 'ℰ', F: 'ℱ', H: 'ℋ', I: 'ℐ', L: 'ℒ', M: 'ℳ', R: 'ℛ' } },
-  mathscr: { start: 0x1d49c, held: { B: 'ℬ', E: 'ℰ', F: 'ℱ', H: 'ℋ', I: 'ℐ', L: 'ℒ', M: 'ℳ', R: 'ℛ' } },
-  mathfrak: { start: 0x1d504, held: { C: 'ℭ', H: 'ℌ', I: 'ℑ', R: 'ℜ', Z: 'ℨ' } },
+const ALPHABETS: Readonly<
+  Record<string, { start: number; held: Readonly<Record<string, string>> }>
+> = {
+  mathbb: {
+    start: 0x1d538,
+    held: { C: 'ℂ', H: 'ℍ', N: 'ℕ', P: 'ℙ', Q: 'ℚ', R: 'ℝ', Z: 'ℤ' }
+  },
+  mathcal: {
+    start: 0x1d49c,
+    held: { B: 'ℬ', E: 'ℰ', F: 'ℱ', H: 'ℋ', I: 'ℐ', L: 'ℒ', M: 'ℳ', R: 'ℛ' }
+  },
+  mathscr: {
+    start: 0x1d49c,
+    held: { B: 'ℬ', E: 'ℰ', F: 'ℱ', H: 'ℋ', I: 'ℐ', L: 'ℒ', M: 'ℳ', R: 'ℛ' }
+  },
+  mathfrak: { start: 0x1d504, held: { C: 'ℭ', H: 'ℌ', I: 'ℑ', R: 'ℜ', Z: 'ℨ' } }
 }
 
 type Environment = { open: string; close: string; align: GridAlign }
@@ -130,16 +368,24 @@ const ENVIRONMENTS: Readonly<Record<string, Environment>> = {
   alignat: { open: '', close: '', align: 'pairs' },
   split: { open: '', close: '', align: 'pairs' },
   eqnarray: { open: '', close: '', align: 'pairs' },
-  flalign: { open: '', close: '', align: 'pairs' },
+  flalign: { open: '', close: '', align: 'pairs' }
 }
 
-const OP_CHARS = new Set([...'+−×÷±∓⋅·∗∘∪∩⊕⊗∧∨'])
-const REL_CHARS = new Set([...'=<>≤≥≠≈≡∼≃≅∝∈∉⊂⊆⊃⊇→←↔⇒⇐⇔⟹⟺↦≪≫∥'])
+const OP_CHARS = new Set('+−×÷±∓⋅·∗∘∪∩⊕⊗∧∨')
+const REL_CHARS = new Set('=<>≤≥≠≈≡∼≃≅∝∈∉⊂⊆⊃⊇→←↔⇒⇐⇔⟹⟺↦≪≫∥')
 
 const ASCII: Readonly<Record<string, readonly [string, Role]>> = {
-  '-': ['−', 'op'], '*': ['∗', 'op'], ':': [':', 'rel'], ',': [',', 'punct'], ';': [';', 'punct'],
-  '(': ['(', 'open'], '[': ['[', 'open'], ')': [')', 'close'], ']': [']', 'close'], '!': ['!', 'close'],
-  '?': ['?', 'close'],
+  '-': ['−', 'op'],
+  '*': ['∗', 'op'],
+  ':': [':', 'rel'],
+  ',': [',', 'punct'],
+  ';': [';', 'punct'],
+  '(': ['(', 'open'],
+  '[': ['[', 'open'],
+  ')': [')', 'close'],
+  ']': [']', 'close'],
+  '!': ['!', 'close'],
+  '?': ['?', 'close']
 }
 
 // --- Parsing ------------------------------------------------------------------------
@@ -188,21 +434,37 @@ function tokenize(tex: string): Token[] {
   return tokens
 }
 
-const sym = (text: string, role: Role, italic = false): Sym => ({ kind: 'sym', text, role, italic })
+const sym = (text: string, role: Role, italic = false): Sym => ({
+  kind: 'sym',
+  text,
+  role,
+  italic
+})
 
 const EMPTY: MathNode = { kind: 'row', items: [] }
 
-const rowOf = (items: MathNode[]): MathNode => (items.length === 1 && items[0] !== undefined ? items[0] : { kind: 'row', items })
+const rowOf = (items: MathNode[]): MathNode =>
+  items.length === 1 && items[0] !== undefined
+    ? items[0]
+    : { kind: 'row', items }
 
-const isChar = (text: string) => (token: Token): boolean => token.kind === 'char' && token.text === text
+const isChar =
+  (text: string) =>
+  (token: Token): boolean =>
+    token.kind === 'char' && token.text === text
 
-const isCmd = (name: string) => (token: Token): boolean => token.kind === 'cmd' && token.name === name
+const isCmd =
+  (name: string) =>
+  (token: Token): boolean =>
+    token.kind === 'cmd' && token.name === name
 
 const ENDS_CELL = (token: Token): boolean =>
-  (token.kind === 'char' && token.text === '&') || (token.kind === 'cmd' && (token.name === '\\' || token.name === 'end'))
+  (token.kind === 'char' && token.text === '&') ||
+  (token.kind === 'cmd' && (token.name === '\\' || token.name === 'end'))
 
 const ENDS_LINE = (token: Token): boolean =>
-  (token.kind === 'char' && token.text === '&') || (token.kind === 'cmd' && token.name === '\\')
+  (token.kind === 'char' && token.text === '&') ||
+  (token.kind === 'cmd' && token.name === '\\')
 
 // Every symbol in a subtree changed, for \mathrm, \mathbf and the math alphabets.
 function restyle(node: MathNode, change: (node: Sym) => Sym): MathNode {
@@ -210,7 +472,7 @@ function restyle(node: MathNode, change: (node: Sym) => Sym): MathNode {
     case 'sym':
       return change(node)
     case 'row':
-      return { ...node, items: node.items.map(item => restyle(item, change)) }
+      return { ...node, items: node.items.map((item) => restyle(item, change)) }
     case 'scripts':
       return { ...node, base: restyle(node.base, change) }
     case 'accent':
@@ -220,19 +482,27 @@ function restyle(node: MathNode, change: (node: Sym) => Sym): MathNode {
   }
 }
 
-const inAlphabet = (name: string) => (node: Sym): Sym => {
-  const alphabet = ALPHABETS[name]
+const inAlphabet =
+  (name: string) =>
+  (node: Sym): Sym => {
+    const alphabet = ALPHABETS[name]
 
-  if (alphabet === undefined) {
-    return node
+    if (alphabet === undefined) {
+      return node
+    }
+
+    const text = [...node.text]
+      .map(
+        (char) =>
+          alphabet.held[char] ??
+          (/[A-Z]/.test(char)
+            ? String.fromCodePoint(alphabet.start + char.charCodeAt(0) - 65)
+            : char)
+      )
+      .join('')
+
+    return { ...node, text, italic: false }
   }
-
-  const text = [...node.text]
-    .map(char => alphabet.held[char] ?? (/[A-Z]/.test(char) ? String.fromCodePoint(alphabet.start + char.charCodeAt(0) - 65) : char))
-    .join('')
-
-  return { ...node, text, italic: false }
-}
 
 class Parser {
   private at = 0
@@ -248,7 +518,11 @@ class Parser {
       return only[0]
     }
 
-    return { kind: 'grid', rows, align: rows.some(cells => cells.length > 1) ? 'pairs' : 'center' }
+    return {
+      kind: 'grid',
+      rows,
+      align: rows.some((cells) => cells.length > 1) ? 'pairs' : 'center'
+    }
   }
 
   private peek(): Token | undefined {
@@ -263,7 +537,11 @@ class Parser {
   }
 
   private skipSpace(): void {
-    for (let token = this.peek(); token?.kind === 'char' && /\s/.test(token.text); token = this.peek()) {
+    for (
+      let token = this.peek();
+      token?.kind === 'char' && /\s/.test(token.text);
+      token = this.peek()
+    ) {
       this.at++
     }
   }
@@ -330,7 +608,12 @@ class Parser {
 
     const last = rows.at(-1)
 
-    if (rows.length > 1 && last?.length === 1 && last[0]?.kind === 'row' && last[0].items.length === 0) {
+    if (
+      rows.length > 1 &&
+      last?.length === 1 &&
+      last[0]?.kind === 'row' &&
+      last[0].items.length === 0
+    ) {
       rows.pop()
     }
 
@@ -390,7 +673,9 @@ class Parser {
     }
 
     if (!(first.kind === 'char' && first.text === '{')) {
-      return first.kind === 'char' ? first.text : (GREEK[first.name] ?? SYMBOLS[first.name]?.[0] ?? first.name)
+      return first.kind === 'char'
+        ? first.text
+        : (GREEK[first.name] ?? SYMBOLS[first.name]?.[0] ?? first.name)
     }
 
     let text = ''
@@ -404,9 +689,15 @@ class Parser {
           break
         }
 
-        text += token.text === '{' || token.text === '}' || token.text === '$' ? '' : token.text
+        text +=
+          token.text === '{' || token.text === '}' || token.text === '$'
+            ? ''
+            : token.text
       } else {
-        text += token.name.length === 1 ? token.name : (GREEK[token.name] ?? SYMBOLS[token.name]?.[0] ?? '')
+        text +=
+          token.name.length === 1
+            ? token.name
+            : (GREEK[token.name] ?? SYMBOLS[token.name]?.[0] ?? '')
       }
     }
 
@@ -455,9 +746,14 @@ class Parser {
       }
     }
 
-    const marks = primes === '' ? sup : rowOf([sym(primes, 'ord'), ...(sup === null ? [] : [sup])])
+    const marks =
+      primes === ''
+        ? sup
+        : rowOf([sym(primes, 'ord'), ...(sup === null ? [] : [sup])])
 
-    return marks === null && sub === null ? node : { kind: 'scripts', base: node, sup: marks, sub }
+    return marks === null && sub === null
+      ? node
+      : { kind: 'scripts', base: node, sup: marks, sub }
   }
 
   private atom(): MathNode | null {
@@ -467,7 +763,9 @@ class Parser {
       return null
     }
 
-    return token.kind === 'char' ? this.character(token.text) : this.command(token.name)
+    return token.kind === 'char'
+      ? this.character(token.text)
+      : this.command(token.name)
   }
 
   private character(text: string): MathNode | null {
@@ -493,10 +791,17 @@ class Parser {
     if (/[0-9]/.test(text)) {
       let number = text
 
-      for (let token = this.peek(); token?.kind === 'char'; token = this.peek()) {
+      for (
+        let token = this.peek();
+        token?.kind === 'char';
+        token = this.peek()
+      ) {
         const after = this.tokens[this.at + 1]
         const isDigit = /[0-9]/.test(token.text)
-        const isPoint = token.text === '.' && after?.kind === 'char' && /[0-9]/.test(after.text)
+        const isPoint =
+          token.text === '.' &&
+          after?.kind === 'char' &&
+          /[0-9]/.test(after.text)
 
         if (!isDigit && !isPoint) {
           break
@@ -519,7 +824,10 @@ class Parser {
       return sym(ascii[0], ascii[1])
     }
 
-    return sym(text, OP_CHARS.has(text) ? 'op' : REL_CHARS.has(text) ? 'rel' : 'ord')
+    return sym(
+      text,
+      OP_CHARS.has(text) ? 'op' : REL_CHARS.has(text) ? 'rel' : 'ord'
+    )
   }
 
   private command(name: string): MathNode | null {
@@ -577,7 +885,12 @@ class Parser {
       case 'tbinom': {
         const num = this.arg()
 
-        return { kind: 'fence', open: '(', close: ')', body: { kind: 'frac', num, den: this.arg(), bar: false } }
+        return {
+          kind: 'fence',
+          open: '(',
+          close: ')',
+          body: { kind: 'frac', num, den: this.arg(), bar: false }
+        }
       }
       case 'sqrt': {
         const index = this.optional()
@@ -589,7 +902,12 @@ class Parser {
         const items = this.list(isCmd('right'))
         this.take()
 
-        return { kind: 'fence', open, close: this.delimiter(), body: rowOf(items) }
+        return {
+          kind: 'fence',
+          open,
+          close: this.delimiter(),
+          body: rowOf(items)
+        }
       }
       case 'middle':
         return sym(this.delimiter(), 'rel')
@@ -636,13 +954,16 @@ class Parser {
       case 'mathtt':
       case 'mathup':
       case 'rm':
-        return restyle(this.arg(), node => ({ ...node, italic: false }))
+        return restyle(this.arg(), (node) => ({ ...node, italic: false }))
       case 'mathit':
-        return restyle(this.arg(), node => ({ ...node, italic: /\p{L}/u.test(node.text) }))
+        return restyle(this.arg(), (node) => ({
+          ...node,
+          italic: /\p{L}/u.test(node.text)
+        }))
       case 'mathbf':
       case 'boldsymbol':
       case 'bm':
-        return restyle(this.arg(), node => ({ ...node, bold: true }))
+        return restyle(this.arg(), (node) => ({ ...node, bold: true }))
       case 'mathbb':
       case 'mathcal':
       case 'mathscr':
@@ -655,7 +976,13 @@ class Parser {
         return sym(NEGATED[text] ?? `${text}̸`, 'rel')
       }
       case 'pmod':
-        return rowOf([{ kind: 'space', em: 1 }, sym('(', 'open'), sym('mod', 'fn'), this.arg(), sym(')', 'close')])
+        return rowOf([
+          { kind: 'space', em: 1 },
+          sym('(', 'open'),
+          sym('mod', 'fn'),
+          this.arg(),
+          sym(')', 'close')
+        ])
       case 'tag':
         return rowOf([{ kind: 'space', em: 2 }, sym(`(${this.raw()})`, 'word')])
       case 'overset':
@@ -663,13 +990,23 @@ class Parser {
         const over = this.arg()
         const base = this.arg()
 
-        return { kind: 'scripts', base: base.kind === 'sym' ? { ...base, limits: true } : base, sup: over, sub: null }
+        return {
+          kind: 'scripts',
+          base: base.kind === 'sym' ? { ...base, limits: true } : base,
+          sup: over,
+          sub: null
+        }
       }
       case 'underset': {
         const under = this.arg()
         const base = this.arg()
 
-        return { kind: 'scripts', base: base.kind === 'sym' ? { ...base, limits: true } : base, sup: null, sub: under }
+        return {
+          kind: 'scripts',
+          base: base.kind === 'sym' ? { ...base, limits: true } : base,
+          sup: null,
+          sub: under
+        }
       }
       case 'textcolor':
         this.raw()
@@ -706,7 +1043,9 @@ class Parser {
       case 'mathstrut':
       case 'strut':
       case '\\':
-        return name === 'overbrace' || name === 'underbrace' || name === 'boxed' ? this.arg() : null
+        return name === 'overbrace' || name === 'underbrace' || name === 'boxed'
+          ? this.arg()
+          : null
       default:
         return sym(`\\${name}`, 'word')
     }
@@ -724,11 +1063,14 @@ class Parser {
     const shape = ENVIRONMENTS[name] ?? { open: '', close: '', align: 'center' }
     const grid: MathNode = { kind: 'grid', rows, align: shape.align }
 
-    return shape.open === '' && shape.close === '' ? grid : { kind: 'fence', open: shape.open, close: shape.close, body: grid }
+    return shape.open === '' && shape.close === ''
+      ? grid
+      : { kind: 'fence', open: shape.open, close: shape.close, body: grid }
   }
 }
 
-export const parseTex = (tex: string): MathNode => new Parser(tokenize(tex)).top()
+export const parseTex = (tex: string): MathNode =>
+  new Parser(tokenize(tex)).top()
 
 // --- Spacing ------------------------------------------------------------------------
 
@@ -740,7 +1082,11 @@ const THICK = 5 / 18
 const SIGN_AFTER = new Set<Role>(['op', 'rel', 'open', 'punct', 'big', 'fn'])
 
 const roleOf = (node: MathNode): Role =>
-  node.kind === 'sym' ? node.role : node.kind === 'scripts' ? roleOf(node.base) : 'ord'
+  node.kind === 'sym'
+    ? node.role
+    : node.kind === 'scripts'
+      ? roleOf(node.base)
+      : 'ord'
 
 // The space before each item, in em, by TeX's rules cut down: a medium space around binary
 // operators, a thick one around relations, a thin one after punctuation and after a
@@ -751,7 +1097,11 @@ export function gapsOf(items: readonly MathNode[], compact: boolean): number[] {
   for (const item of items) {
     const role = roleOf(item)
     const before = roles.at(-1)
-    roles.push(role === 'op' && (before === undefined || SIGN_AFTER.has(before)) ? 'ord' : role)
+    roles.push(
+      role === 'op' && (before === undefined || SIGN_AFTER.has(before))
+        ? 'ord'
+        : role
+    )
   }
 
   return roles.map((role, i) => {
@@ -762,7 +1112,9 @@ export function gapsOf(items: readonly MathNode[], compact: boolean): number[] {
       return !compact && role === 'rel' ? THICK : 0
     }
 
-    const afterName = (before === 'fn' || before === 'big') && !['open', 'close', 'punct', 'rel', 'op'].includes(role)
+    const afterName =
+      (before === 'fn' || before === 'big') &&
+      !['open', 'close', 'punct', 'rel', 'op'].includes(role)
 
     if (compact) {
       return before === 'fn' && afterName ? THIN : 0
@@ -783,32 +1135,146 @@ export function gapsOf(items: readonly MathNode[], compact: boolean): number[] {
 // --- One line of Unicode ------------------------------------------------------------
 
 const SUP: Readonly<Record<string, string>> = {
-  '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
-  '+': '⁺', '−': '⁻', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', '′': '′',
-  a: 'ᵃ', b: 'ᵇ', c: 'ᶜ', d: 'ᵈ', e: 'ᵉ', f: 'ᶠ', g: 'ᵍ', h: 'ʰ', i: 'ⁱ', j: 'ʲ', k: 'ᵏ', l: 'ˡ', m: 'ᵐ',
-  n: 'ⁿ', o: 'ᵒ', p: 'ᵖ', r: 'ʳ', s: 'ˢ', t: 'ᵗ', u: 'ᵘ', v: 'ᵛ', w: 'ʷ', x: 'ˣ', y: 'ʸ', z: 'ᶻ',
-  A: 'ᴬ', B: 'ᴮ', D: 'ᴰ', E: 'ᴱ', G: 'ᴳ', H: 'ᴴ', I: 'ᴵ', J: 'ᴶ', K: 'ᴷ', L: 'ᴸ', M: 'ᴹ', N: 'ᴺ',
-  O: 'ᴼ', P: 'ᴾ', R: 'ᴿ', T: 'ᵀ', U: 'ᵁ', V: 'ⱽ', W: 'ᵂ',
-  α: 'ᵅ', β: 'ᵝ', γ: 'ᵞ', δ: 'ᵟ', ε: 'ᵋ', θ: 'ᶿ', φ: 'ᵠ', ϕ: 'ᵠ', χ: 'ᵡ',
+  '0': '⁰',
+  '1': '¹',
+  '2': '²',
+  '3': '³',
+  '4': '⁴',
+  '5': '⁵',
+  '6': '⁶',
+  '7': '⁷',
+  '8': '⁸',
+  '9': '⁹',
+  '+': '⁺',
+  '−': '⁻',
+  '-': '⁻',
+  '=': '⁼',
+  '(': '⁽',
+  ')': '⁾',
+  '′': '′',
+  a: 'ᵃ',
+  b: 'ᵇ',
+  c: 'ᶜ',
+  d: 'ᵈ',
+  e: 'ᵉ',
+  f: 'ᶠ',
+  g: 'ᵍ',
+  h: 'ʰ',
+  i: 'ⁱ',
+  j: 'ʲ',
+  k: 'ᵏ',
+  l: 'ˡ',
+  m: 'ᵐ',
+  n: 'ⁿ',
+  o: 'ᵒ',
+  p: 'ᵖ',
+  r: 'ʳ',
+  s: 'ˢ',
+  t: 'ᵗ',
+  u: 'ᵘ',
+  v: 'ᵛ',
+  w: 'ʷ',
+  x: 'ˣ',
+  y: 'ʸ',
+  z: 'ᶻ',
+  A: 'ᴬ',
+  B: 'ᴮ',
+  D: 'ᴰ',
+  E: 'ᴱ',
+  G: 'ᴳ',
+  H: 'ᴴ',
+  I: 'ᴵ',
+  J: 'ᴶ',
+  K: 'ᴷ',
+  L: 'ᴸ',
+  M: 'ᴹ',
+  N: 'ᴺ',
+  O: 'ᴼ',
+  P: 'ᴾ',
+  R: 'ᴿ',
+  T: 'ᵀ',
+  U: 'ᵁ',
+  V: 'ⱽ',
+  W: 'ᵂ',
+  α: 'ᵅ',
+  β: 'ᵝ',
+  γ: 'ᵞ',
+  δ: 'ᵟ',
+  ε: 'ᵋ',
+  θ: 'ᶿ',
+  φ: 'ᵠ',
+  ϕ: 'ᵠ',
+  χ: 'ᵡ'
 }
 
 const SUB: Readonly<Record<string, string>> = {
-  '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
-  '+': '₊', '−': '₋', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
-  a: 'ₐ', e: 'ₑ', h: 'ₕ', i: 'ᵢ', j: 'ⱼ', k: 'ₖ', l: 'ₗ', m: 'ₘ', n: 'ₙ', o: 'ₒ', p: 'ₚ', r: 'ᵣ', s: 'ₛ',
-  t: 'ₜ', u: 'ᵤ', v: 'ᵥ', x: 'ₓ', β: 'ᵦ', γ: 'ᵧ', ρ: 'ᵨ', φ: 'ᵩ', ϕ: 'ᵩ', χ: 'ᵪ',
+  '0': '₀',
+  '1': '₁',
+  '2': '₂',
+  '3': '₃',
+  '4': '₄',
+  '5': '₅',
+  '6': '₆',
+  '7': '₇',
+  '8': '₈',
+  '9': '₉',
+  '+': '₊',
+  '−': '₋',
+  '-': '₋',
+  '=': '₌',
+  '(': '₍',
+  ')': '₎',
+  a: 'ₐ',
+  e: 'ₑ',
+  h: 'ₕ',
+  i: 'ᵢ',
+  j: 'ⱼ',
+  k: 'ₖ',
+  l: 'ₗ',
+  m: 'ₘ',
+  n: 'ₙ',
+  o: 'ₒ',
+  p: 'ₚ',
+  r: 'ᵣ',
+  s: 'ₛ',
+  t: 'ₜ',
+  u: 'ᵤ',
+  v: 'ᵥ',
+  x: 'ₓ',
+  β: 'ᵦ',
+  γ: 'ᵧ',
+  ρ: 'ᵨ',
+  φ: 'ᵩ',
+  ϕ: 'ᵩ',
+  χ: 'ᵪ'
 }
 
 const VULGAR: Readonly<Record<string, string>> = {
-  '1/2': '½', '1/3': '⅓', '2/3': '⅔', '1/4': '¼', '3/4': '¾', '1/5': '⅕', '1/6': '⅙', '1/8': '⅛',
+  '1/2': '½',
+  '1/3': '⅓',
+  '2/3': '⅔',
+  '1/4': '¼',
+  '3/4': '¾',
+  '1/5': '⅕',
+  '1/6': '⅙',
+  '1/8': '⅛'
 }
 
 const COMBINING: Readonly<Record<Accent, string>> = {
-  hat: '̂', bar: '̄', vec: '⃗', tilde: '̃', dot: '̇', ddot: '̈', under: '̲',
+  hat: '̂',
+  bar: '̄',
+  vec: '⃗',
+  tilde: '̃',
+  dot: '̇',
+  ddot: '̈',
+  under: '̲'
 }
 
 // `text` in super- or subscript letters, or null when one of them has none.
-function mapped(text: string, table: Readonly<Record<string, string>>): string | null {
+function mapped(
+  text: string,
+  table: Readonly<Record<string, string>>
+): string | null {
   let out = ''
 
   for (const char of text) {
@@ -826,25 +1292,53 @@ function mapped(text: string, table: Readonly<Record<string, string>>): string |
 
 // One thing on its own, needing no brackets to keep it together after a `/` or `^`.
 const isAtomic = (node: MathNode): boolean =>
-  node.kind === 'sym' || node.kind === 'sqrt' || node.kind === 'fence' || node.kind === 'accent' ||
-  (node.kind === 'scripts' && isAtomic(node.base)) || (node.kind === 'row' && node.items.length === 1 && node.items[0] !== undefined && isAtomic(node.items[0]))
+  node.kind === 'sym' ||
+  node.kind === 'sqrt' ||
+  node.kind === 'fence' ||
+  node.kind === 'accent' ||
+  (node.kind === 'scripts' && isAtomic(node.base)) ||
+  (node.kind === 'row' &&
+    node.items.length === 1 &&
+    node.items[0] !== undefined &&
+    isAtomic(node.items[0]))
 
-const kept = (node: MathNode, text: string): string => (isAtomic(node) || text === '' ? text : `(${text})`)
+const kept = (node: MathNode, text: string): string =>
+  isAtomic(node) || text === '' ? text : `(${text})`
 
-function scriptLine(node: MathNode | null, table: Readonly<Record<string, string>>, mark: string): string {
+function scriptLine(
+  node: MathNode | null,
+  table: Readonly<Record<string, string>>,
+  mark: string
+): string {
   if (node === null) {
     return ''
   }
 
   const text = linear(node, true)
 
-  return mapped(text, table) ?? (isAtomic(node) && [...text].length === 1 ? `${mark}${text}` : `${mark}(${text})`)
+  return (
+    mapped(text, table) ??
+    (isAtomic(node) && [...text].length === 1
+      ? `${mark}${text}`
+      : `${mark}(${text})`)
+  )
 }
 
-function gridLine(rows: readonly MathNode[][], align: GridAlign, rowJoin: string): string {
+function gridLine(
+  rows: readonly MathNode[][],
+  align: GridAlign,
+  rowJoin: string
+): string {
   const cellJoin = align === 'pairs' ? '' : align === 'left' ? '  ' : ' '
 
-  return rows.map(cells => cells.map(cell => linear(cell)).join(cellJoin).trim()).join(rowJoin)
+  return rows
+    .map((cells) =>
+      cells
+        .map((cell) => linear(cell))
+        .join(cellJoin)
+        .trim()
+    )
+    .join(rowJoin)
 }
 
 // The formula as one line of Unicode (a line a row, for a grid at the top). `compact`
@@ -854,11 +1348,21 @@ export function linear(node: MathNode, compact = false): string {
     case 'sym':
       return node.text
     case 'space':
-      return compact || node.em <= 0.1 ? '' : node.em >= 1.5 ? '    ' : node.em >= 0.9 ? '  ' : ' '
+      return compact || node.em <= 0.1
+        ? ''
+        : node.em >= 1.5
+          ? '    '
+          : node.em >= 0.9
+            ? '  '
+            : ' '
     case 'row': {
       const gaps = gapsOf(node.items, compact)
 
-      return node.items.map((item, i) => ((gaps[i] ?? 0) > 0 ? ' ' : '') + linear(item, compact)).join('')
+      return node.items
+        .map(
+          (item, i) => ((gaps[i] ?? 0) > 0 ? ' ' : '') + linear(item, compact)
+        )
+        .join('')
     }
     case 'frac': {
       const num = linear(node.num, compact)
@@ -870,25 +1374,47 @@ export function linear(node: MathNode, compact = false): string {
 
       const digits = /^\d{1,3}$/.test(num) && /^\d{1,3}$/.test(den)
 
-      return VULGAR[`${num}/${den}`] ?? (digits ? `${mapped(num, SUP) ?? num}⁄${mapped(den, SUB) ?? den}` : `${kept(node.num, num)}/${kept(node.den, den)}`)
+      return (
+        VULGAR[`${num}/${den}`] ??
+        (digits
+          ? `${mapped(num, SUP) ?? num}⁄${mapped(den, SUB) ?? den}`
+          : `${kept(node.num, num)}/${kept(node.den, den)}`)
+      )
     }
     case 'sqrt': {
       const index = node.index === null ? '' : linear(node.index, true)
-      const root = index === '3' ? '∛' : index === '4' ? '∜' : `${mapped(index, SUP) ?? index}√`
+      const root =
+        index === '3'
+          ? '∛'
+          : index === '4'
+            ? '∜'
+            : `${mapped(index, SUP) ?? index}√`
 
       return root + kept(node.body, linear(node.body, compact))
     }
     case 'scripts':
-      return kept(node.base, linear(node.base, compact)) + scriptLine(node.sub, SUB, '_') + scriptLine(node.sup, SUP, '^')
+      return (
+        kept(node.base, linear(node.base, compact)) +
+        scriptLine(node.sub, SUB, '_') +
+        scriptLine(node.sup, SUP, '^')
+      )
     case 'fence':
-      return node.open + (node.body.kind === 'grid' ? gridLine(node.body.rows, node.body.align, '; ') : linear(node.body, compact)) + node.close
+      return (
+        node.open +
+        (node.body.kind === 'grid'
+          ? gridLine(node.body.rows, node.body.align, '; ')
+          : linear(node.body, compact)) +
+        node.close
+      )
     case 'grid':
       return gridLine(node.rows, node.align, '\n')
     case 'accent': {
       const body = linear(node.body, compact)
       const mark = COMBINING[node.mark]
 
-      return node.mark === 'bar' || node.mark === 'under' ? [...body].map(char => char + mark).join('') : body + mark
+      return node.mark === 'bar' || node.mark === 'under'
+        ? [...body].map((char) => char + mark).join('')
+        : body + mark
     }
   }
 }
@@ -900,34 +1426,64 @@ type Art = { lines: string[]; base: number; width: number }
 
 const blank = (width: number): string => ' '.repeat(Math.max(0, width))
 
-function fill(line: string, width: number, align: 'left' | 'right' | 'center' = 'left'): string {
+function fill(
+  line: string,
+  width: number,
+  align: 'left' | 'right' | 'center' = 'left'
+): string {
   const room = Math.max(0, width - widthOf(line))
-  const left = align === 'right' ? room : align === 'center' ? Math.floor(room / 2) : 0
+  const left =
+    align === 'right' ? room : align === 'center' ? Math.floor(room / 2) : 0
 
   return blank(left) + line + blank(room - left)
 }
 
-const flat = (text: string): Art => ({ lines: [text], base: 0, width: widthOf(text) })
+const flat = (text: string): Art => ({
+  lines: [text],
+  base: 0,
+  width: widthOf(text)
+})
 
 // Side by side on a shared baseline.
 function beside(parts: readonly Art[]): Art {
-  const up = Math.max(0, ...parts.map(part => part.base))
-  const down = Math.max(0, ...parts.map(part => part.lines.length - 1 - part.base))
+  const up = Math.max(0, ...parts.map((part) => part.base))
+  const down = Math.max(
+    0,
+    ...parts.map((part) => part.lines.length - 1 - part.base)
+  )
   const lines = Array.from({ length: up + down + 1 }, (_, r) =>
-    parts.map(part => part.lines[r - up + part.base] ?? blank(part.width)).join(''),
+    parts
+      .map((part) => part.lines[r - up + part.base] ?? blank(part.width))
+      .join('')
   )
 
-  return { lines, base: up, width: parts.reduce((sum, part) => sum + part.width, 0) }
+  return {
+    lines,
+    base: up,
+    width: parts.reduce((sum, part) => sum + part.width, 0)
+  }
 }
 
-function stacked(parts: readonly Art[], base: number, align: 'left' | 'center' = 'center'): Art {
-  const width = Math.max(0, ...parts.map(part => part.width))
+function stacked(
+  parts: readonly Art[],
+  base: number,
+  align: 'left' | 'center' = 'center'
+): Art {
+  const width = Math.max(0, ...parts.map((part) => part.width))
 
-  return { lines: parts.flatMap(part => part.lines.map(line => fill(line, width, align))), base, width }
+  return {
+    lines: parts.flatMap((part) =>
+      part.lines.map((line) => fill(line, width, align))
+    ),
+    base,
+    width
+  }
 }
 
 // Tall delimiters from the bracket pieces: top, extension, bottom, and the middle piece.
-const TALL: Readonly<Record<string, readonly [string, string, string, string]>> = {
+const TALL: Readonly<
+  Record<string, readonly [string, string, string, string]>
+> = {
   '(': ['⎛', '⎜', '⎝', '⎜'],
   ')': ['⎞', '⎟', '⎠', '⎟'],
   '[': ['⎡', '⎢', '⎣', '⎢'],
@@ -937,7 +1493,7 @@ const TALL: Readonly<Record<string, readonly [string, string, string, string]>> 
   '⌊': ['⎢', '⎢', '⎣', '⎢'],
   '⌋': ['⎥', '⎥', '⎦', '⎥'],
   '⌈': ['⎡', '⎢', '⎢', '⎢'],
-  '⌉': ['⎤', '⎥', '⎥', '⎥'],
+  '⌉': ['⎤', '⎥', '⎥', '⎥']
 }
 
 function tall(delimiter: string, height: number, base: number): Art {
@@ -949,21 +1505,41 @@ function tall(delimiter: string, height: number, base: number): Art {
   const middle = Math.floor((height - 1) / 2)
   const lines = Array.from({ length: height }, (_, r) => {
     if (pieces !== undefined) {
-      return r === 0 ? pieces[0] : r === height - 1 ? pieces[2] : r === middle && height > 2 ? pieces[3] : pieces[1]
+      return r === 0
+        ? pieces[0]
+        : r === height - 1
+          ? pieces[2]
+          : r === middle && height > 2
+            ? pieces[3]
+            : pieces[1]
     }
 
     if (delimiter === '⟨' || delimiter === '⟩') {
-      return (r < height / 2) === (delimiter === '⟨') ? '╱' : '╲'
+      return r < height / 2 === (delimiter === '⟨') ? '╱' : '╲'
     }
 
-    return delimiter === '|' ? '│' : delimiter === '‖' ? '║' : r === middle ? delimiter : ' '
+    return delimiter === '|'
+      ? '│'
+      : delimiter === '‖'
+        ? '║'
+        : r === middle
+          ? delimiter
+          : ' '
   })
 
   return { lines, base, width: widthOf(lines[0] ?? '') }
 }
 
 // Marks drawn on the row above a body too wide to take a combining mark.
-const OVER: Readonly<Record<Accent, string>> = { hat: '^', bar: '_', vec: '→', tilde: '~', dot: '·', ddot: '¨', under: '‾' }
+const OVER: Readonly<Record<Accent, string>> = {
+  hat: '^',
+  bar: '_',
+  vec: '→',
+  tilde: '~',
+  dot: '·',
+  ddot: '¨',
+  under: '‾'
+}
 
 function art(node: MathNode, compact: boolean): Art {
   switch (node.kind) {
@@ -973,7 +1549,13 @@ function art(node: MathNode, compact: boolean): Art {
     case 'row': {
       const gaps = gapsOf(node.items, compact)
 
-      return beside(node.items.flatMap((item, i) => ((gaps[i] ?? 0) > 0 ? [flat(' '), art(item, compact)] : [art(item, compact)])))
+      return beside(
+        node.items.flatMap((item, i) =>
+          (gaps[i] ?? 0) > 0
+            ? [flat(' '), art(item, compact)]
+            : [art(item, compact)]
+        )
+      )
     }
     case 'frac': {
       if (compact) {
@@ -987,7 +1569,10 @@ function art(node: MathNode, compact: boolean): Art {
         return stacked([num, den], num.lines.length - 1)
       }
 
-      return stacked([num, flat('─'.repeat(Math.max(num.width, den.width) + 2)), den], num.lines.length)
+      return stacked(
+        [num, flat('─'.repeat(Math.max(num.width, den.width) + 2)), den],
+        num.lines.length
+      )
     }
     case 'sqrt': {
       if (compact) {
@@ -1002,15 +1587,33 @@ function art(node: MathNode, compact: boolean): Art {
       if (height === 1) {
         const lead = `${mark}√`
 
-        return { lines: [blank(widthOf(lead)) + '_'.repeat(body.width), lead + (body.lines[0] ?? '')], base: 1, width: widthOf(lead) + body.width }
+        return {
+          lines: [
+            blank(widthOf(lead)) + '_'.repeat(body.width),
+            lead + (body.lines[0] ?? '')
+          ],
+          base: 1,
+          width: widthOf(lead) + body.width
+        }
       }
 
       // The radical climbs one cell a row, so it takes as many cells as the body has rows.
       const lead = height + 1
-      const bar = (widthOf(mark) < lead ? fill(mark, lead) : blank(lead)) + '_'.repeat(body.width)
-      const rows = body.lines.map((line, r) => (r < height - 1 ? `${blank(height - r)}╱${blank(r)}` : `╲╱${blank(height - 1)}`) + line)
+      const bar =
+        (widthOf(mark) < lead ? fill(mark, lead) : blank(lead)) +
+        '_'.repeat(body.width)
+      const rows = body.lines.map(
+        (line, r) =>
+          (r < height - 1
+            ? `${blank(height - r)}╱${blank(r)}`
+            : `╲╱${blank(height - 1)}`) + line
+      )
 
-      return { lines: [bar, ...rows], base: body.base + 1, width: lead + body.width }
+      return {
+        lines: [bar, ...rows],
+        base: body.base + 1,
+        width: lead + body.width
+      }
     }
     case 'scripts':
       return scriptsArt(node.base, node.sup, node.sub, compact)
@@ -1025,7 +1628,13 @@ function art(node: MathNode, compact: boolean): Art {
       const left = tall(node.open, body.lines.length, body.base)
       const right = tall(node.close, body.lines.length, body.base)
 
-      return beside([left, ...(left.width > 0 ? pad : []), body, ...(right.width > 0 ? pad : []), right])
+      return beside([
+        left,
+        ...(left.width > 0 ? pad : []),
+        body,
+        ...(right.width > 0 ? pad : []),
+        right
+      ])
     }
     case 'grid':
       return gridArt(node.rows, node.align, compact)
@@ -1037,17 +1646,35 @@ function art(node: MathNode, compact: boolean): Art {
       }
 
       if (node.mark === 'under') {
-        return { lines: [...body.lines, '‾'.repeat(body.width)], base: body.base, width: body.width }
+        return {
+          lines: [...body.lines, '‾'.repeat(body.width)],
+          base: body.base,
+          width: body.width
+        }
       }
 
-      const over = node.mark === 'bar' ? '_'.repeat(body.width) : node.mark === 'vec' ? `${'─'.repeat(Math.max(0, body.width - 1))}→` : fill(OVER[node.mark], body.width, 'center')
+      const over =
+        node.mark === 'bar'
+          ? '_'.repeat(body.width)
+          : node.mark === 'vec'
+            ? `${'─'.repeat(Math.max(0, body.width - 1))}→`
+            : fill(OVER[node.mark], body.width, 'center')
 
-      return { lines: [over, ...body.lines], base: body.base + 1, width: body.width }
+      return {
+        lines: [over, ...body.lines],
+        base: body.base + 1,
+        width: body.width
+      }
     }
   }
 }
 
-function scriptsArt(baseNode: MathNode, supNode: MathNode | null, subNode: MathNode | null, compact: boolean): Art {
+function scriptsArt(
+  baseNode: MathNode,
+  supNode: MathNode | null,
+  subNode: MathNode | null,
+  compact: boolean
+): Art {
   const base = art(baseNode, compact)
 
   // ∑ and lim in display: the scripts stacked over and under.
@@ -1055,7 +1682,10 @@ function scriptsArt(baseNode: MathNode, supNode: MathNode | null, subNode: MathN
     const sup = supNode === null ? [] : [art(supNode, true)]
     const sub = subNode === null ? [] : [art(subNode, true)]
 
-    return stacked([...sup, base, ...sub], (sup[0]?.lines.length ?? 0) + base.base)
+    return stacked(
+      [...sup, base, ...sub],
+      (sup[0]?.lines.length ?? 0) + base.base
+    )
   }
 
   const supText = supNode === null ? '' : mapped(linear(supNode, true), SUP)
@@ -1072,7 +1702,10 @@ function scriptsArt(baseNode: MathNode, supNode: MathNode | null, subNode: MathN
   const supTop = sup === null ? 0 : base.base - sup.lines.length
   const subTop = base.base + 1
   const top = Math.min(0, supTop)
-  const bottom = Math.max(base.lines.length, sub === null ? 0 : subTop + sub.lines.length)
+  const bottom = Math.max(
+    base.lines.length,
+    sub === null ? 0 : subTop + sub.lines.length
+  )
   const side = Math.max(sup?.width ?? 0, sub?.width ?? 0)
   const lines = Array.from({ length: bottom - top }, (_, k) => {
     const r = k + top
@@ -1084,20 +1717,40 @@ function scriptsArt(baseNode: MathNode, supNode: MathNode | null, subNode: MathN
   return { lines, base: base.base - top, width: base.width + side }
 }
 
-function gridArt(rows: readonly MathNode[][], align: GridAlign, compact: boolean): Art {
-  const cells = rows.map(cells => cells.map(cell => art(cell, compact)))
-  const columns = Math.max(0, ...cells.map(row => row.length))
-  const widths = Array.from({ length: columns }, (_, c) => Math.max(0, ...cells.map(row => row[c]?.width ?? 0)))
-  const gap = (c: number): number => (c === 0 ? 0 : align === 'pairs' ? (c % 2 === 1 ? 0 : 3) : 2)
-  const side = (c: number): 'left' | 'right' | 'center' => (align === 'pairs' ? (c % 2 === 0 ? 'right' : 'left') : align === 'left' ? 'left' : 'center')
-  const lines = cells.map(row =>
+function gridArt(
+  rows: readonly MathNode[][],
+  align: GridAlign,
+  compact: boolean
+): Art {
+  const cells = rows.map((cells) => cells.map((cell) => art(cell, compact)))
+  const columns = Math.max(0, ...cells.map((row) => row.length))
+  const widths = Array.from({ length: columns }, (_, c) =>
+    Math.max(0, ...cells.map((row) => row[c]?.width ?? 0))
+  )
+  const gap = (c: number): number =>
+    c === 0 ? 0 : align === 'pairs' ? (c % 2 === 1 ? 0 : 3) : 2
+  const side = (c: number): 'left' | 'right' | 'center' =>
+    align === 'pairs'
+      ? c % 2 === 0
+        ? 'right'
+        : 'left'
+      : align === 'left'
+        ? 'left'
+        : 'center'
+  const lines = cells.map((row) =>
     beside(
       widths.map((width, c) => {
         const cell = row[c] ?? flat('')
 
-        return { lines: cell.lines.map(line => blank(gap(c)) + fill(line, width, side(c))), base: cell.base, width: gap(c) + width }
-      }),
-    ),
+        return {
+          lines: cell.lines.map(
+            (line) => blank(gap(c)) + fill(line, width, side(c))
+          ),
+          base: cell.base,
+          width: gap(c) + width
+        }
+      })
+    )
   )
   const height = lines.reduce((sum, line) => sum + line.lines.length, 0)
 
@@ -1110,7 +1763,7 @@ export function mathArt(node: MathNode, maxWidth: number): string[] {
   const drawn = art(node, false)
   const lines = drawn.width <= maxWidth ? drawn.lines : linear(node).split('\n')
 
-  return lines.map(line => line.replace(/\s+$/, ''))
+  return lines.map((line) => line.replace(/\s+$/, ''))
 }
 
 // --- Inline math --------------------------------------------------------------------
@@ -1118,11 +1771,15 @@ export function mathArt(node: MathNode, maxWidth: number): string[] {
 // `$x$` as Pandoc reads it (no space inside either dollar, no digit after the closing
 // one, so "$5 and $10" stays money), `\(x\)`, and `$$x$$` inside a line. Code spans
 // come first so the formula inside one is left alone.
-const INLINE = /(`+)[^`]*?\1|\\\((.+?)\\\)|\$\$([^$\n]+?)\$\$|(?<![\\$\w])\$([^$\s](?:[^$\n]*[^$\s\\])?)\$(?![\w$])/g
+const INLINE =
+  /(`+)[^`]*?\1|\\\((.+?)\\\)|\$\$([^$\n]+?)\$\$|(?<![\\$\w])\$([^$\s](?:[^$\n]*[^$\s\\])?)\$(?![\w$])/g
 
 // A dollar pair only counts when what is inside reads as math.
 const looksLikeMath = (tex: string): boolean =>
-  /[\\^_=<>]/.test(tex) || /^[A-Za-z](\([^()]*\))?$/.test(tex) || (/[A-Za-z]/.test(tex) && /^[A-Za-z0-9]+(\s*[+\-*/]\s*[A-Za-z0-9]+)+$/.test(tex))
+  /[\\^_=<>]/.test(tex) ||
+  /^[A-Za-z](\([^()]*\))?$/.test(tex) ||
+  (/[A-Za-z]/.test(tex) &&
+    /^[A-Za-z0-9]+(\s*[+\-*/]\s*[A-Za-z0-9]+)+$/.test(tex))
 
 // Markdown would read a `_` or `*` in the Unicode as emphasis.
 const markdownSafe = (text: string): string => text.replace(/[\\*_`]/g, '\\$&')
@@ -1135,7 +1792,7 @@ export function inlineMath(markdown: string): string {
 
   return markdown
     .split('\n')
-    .map(line => {
+    .map((line) => {
       if (FENCE_LINE.test(line)) {
         inFence = !inFence
 
@@ -1146,15 +1803,28 @@ export function inlineMath(markdown: string): string {
         return line
       }
 
-      return line.replace(INLINE, (whole: string, ticks: string | undefined, paren: string | undefined, display: string | undefined, dollar: string | undefined) => {
-        const tex = paren ?? display ?? dollar
+      return line.replace(
+        INLINE,
+        (
+          whole: string,
+          ticks: string | undefined,
+          paren: string | undefined,
+          display: string | undefined,
+          dollar: string | undefined
+        ) => {
+          const tex = paren ?? display ?? dollar
 
-        if (ticks !== undefined || tex === undefined || (dollar !== undefined && !looksLikeMath(dollar))) {
-          return whole
+          if (
+            ticks !== undefined ||
+            tex === undefined ||
+            (dollar !== undefined && !looksLikeMath(dollar))
+          ) {
+            return whole
+          }
+
+          return markdownSafe(linear(parseTex(tex)))
         }
-
-        return markdownSafe(linear(parseTex(tex)))
-      })
+      )
     })
     .join('\n')
 }

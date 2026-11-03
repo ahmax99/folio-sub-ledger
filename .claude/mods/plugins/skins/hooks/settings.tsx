@@ -1,13 +1,17 @@
 import type { ElementTable } from 'claude-code'
 
 import type { SkinSlot } from '../types'
+
 import type { ToggleWord } from './command'
 import { SLOTS } from './custom'
 import type { Table } from './markdown'
 import { footerRow, groupRow, promptRow, tableRows, toolRow } from './rows'
 import type { Look } from './rows'
 
-export type PaneUi = Pick<ElementTable<'terminal' | 'desktop'>, 'Box' | 'Text' | 'Markdown' | 'Button' | 'Input' | 'Select'>
+export type PaneUi = Pick<
+  ElementTable<'terminal' | 'desktop'>,
+  'Box' | 'Text' | 'Markdown' | 'Button' | 'Input' | 'Select'
+>
 
 export type SettingsModel = {
   names: readonly string[]
@@ -33,8 +37,8 @@ const SAMPLE: Table = {
   rows: [
     ['/chat', '60', '1 min'],
     ['/upload', '10', '1 min'],
-    ['/search', '120', '1 min'],
-  ],
+    ['/search', '120', '1 min']
+  ]
 }
 
 const done = { isRunning: false, isErrored: false, isInterrupted: false }
@@ -45,18 +49,35 @@ function preview(look: Look, width: number) {
   const word = look.skin.done[0] ?? 'Done'
 
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor={look.skin.palette.muted} paddingX={1}>
+    <Box
+      flexDirection="column"
+      borderStyle="round"
+      borderColor={look.skin.palette.muted}
+      paddingX={1}
+    >
       {promptRow(look, 'add rate limiting to the hub api')}
-      {toolRow(look, { tool: 'Bash', input: {}, ...done }, 'run', 'pnpm test --filter hub', { ms: 2140 })}
-      {toolRow(look, { tool: 'Edit', input: {}, ...done }, 'write', 'apps/hub/src/server.ts', {
-        ms: 380,
-        added: 18,
-        removed: 3,
-      })}
+      {toolRow(
+        look,
+        { tool: 'Bash', input: {}, ...done },
+        'run',
+        'pnpm test --filter hub',
+        { ms: 2140 }
+      )}
+      {toolRow(
+        look,
+        { tool: 'Edit', input: {}, ...done },
+        'write',
+        'apps/hub/src/server.ts',
+        {
+          ms: 380,
+          added: 18,
+          removed: 3
+        }
+      )}
       {groupRow(look, [
         { tool: 'Read', input: {}, ...done },
         { tool: 'Read', input: {}, ...done },
-        { tool: 'Grep', input: {}, ...done },
+        { tool: 'Grep', input: {}, ...done }
       ])}
       {tableRows(look, SAMPLE, Math.max(20, width - 4))}
       {footerRow(look, word, 41_000, { tools: 6, added: 18, removed: 3 })}
@@ -66,7 +87,12 @@ function preview(look: Look, width: number) {
 
 const mark = (on: boolean): string => (on ? '●' : '○')
 
-export function settingsPane(look: Look, ui: PaneUi, model: SettingsModel, actions: SettingsActions) {
+export function settingsPane(
+  look: Look,
+  ui: PaneUi,
+  model: SettingsModel,
+  actions: SettingsActions
+) {
   const { Box, Text, Button, Input, Select } = ui
   const { palette } = look.skin
   const { prefs } = look
@@ -124,17 +150,39 @@ export function settingsPane(look: Look, ui: PaneUi, model: SettingsModel, actio
         {toggle('links', 'l', prefs.links)}
         {toggle('copy', 'p', prefs.copy)}
         {toggle('fold', 'f', prefs.fold)}
-        <Button key="calm" label={`calm ${mark(prefs.calm !== null)}`} hotkey="k" plain dimColor={prefs.calm === null} onPress={() => actions.calm()} />
-        <Button key="icons" label={`icons ${prefs.icons}`} hotkey="i" plain onPress={() => actions.icons()} />
-        <Button key="prompt" label={`prompt ${prefs.prompt}`} hotkey="a" plain onPress={() => actions.prompt()} />
+        <Button
+          key="calm"
+          label={`calm ${mark(prefs.calm !== null)}`}
+          hotkey="k"
+          plain
+          dimColor={prefs.calm === null}
+          onPress={() => actions.calm()}
+        />
+        <Button
+          key="icons"
+          label={`icons ${prefs.icons}`}
+          hotkey="i"
+          plain
+          onPress={() => actions.icons()}
+        />
+        <Button
+          key="prompt"
+          label={`prompt ${prefs.prompt}`}
+          hotkey="a"
+          plain
+          onPress={() => actions.prompt()}
+        />
       </Box>
 
       <Box flexDirection="column">
         <Box flexDirection="row" flexWrap="wrap" columnGap={2}>
-          {SLOTS.map(slot => (
+          {SLOTS.map((slot) => (
             <Text>
               <Text backgroundColor={palette[slot]}>{'  '}</Text>
-              <Text color={slot === model.editing ? palette.fg : palette.muted} bold={slot === model.editing}>
+              <Text
+                color={slot === model.editing ? palette.fg : palette.muted}
+                bold={slot === model.editing}
+              >
                 {` ${slot}`}
               </Text>
             </Text>
@@ -145,7 +193,7 @@ export function settingsPane(look: Look, ui: PaneUi, model: SettingsModel, actio
             key="slot"
             label="Colour"
             value={model.editing}
-            options={SLOTS.map(slot => ({ value: slot, label: slot }))}
+            options={SLOTS.map((slot) => ({ value: slot, label: slot }))}
             onSelect={(value: string) => actions.edit(value as SkinSlot)}
           />
           <Input
@@ -160,7 +208,11 @@ export function settingsPane(look: Look, ui: PaneUi, model: SettingsModel, actio
       </Box>
 
       <Text color={palette.muted}>
-        Or ask Claude: <Text color={palette.fg}>“make me a skin that feels like a sunset”</Text>. Esc closes.
+        Or ask Claude:{' '}
+        <Text color={palette.fg}>
+          “make me a skin that feels like a sunset”
+        </Text>
+        . Esc closes.
       </Text>
     </Box>
   )

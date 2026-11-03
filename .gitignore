@@ -9,8 +9,6 @@
 
 # Testing
 coverage
-*.test.ts
-*.spec.ts
 
 # Turbo
 **/.turbo

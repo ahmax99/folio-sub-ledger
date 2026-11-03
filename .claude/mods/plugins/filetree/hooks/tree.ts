@@ -1,10 +1,20 @@
 import type { Branch, FileNode, FileTree, Theme } from '../types'
+
 import { stronger } from './icons'
 
-export type Entry = { name: string; kind: 'file' | 'dir' | 'other'; mtimeMs: number; size: number; isLink: boolean }
+export type Entry = {
+  name: string
+  kind: 'file' | 'dir' | 'other'
+  mtimeMs: number
+  size: number
+  isLink: boolean
+}
 export type Row = { node: FileNode; depth: number; open: boolean }
 
-const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base'
+})
 
 export const DEFAULT_THEME: Theme = {
   fg: '',
@@ -12,7 +22,7 @@ export const DEFAULT_THEME: Theme = {
   muted: '#808a96',
   urgent: '#d0605e',
   selection: '#6b7280',
-  bg: '',
+  bg: ''
 }
 
 export function emptyTree(root: string): FileTree {
@@ -40,19 +50,20 @@ export function emptyTree(root: string): FileTree {
     flashTones: {},
     scroll: null,
     preview: '',
-    previewTop: 0,
+    previewTop: 0
   }
 }
 
 export function parseTheme(toml: string): Theme {
-  const get = (k: string) => toml.match(new RegExp(`^${k}\\s*=\\s*"(#[0-9a-fA-F]{6})"`, 'm'))?.[1]
+  const get = (k: string) =>
+    toml.match(new RegExp(`^${k}\\s*=\\s*"(#[0-9a-fA-F]{6})"`, 'm'))?.[1]
   return {
     fg: get('foreground') ?? get('color7') ?? DEFAULT_THEME.fg,
     accent: get('accent') ?? get('color4') ?? DEFAULT_THEME.accent,
     muted: get('muted') ?? get('color8') ?? DEFAULT_THEME.muted,
     urgent: get('red') ?? get('color1') ?? DEFAULT_THEME.urgent,
     selection: get('selection') ?? DEFAULT_THEME.selection,
-    bg: get('dark_background') ?? get('background') ?? DEFAULT_THEME.bg,
+    bg: get('dark_background') ?? get('background') ?? DEFAULT_THEME.bg
   }
 }
 
@@ -78,14 +89,18 @@ export function drivesOn(): boolean {
 
 export function posix(path: string): string {
   if (!drives) return path
-  return path.replace(/\\/g, '/').replace(/^\/([A-Za-z])(\/|$)/, (_, d: string) => `${d.toUpperCase()}:/`)
+  return path
+    .replace(/\\/g, '/')
+    .replace(/^\/([A-Za-z])(\/|$)/, (_, d: string) => `${d.toUpperCase()}:/`)
 }
 
 export function dropBelow(nodes: FileNode[], dirs: string[]): FileNode[] {
   if (dirs.length === 0) return nodes
-  const under = (id: string) => dirs.some(d => id !== d && inside(d, id))
+  const under = (id: string) => dirs.some((d) => id !== d && inside(d, id))
   const gone = new Set(dirs)
-  return nodes.filter(n => !under(n.id)).map(n => (gone.has(n.id) && n.loaded ? { ...n, loaded: false } : n))
+  return nodes
+    .filter((n) => !under(n.id))
+    .map((n) => (gone.has(n.id) && n.loaded ? { ...n, loaded: false } : n))
 }
 
 export function isAbsolute(path: string): boolean {
@@ -93,34 +108,52 @@ export function isAbsolute(path: string): boolean {
 }
 
 export function inside(root: string, path: string): boolean {
-  return path === root || path.startsWith(root.endsWith('/') ? root : `${root}/`)
+  return (
+    path === root || path.startsWith(root.endsWith('/') ? root : `${root}/`)
+  )
 }
 
 export function toNodes(dir: string, list: Entry[]): FileNode[] {
   return list
-    .map(e => ({
+    .map((e) => ({
       id: join(dir, e.name),
       parent: dir,
       name: e.name,
-      kind: e.isLink ? ('link' as const) : e.kind === 'dir' ? ('dir' as const) : ('file' as const),
+      kind: e.isLink
+        ? ('link' as const)
+        : e.kind === 'dir'
+          ? ('dir' as const)
+          : ('file' as const),
       hidden: e.name.startsWith('.'),
       mtime: e.mtimeMs,
       size: e.size,
-      loaded: false,
+      loaded: false
     }))
-    .sort((a, b) => (a.kind === 'dir' ? 0 : 1) - (b.kind === 'dir' ? 0 : 1) || collator.compare(a.name, b.name))
+    .sort(
+      (a, b) =>
+        (a.kind === 'dir' ? 0 : 1) - (b.kind === 'dir' ? 0 : 1) ||
+        collator.compare(a.name, b.name)
+    )
 }
 
-export function replaceChildren(nodes: FileNode[], listed: Map<string, FileNode[]>): FileNode[] {
+export function replaceChildren(
+  nodes: FileNode[],
+  listed: Map<string, FileNode[]>
+): FileNode[] {
   if (listed.size === 0) return nodes
   const keep = new Map<string, FileNode>()
   for (const n of nodes) if (listed.has(n.parent)) keep.set(n.id, n)
   const freshIds = new Set<string>()
   for (const kids of listed.values()) for (const k of kids) freshIds.add(k.id)
-  const gone = new Set([...keep.keys()].filter(id => !freshIds.has(id)))
+  const gone = new Set([...keep.keys()].filter((id) => !freshIds.has(id)))
   const under = (id: string) => {
     if (gone.size === 0) return false
-    for (let dir = dirname(id), prev = id; dir !== prev; prev = dir, dir = dirname(dir)) if (gone.has(dir)) return true
+    for (
+      let dir = dirname(id), prev = id;
+      dir !== prev;
+      prev = dir, dir = dirname(dir)
+    )
+      if (gone.has(dir)) return true
     return false
   }
   const fresh: FileNode[] = []
@@ -128,11 +161,18 @@ export function replaceChildren(nodes: FileNode[], listed: Map<string, FileNode[
     for (const k of kids) {
       if (under(k.id)) continue
       const old = keep.get(k.id)
-      fresh.push(old && old.kind === 'dir' && k.kind === 'dir' ? { ...k, loaded: old.loaded } : k)
+      fresh.push(
+        old && old.kind === 'dir' && k.kind === 'dir'
+          ? { ...k, loaded: old.loaded }
+          : k
+      )
     }
   }
-  const out = nodes.filter(n => !listed.has(n.parent) && !under(n.id))
-  return [...out.map(n => (listed.has(n.id) ? { ...n, loaded: true } : n)), ...fresh]
+  const out = nodes.filter((n) => !listed.has(n.parent) && !under(n.id))
+  return [
+    ...out.map((n) => (listed.has(n.id) ? { ...n, loaded: true } : n)),
+    ...fresh
+  ]
 }
 
 export type GitStatus = {
@@ -147,19 +187,36 @@ export type Change = 'new' | 'mod' | 'del'
 
 export function parseBranch(record: string): Branch {
   const body = record.replace(/^## /, '')
-  if (body.startsWith('HEAD (no branch)')) return { head: 'detached', upstream: '', ahead: 0, behind: 0 }
-  const head = body.match(/^(?:No commits yet on |Initial commit on )?(.+?)(?:\.\.\.|\s|$)/)?.[1] ?? body
+  if (body.startsWith('HEAD (no branch)'))
+    return { head: 'detached', upstream: '', ahead: 0, behind: 0 }
+  const head =
+    body.match(
+      /^(?:No commits yet on |Initial commit on )?(.+?)(?:\.\.\.|\s|$)/
+    )?.[1] ?? body
   const upstream = body.match(/\.\.\.(\S+)/)?.[1] ?? ''
   const ahead = Number(body.match(/ahead (\d+)/)?.[1] ?? 0)
   const behind = Number(body.match(/behind (\d+)/)?.[1] ?? 0)
   return { head, upstream, ahead, behind }
 }
 
-export function mapper(root: string, prefix: string): (rel: string) => string | null {
-  return rel => (rel.startsWith(prefix) ? join(root, rel.slice(prefix.length).replace(/\/$/, '')).replace(/\/$/, '') : null)
+export function mapper(
+  root: string,
+  prefix: string
+): (rel: string) => string | null {
+  return (rel) =>
+    rel.startsWith(prefix)
+      ? join(root, rel.slice(prefix.length).replace(/\/$/, '')).replace(
+          /\/$/,
+          ''
+        )
+      : null
 }
 
-export function parseGit(stdout: string, root: string, prefix: string): GitStatus {
+export function parseGit(
+  stdout: string,
+  root: string,
+  prefix: string
+): GitStatus {
   const map = mapper(root, prefix)
   const git: Record<string, string> = {}
   const ignored: string[] = []
@@ -184,13 +241,19 @@ export function parseGit(stdout: string, root: string, prefix: string): GitStatu
       continue
     }
     if (xy === '??' && raw.endsWith('/')) untrackedDirs.push(path)
-    else files[path] = xy === '??' || (xy.includes('A') && !xy.includes('D')) ? 'new' : xy.includes('D') && !/U/.test(xy) ? 'del' : 'mod'
+    else
+      files[path] =
+        xy === '??' || (xy.includes('A') && !xy.includes('D'))
+          ? 'new'
+          : xy.includes('D') && !/U/.test(xy)
+            ? 'del'
+            : 'mod'
     const letter =
       xy === '??'
         ? '?'
         : /U/.test(xy) || xy === 'AA' || xy === 'DD'
           ? 'U'
-          : (['D', 'M', 'R', 'C', 'A', 'T'].find(c => xy.includes(c)) ?? '')
+          : (['D', 'M', 'R', 'C', 'A', 'T'].find((c) => xy.includes(c)) ?? '')
     if (!letter) continue
     git[path] = stronger(git[path], letter)
     let dir = dirname(path)
@@ -203,7 +266,12 @@ export function parseGit(stdout: string, root: string, prefix: string): GitStatu
   return { git, ignored, untrackedDirs, branch, files }
 }
 
-export function parseNumstat(stdout: string, root: string, prefix: string, into: Record<string, [number, number]>): void {
+export function parseNumstat(
+  stdout: string,
+  root: string,
+  prefix: string,
+  into: Record<string, [number, number]>
+): void {
   const map = mapper(root, prefix)
   const parts = stdout.split('\0')
   for (let i = 0; i < parts.length; i++) {
@@ -226,7 +294,10 @@ export function parseNumstat(stdout: string, root: string, prefix: string, into:
   }
 }
 
-export function rollUp(diff: Record<string, [number, number]>, root: string): Record<string, [number, number]> {
+export function rollUp(
+  diff: Record<string, [number, number]>,
+  root: string
+): Record<string, [number, number]> {
   const out: Record<string, [number, number]> = { ...diff }
   for (const [path, [add, del]] of Object.entries(diff)) {
     let dir = dirname(path)
@@ -240,7 +311,10 @@ export function rollUp(diff: Record<string, [number, number]>, root: string): Re
   return out
 }
 
-export function rollCounts(files: Record<string, Change>, root: string): Record<string, [number, number, number]> {
+export function rollCounts(
+  files: Record<string, Change>,
+  root: string
+): Record<string, [number, number, number]> {
   const out: Record<string, [number, number, number]> = {}
   const slot = { new: 0, mod: 1, del: 2 } as const
   for (const [path, change] of Object.entries(files)) {
@@ -271,12 +345,19 @@ export function underAny(id: string, set: Set<string>, root: string): boolean {
 export function ancestorsOf(id: string, root: string): string[] {
   const out: string[] = []
   if (!root) return out
-  for (let dir = dirname(id), prev = id; dir !== prev && dir !== root && inside(root, dir); prev = dir, dir = dirname(dir)) out.push(dir)
+  for (
+    let dir = dirname(id), prev = id;
+    dir !== prev && dir !== root && inside(root, dir);
+    prev = dir, dir = dirname(dir)
+  )
+    out.push(dir)
   return out
 }
 
 export function relative(root: string, path: string): string {
-  return path === root ? '' : path.slice(root.endsWith('/') ? root.length : root.length + 1)
+  return path === root
+    ? ''
+    : path.slice(root.endsWith('/') ? root.length : root.length + 1)
 }
 
 export function visibleRows(t: FileTree): Row[] {
@@ -302,7 +383,8 @@ export function visibleRows(t: FileTree): Row[] {
   const walk = (dir: string, depth: number) => {
     for (const n of kids.get(dir) ?? []) {
       if (keep && !keep.has(n.id)) continue
-      const isOpen = n.kind === 'dir' && (keep ? kids.has(n.id) : open.has(n.id))
+      const isOpen =
+        n.kind === 'dir' && (keep ? kids.has(n.id) : open.has(n.id))
       rows.push({ node: n, depth, open: isOpen })
       if (isOpen) walk(n.id, depth + 1)
     }

@@ -1,4 +1,5 @@
-export const LINUX_LAUNCH = 'setsid -f -w "$@" </dev/null >/dev/null 2>&1 & p=$!; sleep 1; kill -0 "$p" 2>/dev/null && exit 0; wait "$p"'
+export const LINUX_LAUNCH =
+  'setsid -f -w "$@" </dev/null >/dev/null 2>&1 & p=$!; sleep 1; kill -0 "$p" 2>/dev/null && exit 0; wait "$p"'
 
 export const LINUX_OPEN = [
   'set -f',
@@ -19,23 +20,33 @@ export const LINUX_OPEN = [
   '  fi',
   '  if (exec gio open "$f"); then exit 0; fi',
   'fi',
-  'exec xdg-open "$f"',
+  'exec xdg-open "$f"'
 ].join('\n')
 
-const WIN_OPEN = "$ErrorActionPreference = 'Stop'; [Diagnostics.Process]::Start([Diagnostics.ProcessStartInfo]@{ FileName = $env:PANE_OPEN_TARGET; UseShellExecute = $true }) | Out-Null"
+const WIN_OPEN =
+  "$ErrorActionPreference = 'Stop'; [Diagnostics.Process]::Start([Diagnostics.ProcessStartInfo]@{ FileName = $env:PANE_OPEN_TARGET; UseShellExecute = $true }) | Out-Null"
 
 export function openCommand(os: 'linux' | 'darwin' | 'win32', target: string) {
-  const argv = os === 'linux'
-    ? ['sh', '-c', LINUX_LAUNCH, 'sh', 'sh', '-c', LINUX_OPEN, 'sh', target]
-    : os === 'darwin'
-      ? ['open', '--', target]
-      : ['powershell', '-NoProfile', '-NonInteractive', '-Command', WIN_OPEN]
+  const argv =
+    os === 'linux'
+      ? ['sh', '-c', LINUX_LAUNCH, 'sh', 'sh', '-c', LINUX_OPEN, 'sh', target]
+      : os === 'darwin'
+        ? ['open', '--', target]
+        : ['powershell', '-NoProfile', '-NonInteractive', '-Command', WIN_OPEN]
   return {
     argv,
     init: {
       timeoutMs: 10_000,
-      ...(os === 'win32' ? { env: { PANE_OPEN_TARGET: /^[a-z][a-z0-9+.-]*:\/\//i.test(target) ? target : target.replace(/\//g, '\\') } } : {}),
-    },
+      ...(os === 'win32'
+        ? {
+            env: {
+              PANE_OPEN_TARGET: /^[a-z][a-z0-9+.-]*:\/\//i.test(target)
+                ? target
+                : target.replace(/\//g, '\\')
+            }
+          }
+        : {})
+    }
   }
 }
 
@@ -59,9 +70,15 @@ function words(command: string): string[] {
   return out
 }
 
-export function openWithCommand(command: string, path: string, dir: string): string[] | null {
+export function openWithCommand(
+  command: string,
+  path: string,
+  dir: string
+): string[] | null {
   const argv = words(command)
   if (!argv.length) return null
-  const filled = argv.map(w => w.replace(/\{(path|dir)\}/g, (_, key) => (key === 'path' ? path : dir)))
-  return argv.some(w => w.includes('{path}')) ? filled : [...filled, path]
+  const filled = argv.map((w) =>
+    w.replace(/\{(path|dir)\}/g, (_, key) => (key === 'path' ? path : dir))
+  )
+  return argv.some((w) => w.includes('{path}')) ? filled : [...filled, path]
 }

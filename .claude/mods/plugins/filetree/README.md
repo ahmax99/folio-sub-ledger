@@ -99,4 +99,4 @@ The same checks run on macOS, Windows and Linux in CI on every push that touches
 
 [MIT](LICENSE)
 
-*This project is inspired by my Omarchy app [FileBlade](https://github.com/data-goblin/fileblade)*
+_This project is inspired by my Omarchy app [FileBlade](https://github.com/data-goblin/fileblade)_

@@ -17,6 +17,7 @@
     "check-mismatches": "bunx syncpack lint",
     "sync-packages": "bunx syncpack update",
     "check-types": "turbo run check-types",
+    "test": "turbo run test",
     "check-format": "oxlint && oxfmt --check",
     "format": "oxlint --fix && oxfmt",
     "prepare": "lefthook install || true",

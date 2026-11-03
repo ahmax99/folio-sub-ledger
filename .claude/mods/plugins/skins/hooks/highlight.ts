@@ -47,16 +47,20 @@ export function roleColors(palette: Palette): Readonly<Record<Role, string>> {
     del: palette.err,
     meta: palette.muted,
     heading: palette.user,
-    warn: palette.warn,
+    warn: palette.warn
   }
 }
-
 
 type Family = {
   line: readonly string[]
   block: readonly (readonly [string, string])[]
   // String delimiters, longest first; `multi` ones may run over several lines.
-  strings: readonly { open: string; close: string; multi: boolean; raw?: boolean }[]
+  strings: readonly {
+    open: string
+    close: string
+    multi: boolean
+    raw?: boolean
+  }[]
   keywords: ReadonlySet<string>
   literals: ReadonlySet<string>
   types: ReadonlySet<string>
@@ -71,13 +75,14 @@ type Family = {
   at: boolean
 }
 
-const words = (text: string): ReadonlySet<string> => new Set(text.split(/\s+/).filter(word => word !== ''))
+const words = (text: string): ReadonlySet<string> =>
+  new Set(text.split(/\s+/).filter((word) => word !== ''))
 
 const NONE = words('')
 
 const QUOTES = [
   { open: '"', close: '"', multi: false },
-  { open: "'", close: "'", multi: false },
+  { open: "'", close: "'", multi: false }
 ] as const
 
 const base = (overrides: Partial<Family>): Family => ({
@@ -92,17 +97,19 @@ const base = (overrides: Partial<Family>): Family => ({
   dashWords: false,
   caseless: false,
   at: false,
-  ...overrides,
+  ...overrides
 })
 
 const JS = base({
   strings: [{ open: '`', close: '`', multi: true }, ...QUOTES],
   keywords: words(
-    'abstract as async await break case catch class const continue debugger declare default delete do else enum export extends finally for from function get if implements import in infer instanceof interface is keyof let namespace new of override private protected public readonly return satisfies set static super switch this throw try type typeof var void while with yield',
+    'abstract as async await break case catch class const continue debugger declare default delete do else enum export extends finally for from function get if implements import in infer instanceof interface is keyof let namespace new of override private protected public readonly return satisfies set static super switch this throw try type typeof var void while with yield'
   ),
   literals: words('true false null undefined NaN Infinity'),
-  types: words('string number boolean bigint symbol object unknown never any void Promise Array Record Map Set Readonly Partial'),
-  at: true,
+  types: words(
+    'string number boolean bigint symbol object unknown never any void Promise Array Record Map Set Readonly Partial'
+  ),
+  at: true
 })
 
 const PYTHON = base({
@@ -111,97 +118,129 @@ const PYTHON = base({
   strings: [
     { open: '"""', close: '"""', multi: true },
     { open: "'''", close: "'''", multi: true },
-    ...QUOTES,
+    ...QUOTES
   ],
-  keywords: words('and as assert async await break class continue def del elif else except finally for from global if import in is lambda match case nonlocal not or pass raise return try while with yield self cls'),
+  keywords: words(
+    'and as assert async await break class continue def del elif else except finally for from global if import in is lambda match case nonlocal not or pass raise return try while with yield self cls'
+  ),
   literals: words('True False None'),
   types: words('int float str bool bytes list dict set tuple object type'),
-  at: true,
+  at: true
 })
 
 // Only `"` quotes: a `'` opens a lifetime as often as a char.
 const RUST = base({
   strings: [{ open: '"', close: '"', multi: true }],
-  keywords: words('as async await break const continue crate dyn else enum extern fn for if impl in let loop match mod move mut pub ref return self Self static struct super trait type unsafe use where while macro_rules'),
-  types: words('i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128 usize f32 f64 bool char str String Vec Option Result Box'),
-  literals: words('true false None Some Ok Err'),
+  keywords: words(
+    'as async await break const continue crate dyn else enum extern fn for if impl in let loop match mod move mut pub ref return self Self static struct super trait type unsafe use where while macro_rules'
+  ),
+  types: words(
+    'i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128 usize f32 f64 bool char str String Vec Option Result Box'
+  ),
+  literals: words('true false None Some Ok Err')
 })
 
 const GO = base({
   strings: [{ open: '`', close: '`', multi: true }, ...QUOTES],
-  keywords: words('break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var'),
-  types: words('bool byte complex64 complex128 error float32 float64 int int8 int16 int32 int64 rune string uint uint8 uint16 uint32 uint64 uintptr any'),
-  literals: words('true false nil iota'),
+  keywords: words(
+    'break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var'
+  ),
+  types: words(
+    'bool byte complex64 complex128 error float32 float64 int int8 int16 int32 int64 rune string uint uint8 uint16 uint32 uint64 uintptr any'
+  ),
+  literals: words('true false nil iota')
 })
 
 const C = base({
   keywords: words(
-    'auto break case catch class const constexpr continue default delete do else enum explicit extern for friend goto if inline namespace new noexcept operator private protected public register return sizeof static struct switch template this throw try typedef typename union using virtual volatile while #include #define #ifdef #ifndef #endif #pragma #if #else',
+    'auto break case catch class const constexpr continue default delete do else enum explicit extern for friend goto if inline namespace new noexcept operator private protected public register return sizeof static struct switch template this throw try typedef typename union using virtual volatile while #include #define #ifdef #ifndef #endif #pragma #if #else'
   ),
-  types: words('void char short int long float double signed unsigned bool size_t int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t std string vector'),
-  literals: words('true false NULL nullptr'),
+  types: words(
+    'void char short int long float double signed unsigned bool size_t int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t std string vector'
+  ),
+  literals: words('true false NULL nullptr')
 })
 
 const CSHARP = base({
-  strings: [{ open: '@"', close: '"', multi: true, raw: true }, { open: '$"', close: '"', multi: false }, ...QUOTES],
+  strings: [
+    { open: '@"', close: '"', multi: true, raw: true },
+    { open: '$"', close: '"', multi: false },
+    ...QUOTES
+  ],
   keywords: words(
-    'abstract as async await base break case catch checked class const continue default delegate do else enum event explicit extern finally fixed for foreach get goto if implicit in init interface internal is lock namespace new operator out override params partial private protected public readonly record ref return sealed set sizeof static struct switch this throw try typeof unchecked unsafe using var virtual void volatile when where while yield',
+    'abstract as async await base break case catch checked class const continue default delegate do else enum event explicit extern finally fixed for foreach get goto if implicit in init interface internal is lock namespace new operator out override params partial private protected public readonly record ref return sealed set sizeof static struct switch this throw try typeof unchecked unsafe using var virtual void volatile when where while yield'
   ),
-  types: words('bool byte char decimal double float int long object sbyte short string uint ulong ushort dynamic Task List'),
+  types: words(
+    'bool byte char decimal double float int long object sbyte short string uint ulong ushort dynamic Task List'
+  ),
   literals: words('true false null'),
-  at: false,
+  at: false
 })
 
 const JAVA = base({
   keywords: words(
-    'abstract assert break case catch class const continue default do else enum extends final finally for goto if implements import instanceof interface native new package private protected public record return static strictfp super switch synchronized this throw throws transient try var void volatile while yield',
+    'abstract assert break case catch class const continue default do else enum extends final finally for goto if implements import instanceof interface native new package private protected public record return static strictfp super switch synchronized this throw throws transient try var void volatile while yield'
   ),
-  types: words('boolean byte char double float int long short String Object List Map'),
+  types: words(
+    'boolean byte char double float int long short String Object List Map'
+  ),
   literals: words('true false null'),
-  at: true,
+  at: true
 })
 
 const SHELL = base({
   line: ['#'],
   block: [],
   strings: QUOTES,
-  keywords: words('if then else elif fi for while until do done case esac in function return local export readonly declare set unset source alias exit break continue select time'),
+  keywords: words(
+    'if then else elif fi for while until do done case esac in function return local export readonly declare set unset source alias exit break continue select time'
+  ),
   literals: words('true false'),
   types: NONE,
   capitalTypes: false,
-  dollar: true,
+  dollar: true
 })
 
 const POWERSHELL = base({
   line: ['#'],
   block: [['<#', '#>']],
-  strings: [{ open: '@"', close: '"@', multi: true }, { open: "@'", close: "'@", multi: true }, ...QUOTES],
-  keywords: words('begin break catch class continue data do dynamicparam else elseif end enum exit filter finally for foreach from function if in param process return switch throw trap try until using while workflow'),
+  strings: [
+    { open: '@"', close: '"@', multi: true },
+    { open: "@'", close: "'@", multi: true },
+    ...QUOTES
+  ],
+  keywords: words(
+    'begin break catch class continue data do dynamicparam else elseif end enum exit filter finally for foreach from function if in param process return switch throw trap try until using while workflow'
+  ),
   literals: words('$true $false $null'),
   capitalTypes: false,
   dollar: true,
   dashWords: true,
-  caseless: true,
+  caseless: true
 })
 
 const SQL = base({
   line: ['--'],
   keywords: words(
-    'add all alter and as asc between by case check column constraint create cross database default delete desc distinct drop else end exists foreign from full group having if in index inner insert into is join key left like limit not on or order outer primary references returning right select set table then union unique update values view when where with',
+    'add all alter and as asc between by case check column constraint create cross database default delete desc distinct drop else end exists foreign from full group having if in index inner insert into is join key left like limit not on or order outer primary references returning right select set table then union unique update values view when where with'
   ),
-  types: words('int integer bigint smallint decimal numeric float real double text varchar char boolean date time timestamp json jsonb uuid serial'),
+  types: words(
+    'int integer bigint smallint decimal numeric float real double text varchar char boolean date time timestamp json jsonb uuid serial'
+  ),
   literals: words('true false null'),
   capitalTypes: false,
-  caseless: true,
+  caseless: true
 })
 
 const LUA = base({
   line: ['--'],
   block: [['--[[', ']]']],
   strings: [{ open: '[[', close: ']]', multi: true }, ...QUOTES],
-  keywords: words('and break do else elseif end for function goto if in local not or repeat return then until while'),
+  keywords: words(
+    'and break do else elseif end for function goto if in local not or repeat return then until while'
+  ),
   literals: words('true false nil'),
-  capitalTypes: false,
+  capitalTypes: false
 })
 
 const FAMILIES: Readonly<Record<string, Family>> = {
@@ -216,41 +255,88 @@ const FAMILIES: Readonly<Record<string, Family>> = {
   shell: SHELL,
   powershell: POWERSHELL,
   sql: SQL,
-  lua: LUA,
+  lua: LUA
 }
 
 // Every fence tag this reads, by the family or mode that draws it.
 const ALIASES: Readonly<Record<string, string>> = {
-  js: 'js', javascript: 'js', jsx: 'js', mjs: 'js', cjs: 'js',
-  ts: 'ts', typescript: 'ts', tsx: 'ts', mts: 'ts', cts: 'ts',
-  py: 'python', python: 'python', python3: 'python',
-  rs: 'rust', rust: 'rust',
-  go: 'go', golang: 'go',
-  c: 'c', h: 'c', cpp: 'c', 'c++': 'c', cc: 'c', cxx: 'c', hpp: 'c',
-  cs: 'csharp', csharp: 'csharp', 'c#': 'csharp',
-  java: 'java', kotlin: 'java', kt: 'java',
-  sh: 'shell', bash: 'shell', zsh: 'shell', shell: 'shell', console: 'shell', fish: 'shell',
-  ps1: 'powershell', powershell: 'powershell', pwsh: 'powershell',
-  sql: 'sql', psql: 'sql', mysql: 'sql', sqlite: 'sql',
+  js: 'js',
+  javascript: 'js',
+  jsx: 'js',
+  mjs: 'js',
+  cjs: 'js',
+  ts: 'ts',
+  typescript: 'ts',
+  tsx: 'ts',
+  mts: 'ts',
+  cts: 'ts',
+  py: 'python',
+  python: 'python',
+  python3: 'python',
+  rs: 'rust',
+  rust: 'rust',
+  go: 'go',
+  golang: 'go',
+  c: 'c',
+  h: 'c',
+  cpp: 'c',
+  'c++': 'c',
+  cc: 'c',
+  cxx: 'c',
+  hpp: 'c',
+  cs: 'csharp',
+  csharp: 'csharp',
+  'c#': 'csharp',
+  java: 'java',
+  kotlin: 'java',
+  kt: 'java',
+  sh: 'shell',
+  bash: 'shell',
+  zsh: 'shell',
+  shell: 'shell',
+  console: 'shell',
+  fish: 'shell',
+  ps1: 'powershell',
+  powershell: 'powershell',
+  pwsh: 'powershell',
+  sql: 'sql',
+  psql: 'sql',
+  mysql: 'sql',
+  sqlite: 'sql',
   lua: 'lua',
-  json: 'json', jsonc: 'json', json5: 'json',
-  yaml: 'yaml', yml: 'yaml',
-  toml: 'toml', ini: 'toml',
-  html: 'markup', xml: 'markup', svg: 'markup', vue: 'markup', xhtml: 'markup',
-  css: 'css', scss: 'css', less: 'css',
-  diff: 'diff', patch: 'diff',
-  md: 'markdown', markdown: 'markdown',
+  json: 'json',
+  jsonc: 'json',
+  json5: 'json',
+  yaml: 'yaml',
+  yml: 'yaml',
+  toml: 'toml',
+  ini: 'toml',
+  html: 'markup',
+  xml: 'markup',
+  svg: 'markup',
+  vue: 'markup',
+  xhtml: 'markup',
+  css: 'css',
+  scss: 'css',
+  less: 'css',
+  diff: 'diff',
+  patch: 'diff',
+  md: 'markdown',
+  markdown: 'markdown'
 }
 
-export const languageOf = (lang: string): string | undefined => ALIASES[lang.trim().toLowerCase()]
+export const languageOf = (lang: string): string | undefined =>
+  ALIASES[lang.trim().toLowerCase()]
 
 // What a scan carries from one line to the next: an open block comment or string.
 type Carry = { close: string; role: 'comment' | 'string'; raw: boolean } | null
 
-const NUMBER = /^(?:0[xX][\da-fA-F_]+|0[bB][01_]+|\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?)[a-zA-Z%]*/
+const NUMBER =
+  /^(?:0[xX][\da-fA-F_]+|0[bB][01_]+|\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?)[a-zA-Z%]*/
 const WORD = /^[A-Za-z_][\w]*/
 const DASH_WORD = /^[A-Za-z_][\w]*(?:-[A-Za-z_][\w]*)*/
-const VARIABLE = /^\$(?:\{[^}]*\}|[A-Za-z_][\w]*(?::[A-Za-z_][\w]*)?|[0-9#?@*$!-])/
+const VARIABLE =
+  /^\$(?:\{[^}]*\}|[A-Za-z_][\w]*(?::[A-Za-z_][\w]*)?|[0-9#?@*$!-])/
 
 // Joins neighbours of one role, so a line is a few spans rather than one per character.
 function push(tokens: Token[], text: string, role: Role): void {
@@ -268,7 +354,12 @@ function push(tokens: Token[], text: string, role: Role): void {
 }
 
 // The end of a string from `from`: the index past its close, or -1 when the line ends first.
-function closeOf(line: string, from: number, close: string, raw: boolean): number {
+function closeOf(
+  line: string,
+  from: number,
+  close: string,
+  raw: boolean
+): number {
   for (let i = from; i < line.length; i++) {
     if (!raw && line[i] === '\\') {
       i++
@@ -283,7 +374,12 @@ function closeOf(line: string, from: number, close: string, raw: boolean): numbe
   return -1
 }
 
-function wordRole(family: Family, word: string, line: string, end: number): Role {
+function wordRole(
+  family: Family,
+  word: string,
+  line: string,
+  end: number
+): Role {
   const key = family.caseless ? word.toLowerCase() : word
 
   if (family.keywords.has(key)) {
@@ -294,7 +390,10 @@ function wordRole(family: Family, word: string, line: string, end: number): Role
     return 'literal'
   }
 
-  if (family.types.has(key) || (family.capitalTypes && /^[A-Z][a-z]/.test(word))) {
+  if (
+    family.types.has(key) ||
+    (family.capitalTypes && /^[A-Z][a-z]/.test(word))
+  ) {
     return 'type'
   }
 
@@ -303,15 +402,25 @@ function wordRole(family: Family, word: string, line: string, end: number): Role
     return 'func'
   }
 
-  return /^\s*\(/.test(line.slice(end)) || (family.dollar && end === word.length + line.search(/\S/)) ? 'func' : 'plain'
+  return /^\s*\(/.test(line.slice(end)) ||
+    (family.dollar && end === word.length + line.search(/\S/))
+    ? 'func'
+    : 'plain'
 }
 
-function scanLine(family: Family, line: string, carry: Carry): { tokens: Token[]; carry: Carry } {
+function scanLine(
+  family: Family,
+  line: string,
+  carry: Carry
+): { tokens: Token[]; carry: Carry } {
   const tokens: Token[] = []
   let i = 0
 
   if (carry !== null) {
-    const end = carry.role === 'comment' ? line.indexOf(carry.close) : closeOf(line, 0, carry.close, carry.raw)
+    const end =
+      carry.role === 'comment'
+        ? line.indexOf(carry.close)
+        : closeOf(line, 0, carry.close, carry.raw)
 
     if (end === -1) {
       return { tokens: [{ text: line, role: carry.role }], carry }
@@ -323,7 +432,7 @@ function scanLine(family: Family, line: string, carry: Carry): { tokens: Token[]
 
   while (i < line.length) {
     const rest = line.slice(i)
-    const lineComment = family.line.find(open => rest.startsWith(open))
+    const lineComment = family.line.find((open) => rest.startsWith(open))
     // Lua's `--[[` opens a block before `--` reads as a line comment.
     const block = family.block.find(([open]) => rest.startsWith(open))
 
@@ -332,7 +441,10 @@ function scanLine(family: Family, line: string, carry: Carry): { tokens: Token[]
 
       if (end === -1) {
         push(tokens, rest, 'comment')
-        return { tokens, carry: { close: block[1], role: 'comment', raw: true } }
+        return {
+          tokens,
+          carry: { close: block[1], role: 'comment', raw: true }
+        }
       }
 
       push(tokens, line.slice(i, end + block[1].length), 'comment')
@@ -341,19 +453,37 @@ function scanLine(family: Family, line: string, carry: Carry): { tokens: Token[]
     }
 
     // A shell `#` opens a comment only at a word's start (`a#b` is one word).
-    if (lineComment !== undefined && !(family.dollar && lineComment === '#' && i > 0 && !/\s/.test(line[i - 1] ?? ''))) {
+    if (
+      lineComment !== undefined &&
+      !(
+        family.dollar &&
+        lineComment === '#' &&
+        i > 0 &&
+        !/\s/.test(line[i - 1] ?? '')
+      )
+    ) {
       push(tokens, rest, 'comment')
       break
     }
 
-    const quote = family.strings.find(string => rest.startsWith(string.open))
+    const quote = family.strings.find((string) => rest.startsWith(string.open))
 
     if (quote !== undefined) {
-      const end = closeOf(line, i + quote.open.length, quote.close, quote.raw === true)
+      const end = closeOf(
+        line,
+        i + quote.open.length,
+        quote.close,
+        quote.raw === true
+      )
 
       if (end === -1) {
         push(tokens, rest, 'string')
-        return { tokens, carry: quote.multi ? { close: quote.close, role: 'string', raw: quote.raw === true } : null }
+        return {
+          tokens,
+          carry: quote.multi
+            ? { close: quote.close, role: 'string', raw: quote.raw === true }
+            : null
+        }
       }
 
       push(tokens, line.slice(i, end), 'string')
@@ -374,7 +504,11 @@ function scanLine(family: Family, line: string, carry: Carry): { tokens: Token[]
 
     if (variable !== null) {
       const key = family.caseless ? variable[0].toLowerCase() : variable[0]
-      push(tokens, variable[0], family.literals.has(key) ? 'literal' : 'variable')
+      push(
+        tokens,
+        variable[0],
+        family.literals.has(key) ? 'literal' : 'variable'
+      )
       i += variable[0].length
       continue
     }
@@ -390,7 +524,8 @@ function scanLine(family: Family, line: string, carry: Carry): { tokens: Token[]
     }
 
     // A C preprocessor line reads as one keyword then the rest.
-    const directive = family === C && rest.startsWith('#') ? /^#\s*\w+/.exec(rest) : null
+    const directive =
+      family === C && rest.startsWith('#') ? /^#\s*\w+/.exec(rest) : null
 
     if (directive !== null) {
       push(tokens, directive[0], 'keyword')
@@ -416,7 +551,8 @@ function scanLine(family: Family, line: string, carry: Carry): { tokens: Token[]
 // JSON: keys apart from values.
 function jsonLine(line: string): Token[] {
   const tokens: Token[] = []
-  const pattern = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null)\b|(\/\/.*$)/g
+  const pattern =
+    /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null)\b|(\/\/.*$)/g
   let last = 0
 
   for (const match of line.matchAll(pattern)) {
@@ -427,7 +563,15 @@ function jsonLine(line: string): Token[] {
       push(tokens, match[1], match[2] === undefined ? 'string' : 'property')
       push(tokens, match[2] ?? '', 'plain')
     } else {
-      push(tokens, match[0], match[3] !== undefined ? 'number' : match[4] !== undefined ? 'literal' : 'comment')
+      push(
+        tokens,
+        match[0],
+        match[3] !== undefined
+          ? 'number'
+          : match[4] !== undefined
+            ? 'literal'
+            : 'comment'
+      )
     }
 
     last = at + match[0].length
@@ -441,9 +585,16 @@ function jsonLine(line: string): Token[] {
 const YAML_LITERALS = words('true false null yes no on off ~ True False Null')
 
 // A YAML or TOML value: a string, a number, a literal, or plain words.
-function valueTokens(tokens: Token[], value: string, literals: ReadonlySet<string>): void {
+function valueTokens(
+  tokens: Token[],
+  value: string,
+  literals: ReadonlySet<string>
+): void {
   const comment = /(^|\s)#.*$/.exec(value)
-  const body = comment === null ? value : value.slice(0, comment.index + comment[1]!.length)
+  const body =
+    comment === null
+      ? value
+      : value.slice(0, comment.index + comment[1]!.length)
   const trimmed = body.trim()
   const lead = body.slice(0, body.length - body.trimStart().length)
   const tail = body.slice(lead.length + trimmed.length)
@@ -459,7 +610,11 @@ function valueTokens(tokens: Token[], value: string, literals: ReadonlySet<strin
   } else if (/^[&*][\w-]+/.test(trimmed)) {
     push(tokens, trimmed, 'variable')
   } else {
-    push(tokens, trimmed, trimmed.startsWith('"') || trimmed.startsWith("'") ? 'string' : 'plain')
+    push(
+      tokens,
+      trimmed,
+      trimmed.startsWith('"') || trimmed.startsWith("'") ? 'string' : 'plain'
+    )
   }
 
   push(tokens, tail, 'plain')
@@ -477,13 +632,18 @@ function yamlLine(line: string): Token[] {
     return [{ text: line, role: 'meta' }]
   }
 
-  const entry = /^(\s*(?:-\s+)*)([^\s#'"][^:#]*?|"[^"]*"|'[^']*')(:)(\s|$)/.exec(line)
+  const entry =
+    /^(\s*(?:-\s+)*)([^\s#'"][^:#]*?|"[^"]*"|'[^']*')(:)(\s|$)/.exec(line)
 
   if (entry !== null) {
     push(tokens, entry[1] ?? '', 'plain')
     push(tokens, entry[2] ?? '', 'property')
     push(tokens, `${entry[3] ?? ''}`, 'plain')
-    valueTokens(tokens, line.slice((entry[1] ?? '').length + (entry[2] ?? '').length + 1), YAML_LITERALS)
+    valueTokens(
+      tokens,
+      line.slice((entry[1] ?? '').length + (entry[2] ?? '').length + 1),
+      YAML_LITERALS
+    )
 
     return tokens
   }
@@ -534,7 +694,18 @@ function tomlLine(line: string): Token[] {
 
   // Arrays and inline tables are scanned as code; single values as a value.
   if (/^\s*[[{]/.test(value)) {
-    tokens.push(...scanLine(base({ line: ['#'], block: [], literals: TOML_LITERALS, capitalTypes: false }), value, null).tokens)
+    tokens.push(
+      ...scanLine(
+        base({
+          line: ['#'],
+          block: [],
+          literals: TOML_LITERALS,
+          capitalTypes: false
+        }),
+        value,
+        null
+      ).tokens
+    )
   } else {
     valueTokens(tokens, value, TOML_LITERALS)
   }
@@ -543,7 +714,10 @@ function tomlLine(line: string): Token[] {
 }
 
 // HTML and XML: tags, attribute names and their values; comments may span lines.
-function markupLine(line: string, carry: Carry): { tokens: Token[]; carry: Carry } {
+function markupLine(
+  line: string,
+  carry: Carry
+): { tokens: Token[]; carry: Carry } {
   const tokens: Token[] = []
   let i = 0
 
@@ -583,7 +757,9 @@ function markupLine(line: string, carry: Carry): { tokens: Token[]; carry: Carry
     }
 
     const attribute = /^([\w:.-]+)(\s*=\s*)("[^"]*"|'[^']*')?/.exec(rest)
-    const inTag = tokens.some(token => token.role === 'tag') && /<[^>]*$/.test(line.slice(0, i))
+    const inTag =
+      tokens.some((token) => token.role === 'tag') &&
+      /<[^>]*$/.test(line.slice(0, i))
 
     if (attribute !== null && inTag) {
       push(tokens, attribute[1] ?? '', 'attr')
@@ -608,9 +784,18 @@ function markupLine(line: string, carry: Carry): { tokens: Token[]; carry: Carry
   return { tokens, carry: null }
 }
 
-const CSS_FAMILY = base({ line: [], strings: QUOTES, capitalTypes: false, dashWords: true, keywords: words('!important') })
+const CSS_FAMILY = base({
+  line: [],
+  strings: QUOTES,
+  capitalTypes: false,
+  dashWords: true,
+  keywords: words('!important')
+})
 
-function cssLine(line: string, carry: Carry): { tokens: Token[]; carry: Carry } {
+function cssLine(
+  line: string,
+  carry: Carry
+): { tokens: Token[]; carry: Carry } {
   const scanned = scanLine(CSS_FAMILY, line, carry)
   const tokens: Token[] = []
 
@@ -618,15 +803,29 @@ function cssLine(line: string, carry: Carry): { tokens: Token[]; carry: Carry } 
   for (const [n, token] of scanned.tokens.entries()) {
     const after = scanned.tokens
       .slice(n + 1)
-      .map(next => next.text)
+      .map((next) => next.text)
       .join('')
-    const isWord = token.role === 'plain' || token.role === 'func' || token.role === 'type'
+    const isWord =
+      token.role === 'plain' || token.role === 'func' || token.role === 'type'
 
-    if (isWord && /^[\w-]+$/.test(token.text) && /^\s*:(?!:)/.test(after) && !/\{\s*$/.test(after)) {
+    if (
+      isWord &&
+      /^[\w-]+$/.test(token.text) &&
+      /^\s*:(?!:)/.test(after) &&
+      !/\{\s*$/.test(after)
+    ) {
       push(tokens, token.text, 'property')
-    } else if (isWord && /^[\w-]+$/.test(token.text) && /^[^:;]*\{/.test(after)) {
+    } else if (
+      isWord &&
+      /^[\w-]+$/.test(token.text) &&
+      /^[^:;]*\{/.test(after)
+    ) {
       push(tokens, token.text, 'tag')
-    } else if (token.role === 'plain' && /^[@#.]/.test(token.text) && n + 1 < scanned.tokens.length) {
+    } else if (
+      token.role === 'plain' &&
+      /^[@#.]/.test(token.text) &&
+      n + 1 < scanned.tokens.length
+    ) {
       push(tokens, token.text, token.text === '@' ? 'keyword' : 'tag')
     } else {
       push(tokens, token.text, token.role)
@@ -638,7 +837,10 @@ function cssLine(line: string, carry: Carry): { tokens: Token[]; carry: Carry } 
 
 function diffLine(line: string): Token[] {
   const role: Role =
-    line.startsWith('+++') || line.startsWith('---') || line.startsWith('diff ') || line.startsWith('index ')
+    line.startsWith('+++') ||
+    line.startsWith('---') ||
+    line.startsWith('diff ') ||
+    line.startsWith('index ')
       ? 'meta'
       : line.startsWith('@@')
         ? 'heading'
@@ -661,7 +863,9 @@ function markdownLine(line: string): Token[] {
   }
 
   const tokens: Token[] = []
-  const marker = /^(\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?|\s*>\s?)/.exec(line)
+  const marker = /^(\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?|\s*>\s?)/.exec(
+    line
+  )
   const start = marker === null ? 0 : marker[0].length
 
   push(tokens, line.slice(0, start), 'keyword')
@@ -673,7 +877,15 @@ function markdownLine(line: string): Token[] {
   for (const match of rest.matchAll(pattern)) {
     const at = match.index ?? 0
     push(tokens, rest.slice(last, at), 'plain')
-    push(tokens, match[0], match[1] !== undefined ? 'string' : match[2] !== undefined ? 'keyword' : 'property')
+    push(
+      tokens,
+      match[0],
+      match[1] !== undefined
+        ? 'string'
+        : match[2] !== undefined
+          ? 'keyword'
+          : 'property'
+    )
     last = at + match[0].length
   }
 
@@ -689,7 +901,7 @@ export function highlight(code: string, lang: string): Token[][] {
 
   switch (id) {
     case undefined:
-      return lines.map(line => [{ text: line, role: 'plain' }])
+      return lines.map((line) => [{ text: line, role: 'plain' }])
     case 'json':
       return lines.map(jsonLine)
     case 'yaml':
@@ -706,10 +918,11 @@ export function highlight(code: string, lang: string): Token[][] {
           ? markupLine
           : id === 'css'
             ? cssLine
-            : (line: string, carry: Carry) => scanLine(FAMILIES[id] ?? JS, line, carry)
+            : (line: string, carry: Carry) =>
+                scanLine(FAMILIES[id] ?? JS, line, carry)
       let carry: Carry = null
 
-      return lines.map(line => {
+      return lines.map((line) => {
         const scanned = scan(line, carry)
         carry = scanned.carry
 
@@ -729,7 +942,19 @@ export function outputTokens(line: string): Token[] {
   for (const match of line.matchAll(pattern)) {
     const at = match.index ?? 0
     push(tokens, line.slice(last, at), 'plain')
-    push(tokens, match[0], match[1] !== undefined ? 'del' : match[2] !== undefined ? 'warn' : match[3] !== undefined ? 'add' : match[4] !== undefined ? 'property' : 'number')
+    push(
+      tokens,
+      match[0],
+      match[1] !== undefined
+        ? 'del'
+        : match[2] !== undefined
+          ? 'warn'
+          : match[3] !== undefined
+            ? 'add'
+            : match[4] !== undefined
+              ? 'property'
+              : 'number'
+    )
     last = at + match[0].length
   }
 

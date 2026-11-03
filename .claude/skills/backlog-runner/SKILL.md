@@ -98,7 +98,7 @@ or resumed):
   (not a template string) on every subsequent phase for the same issue and
   when creating the PR.
 - **Re-entering an existing worktree:** before creating a new one, check `git
-worktree list` for a path already associated with this issue (e.g. one
+  worktree list` for a path already associated with this issue (e.g. one
   whose name embeds `issue-<n>`). If found, re-enter it (the native tool's
   `path` parameter, or the skill's fallback equivalent) instead of creating a
   second one for the same issue.
@@ -117,7 +117,7 @@ worktree list` for a path already associated with this issue (e.g. one
   worktree: `apps/api/.env`, `apps/web/.env`,
   `shared/neon/.env`. A worktree only contains tracked files, so these
   gitignored files are otherwise absent — and `/implement`'s gates (`bun run
-check-types`, the dev server) need them. This is a filesystem copy into an
+  check-types`, the dev server) need them. This is a filesystem copy into an
   already-gitignored destination; never `git add` these files.
 - **Commit before moving on.** Every phase that writes tracked files (the
   spec write, `/implement`'s code changes) must end with a `git commit` on
@@ -191,11 +191,11 @@ prose or scores in-model:
 On every phase advance, update together:
 
 - `.claude/backlog-state/issue-<n>/.agent-state.json` — `{ "issue", "phase",
-"qa_retries", "branch" }`. Increment `qa_retries` only on a qa-retry
+  "qa_retries", "branch" }`. Increment `qa_retries` only on a qa-retry
   transition; every other transition leaves it unchanged (or initializes it
   to `0` on branch creation).
 - The durable GitHub label(s) (`gh issue edit --add-label ... --remove-label
-...`) and a `gh issue comment` explaining what happened this run.
+  ...`) and a `gh issue comment` explaining what happened this run.
 
 ### 5 — PR outcome housekeeping
 

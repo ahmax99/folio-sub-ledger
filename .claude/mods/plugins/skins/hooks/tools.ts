@@ -12,7 +12,7 @@ const BUILTIN: Readonly<Record<string, ToolKind>> = {
   Glob: 'search',
   Grep: 'search',
   WebFetch: 'web',
-  WebSearch: 'web',
+  WebSearch: 'web'
 }
 
 const MAX_TARGET = 120
@@ -43,10 +43,13 @@ type Fields = Readonly<Record<string, unknown>>
 const fieldsOf = (input: unknown): Fields =>
   typeof input === 'object' && input !== null ? (input as Fields) : {}
 
-const textOf = (value: unknown): string => (typeof value === 'string' ? value : '')
+const textOf = (value: unknown): string =>
+  typeof value === 'string' ? value : ''
 
 const firstString = (fields: Fields): string =>
-  Object.values(fields).map(textOf).find(value => value !== '') ?? ''
+  Object.values(fields)
+    .map(textOf)
+    .find((value) => value !== '') ?? ''
 
 // The one thing about a call worth a glance: the command, the file, the pattern.
 export function summarize(tool: string, input: unknown, cwd: string): string {

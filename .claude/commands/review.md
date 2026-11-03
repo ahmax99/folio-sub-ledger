@@ -12,10 +12,9 @@ Issue these in one parallel Bash batch:
 
 - `bun run check-format`
 - `bun run check-types`
+- `bun run test` — Vitest across workspaces. A failing test is a gate FAIL. If `TEST_DATABASE_URL` is unreachable from the sandbox, report the api suite as SKIPPED (CI's `PR Checks` runs it) rather than silently passing.
 - `git diff --name-only origin/main...HEAD`
 - `bunx react-doctor@latest --verbose --scope changed` — React-only scanner; reports just the issues this branch introduced (clean when the diff has no React files). New **errors** count as a gate FAIL; warnings are advisory (list them, don't block).
-
-(This repo has no test runner; there are no tests to run here.)
 
 **If the diff list contains `infra/**` files**, run the Terraform gates (local mirror of `terraform-plan.yml`) in a follow-up parallel batch:
 

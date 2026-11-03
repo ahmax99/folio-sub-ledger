@@ -45,15 +45,26 @@ After implementing each step, self-check:
 
 1. Does it type-check? Run `bun run check-types` (Turbo runs `tsc --noEmit` across packages; deps build first).
 2. Does it pass the linter/formatter? Run `bun run check-format` (lint + format check). `typescript/no-explicit-any` is an **error** here.
-3. Is all external input validated with a `@shared/config` Zod schema at the controller boundary?
-4. Are services returning `ResultAsync` (not throwing), and are multi-step writes wrapped in `prisma.$transaction([...])`?
-5. If the Prisma schema changed, run `/db-check` before applying the migration.
-6. If the step touched React code (`apps/web`), run `bunx react-doctor@latest --verbose --scope changed` and fix any new **errors** before moving on (warnings are advisory). CI enforces the same gate on the PR, so regressions caught here are regressions the reviewer never sees.
-7. If the step builds UI from Figma frames (the spec's `## Design` section or the step itself links them), spawn `subagent_type: "product-designer"` in **Handoff** mode with those links _before_ writing the UI, and build from its component/token mapping. If the step changed what a page or component actually _looks_ like, run `/design-review` afterwards — react-doctor covers framework correctness and a11y rules, not visual hierarchy, spacing, or UX. Skip it for logic-only changes behind an unchanged UI.
-8. If the step touched `infra/**`, run the Terraform gates from `.claude/rules/infra.md` (`terraform fmt -check`, `tflint`, `terraform validate`) and fix failures before moving on — they mirror what `terraform-plan.yml` will reject on the PR. Steps 1–2 (`check-types` / `check-format`) don't cover HCL, so these are the _only_ local gates for infra steps.
-9. Run the step's **Verify:** command from the plan (if the step has one) and read its output. Only check off the step's acceptance criteria after the verification passes — evidence before assertions. If a criterion has no runnable check (UI behaviour, for example), verify it with `playwright` (MCP) or state explicitly that it's unverified rather than silently checking it off.
+3. Do the tests pass? Run `bun run test` (`apps/api` integration tests need `TEST_DATABASE_URL`, see `apps/api/README.md`; if the sandbox cannot reach a database, say so rather than skipping silently).
+4. Is all external input validated with a `@shared/config` Zod schema at the controller boundary?
+5. Are services returning `ResultAsync` (not throwing), and are multi-step writes wrapped in `prisma.$transaction([...])`?
+6. If the Prisma schema changed, run `/db-check` before applying the migration.
+7. If the step touched React code (`apps/web`), run `bunx react-doctor@latest --verbose --scope changed` and fix any new **errors** before moving on (warnings are advisory). CI enforces the same gate on the PR, so regressions caught here are regressions the reviewer never sees.
+8. If the step builds UI from Figma frames (the spec's `## Design` section or the step itself links them), spawn `subagent_type: "product-designer"` in **Handoff** mode with those links _before_ writing the UI, and build from its component/token mapping. If the step changed what a page or component actually _looks_ like, run `/design-review` afterwards — react-doctor covers framework correctness and a11y rules, not visual hierarchy, spacing, or UX. Skip it for logic-only changes behind an unchanged UI.
+9. If the step touched `infra/**`, run the Terraform gates from `.claude/rules/infra.md` (`terraform fmt -check`, `tflint`, `terraform validate`) and fix failures before moving on — they mirror what `terraform-plan.yml` will reject on the PR. Steps 1–2 (`check-types` / `check-format`) don't cover HCL, so these are the _only_ local gates for infra steps.
+10. Run the step's **Verify:** command from the plan (if the step has one) and read its output. Only check off the step's acceptance criteria after the verification passes — evidence before assertions. If a criterion has no runnable check (UI behaviour, for example), verify it with `playwright` (MCP) or state explicitly that it's unverified rather than silently checking it off.
 
-There is **no test runner** configured in this repo. Don't write or run tests unless the plan explicitly adds one. If a quality gate fails, fix it before moving on — do not accumulate technical debt across steps.
+If a quality gate fails, fix it before moving on — do not accumulate technical debt across steps.
+
+### Test-driven development
+
+Every step with a **Tests first:** list is built red → green → refactor, following the `superpowers:test-driven-development` skill:
+
+1. **Red.** Write the listed tests, run `bun run test`, and confirm each fails for the expected reason (a missing route or wrong value, not a typo or import error).
+2. **Green.** Write the minimum code that makes them pass. No code without a failing test asking for it.
+3. **Refactor.** Clean up with the tests green, then run the quality gates above.
+
+Report the red and the green output when you finish the step. Code written before its test is deleted and rewritten test-first. Steps marked `Tests first: None` (config, docs, infra, pure styling) skip the loop; UI behaviour is verified with `playwright` instead.
 
 ### Use subagents for parallel work
 
@@ -66,7 +77,7 @@ Do not invoke `/qa`, `/review`, or the project's reviewer subagents (`security-r
 
 ### Reach for the right plugin
 
-`.claude/rules/harness.md` ("Where each plugin fits") maps every enabled plugin and skill to its phase — codebase orientation via `graphify` (hook-enforced: query it before grepping or reading source), UI via the `app-design` skill, library docs via `context7`, browser verification via `playwright` (there is no unit-test runner here), Terraform via `terraform-skill` + the `terraform` MCP server, root-cause debugging via `superpowers:systematic-debugging`, diff cleanup via the `code-simplifier` agent. Consult that mapping instead of improvising; it is the single source of truth.
+`.claude/rules/harness.md` ("Where each plugin fits") maps every enabled plugin and skill to its phase — codebase orientation via `graphify` (hook-enforced: query it before grepping or reading source), UI via the `app-design` skill, library docs via `context7`, browser verification via `playwright` (Vitest covers unit and integration tests), Terraform via `terraform-skill` + the `terraform` MCP server, root-cause debugging via `superpowers:systematic-debugging`, diff cleanup via the `code-simplifier` agent. Consult that mapping instead of improvising; it is the single source of truth.
 
 ### Communicate progress
 
@@ -80,6 +91,6 @@ After each step:
 
 After all steps are complete:
 
-1. Run `bun run check-format` and `bun run check-types` — fix any issues
+1. Run `bun run check-format`, `bun run check-types` and `bun run test` — fix any issues
 2. Summarize what was built
 3. Suggest running `/qa` to get an independent evaluation

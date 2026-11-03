@@ -3,13 +3,37 @@
 // that (subgraphs, styling, other diagram kinds) reads as null, and the fence keeps its
 // code-block drawing.
 
-import { frontmatterOf, listOf, numbersOf, plural, statementsOf, unquote } from './mermaid-lex'
-import { parseGantt, parseJourney, parseKanban, parseTimeline } from './mermaid-plan'
-import type { Gantt, Journey, Kanban, Timeline } from './mermaid-plan'
-import { parseGitGraph, parseMindmap, parseQuadrant, parseRadar, parseSankey } from './mermaid-shape'
-import type { GitGraph, Mindmap, Quadrant, Radar, Sankey } from './mermaid-shape'
 import { parsePacket, parseTreemap } from './mermaid-data'
 import type { Packet, Treemap } from './mermaid-data'
+import {
+  frontmatterOf,
+  listOf,
+  numbersOf,
+  plural,
+  statementsOf,
+  unquote
+} from './mermaid-lex'
+import {
+  parseGantt,
+  parseJourney,
+  parseKanban,
+  parseTimeline
+} from './mermaid-plan'
+import type { Gantt, Journey, Kanban, Timeline } from './mermaid-plan'
+import {
+  parseGitGraph,
+  parseMindmap,
+  parseQuadrant,
+  parseRadar,
+  parseSankey
+} from './mermaid-shape'
+import type {
+  GitGraph,
+  Mindmap,
+  Quadrant,
+  Radar,
+  Sankey
+} from './mermaid-shape'
 import { parseArchitecture, parseBlock, parseC4 } from './mermaid-system'
 import type { Architecture, Block, C4 } from './mermaid-system'
 
@@ -22,7 +46,13 @@ export type Shape = 'box' | 'round' | 'diamond'
 
 export type FlowNode = { id: string; label: string; shape: Shape }
 
-export type FlowEdge = { from: string; to: string; label: string; line: 'solid' | 'dotted' | 'thick'; isArrow: boolean }
+export type FlowEdge = {
+  from: string
+  to: string
+  label: string
+  line: 'solid' | 'dotted' | 'thick'
+  isArrow: boolean
+}
 
 // `ranks` are the nodes by depth, each rank in the order the source named its nodes;
 // `back` marks the edges that point up the ranks, as in a retry loop.
@@ -38,13 +68,38 @@ export type Flow = {
 
 export type Series = { kind: 'bar' | 'line'; name: string; values: number[] }
 
-export type XyChart = { kind: 'xy'; title: string; labels: string[]; yLabel: string; min: number; max: number; series: Series[] }
+export type XyChart = {
+  kind: 'xy'
+  title: string
+  labels: string[]
+  yLabel: string
+  min: number
+  max: number
+  series: Series[]
+}
 
 export type Slice = { label: string; value: number }
 
 export type Pie = { kind: 'pie'; title: string; slices: Slice[] }
 
-export type Chart = Flow | XyChart | Pie | Gantt | Timeline | Journey | Kanban | Mindmap | Quadrant | Radar | Sankey | GitGraph | Treemap | Packet | Block | Architecture | C4
+export type Chart =
+  | Flow
+  | XyChart
+  | Pie
+  | Gantt
+  | Timeline
+  | Journey
+  | Kanban
+  | Mindmap
+  | Quadrant
+  | Radar
+  | Sankey
+  | GitGraph
+  | Treemap
+  | Packet
+  | Block
+  | Architecture
+  | C4
 
 // Past these a picture stops being easier to read than the source.
 export const MAX_NODES = 40
@@ -56,11 +111,16 @@ export function parseMermaid(source: string): Chart | null {
   const chart = parseKind(lines)
 
   // A frontmatter title names any chart that did not name itself.
-  return chart === null || chart.title !== '' || title === '' ? chart : { ...chart, title }
+  return chart === null || chart.title !== '' || title === ''
+    ? chart
+    : { ...chart, title }
 }
 
 // The header word and the parser that reads the lines after it.
-const KINDS: readonly (readonly [RegExp, (body: readonly string[]) => Chart | null])[] = [
+const KINDS: readonly (readonly [
+  RegExp,
+  (body: readonly string[]) => Chart | null
+])[] = [
   [/^xychart(-beta)?\b/, parseXy],
   [/^gantt\b/, parseGantt],
   [/^timeline\b/, parseTimeline],
@@ -74,11 +134,13 @@ const KINDS: readonly (readonly [RegExp, (body: readonly string[]) => Chart | nu
   [/^treemap(-beta)?\b/, parseTreemap],
   [/^packet(-beta)?\b/, parsePacket],
   [/^block(-beta)?\s*$/, parseBlock],
-  [/^architecture(-beta)?\s*$/, parseArchitecture],
+  [/^architecture(-beta)?\s*$/, parseArchitecture]
 ]
 
 function parseKind(lines: readonly string[]): Chart | null {
-  const start = lines.findIndex(line => line.trim() !== '' && !line.trim().startsWith('%%'))
+  const start = lines.findIndex(
+    (line) => line.trim() !== '' && !line.trim().startsWith('%%')
+  )
   const head = (lines[start] ?? '').trim()
   const body = lines.slice(start + 1)
 
@@ -111,7 +173,9 @@ const NODE =
 const EDGE =
   /^(?:(-->|---|-\.->|-\.-|==>|===)\s*(?:\|([^|]*)\|)?|(--|-\.|==)\s*([^|>-][^>]*?)\s*(-->|---|\.->|\.-|==>|===))\s*/
 
-function readNode(text: string): { node: FlowNode; label: boolean; rest: string } | null {
+function readNode(
+  text: string
+): { node: FlowNode; label: boolean; rest: string } | null {
   const match = NODE.exec(text)
 
   if (match === null) {
@@ -120,13 +184,18 @@ function readNode(text: string): { node: FlowNode; label: boolean; rest: string 
 
   const [whole, id = ''] = match
   const groups = match.slice(2)
-  const at = groups.findIndex(group => group !== undefined)
-  const shape: Shape = at === 3 || at === 6 ? 'diamond' : at === 0 || at === 1 || at === 5 ? 'round' : 'box'
+  const at = groups.findIndex((group) => group !== undefined)
+  const shape: Shape =
+    at === 3 || at === 6
+      ? 'diamond'
+      : at === 0 || at === 1 || at === 5
+        ? 'round'
+        : 'box'
 
   return {
     node: { id, label: at === -1 ? id : unquote(groups[at] ?? ''), shape },
     label: at !== -1,
-    rest: text.slice(whole.length).trim(),
+    rest: text.slice(whole.length).trim()
   }
 }
 
@@ -177,8 +246,12 @@ function parseFlow(head: string, body: readonly string[]): Flow | null {
         from,
         to: next.node.id,
         label: unquote(edge[2] ?? edge[4] ?? ''),
-        line: arrow.includes('.') ? 'dotted' : arrow.includes('=') ? 'thick' : 'solid',
-        isArrow: arrow.endsWith('>'),
+        line: arrow.includes('.')
+          ? 'dotted'
+          : arrow.includes('=')
+            ? 'thick'
+            : 'solid',
+        isArrow: arrow.endsWith('>')
       })
       read = next
     }
@@ -190,14 +263,17 @@ function parseFlow(head: string, body: readonly string[]): Flow | null {
 
   const order = [...nodes.keys()]
   const back = backEdges(order, edges)
-  const forward = edges.filter(edge => !back.includes(edge))
-  const depth = new Map(order.map(id => [id, 0]))
+  const forward = edges.filter((edge) => !back.includes(edge))
+  const depth = new Map(order.map((id) => [id, 0]))
 
   // Longest path from a source: each node one rank below the deepest node feeding it.
   for (let pass = 0; pass < order.length; pass++) {
     for (const edge of forward) {
       if (edge.from !== edge.to) {
-        depth.set(edge.to, Math.max(depth.get(edge.to) ?? 0, (depth.get(edge.from) ?? 0) + 1))
+        depth.set(
+          edge.to,
+          Math.max(depth.get(edge.to) ?? 0, (depth.get(edge.from) ?? 0) + 1)
+        )
       }
     }
   }
@@ -209,18 +285,29 @@ function parseFlow(head: string, body: readonly string[]): Flow | null {
     ranks[rank] = [...(ranks[rank] ?? []), id]
   }
 
-  return { kind: 'flow', title: '', direction, nodes: order.map(id => nodes.get(id) as FlowNode), edges, ranks: ranks.filter(rank => rank !== undefined), back }
+  return {
+    kind: 'flow',
+    title: '',
+    direction,
+    nodes: order.map((id) => nodes.get(id) as FlowNode),
+    edges,
+    ranks: ranks.filter((rank) => rank !== undefined),
+    back
+  }
 }
 
 // The edges that close a cycle, found walking from each node in source order.
-function backEdges(order: readonly string[], edges: readonly FlowEdge[]): FlowEdge[] {
+function backEdges(
+  order: readonly string[],
+  edges: readonly FlowEdge[]
+): FlowEdge[] {
   const state = new Map<string, 'open' | 'done'>()
   const back: FlowEdge[] = []
 
   const walk = (id: string) => {
     state.set(id, 'open')
 
-    for (const edge of edges.filter(candidate => candidate.from === id)) {
+    for (const edge of edges.filter((candidate) => candidate.from === id)) {
       const seen = state.get(edge.to)
 
       if (seen === 'open') {
@@ -248,7 +335,10 @@ export function niceStep(span: number, count = 4): number {
   const power = 10 ** Math.floor(Math.log10(raw))
   const unit = raw / power
 
-  return (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 2.5 ? 2.5 : unit <= 5 ? 5 : 10) * power
+  return (
+    (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 2.5 ? 2.5 : unit <= 5 ? 5 : 10) *
+    power
+  )
 }
 
 function parseXy(body: readonly string[]): XyChart | null {
@@ -260,9 +350,17 @@ function parseXy(body: readonly string[]): XyChart | null {
 
   for (const statement of statementsOf(body)) {
     const titled = /^title\s+(.*)$/.exec(statement)
-    const xAxis = /^x-axis\s*(?:("[^"]*"|[^[\d\s-][^[]*?))?\s*(?:\[(.*)\]|(-?[\d.]+)\s*-->\s*(-?[\d.]+))?$/.exec(statement)
-    const yAxis = /^y-axis\s*(?:("[^"]*"|[^\d\s-][^\d]*?))?\s*(?:(-?[\d.]+)\s*-->\s*(-?[\d.]+))?$/.exec(statement)
-    const plotted = /^(bar|line)\s*(?:("[^"]*"|\S+)\s*)?\[(.*)\]$/.exec(statement)
+    const xAxis =
+      /^x-axis\s*(?:("[^"]*"|[^[\d\s-][^[]*?))?\s*(?:\[(.*)\]|(-?[\d.]+)\s*-->\s*(-?[\d.]+))?$/.exec(
+        statement
+      )
+    const yAxis =
+      /^y-axis\s*(?:("[^"]*"|[^\d\s-][^\d]*?))?\s*(?:(-?[\d.]+)\s*-->\s*(-?[\d.]+))?$/.exec(
+        statement
+      )
+    const plotted = /^(bar|line)\s*(?:("[^"]*"|\S+)\s*)?\[(.*)\]$/.exec(
+      statement
+    )
 
     if (titled !== null) {
       title = unquote(titled[1] ?? '')
@@ -270,15 +368,24 @@ function parseXy(body: readonly string[]): XyChart | null {
       labels = xAxis[2] === undefined ? [] : listOf(xAxis[2])
     } else if (yAxis !== null) {
       yLabel = unquote(yAxis[1] ?? '')
-      range = yAxis[2] === undefined ? null : [Number(yAxis[2]), Number(yAxis[3])]
+      range =
+        yAxis[2] === undefined ? null : [Number(yAxis[2]), Number(yAxis[3])]
     } else if (plotted !== null) {
       const values = numbersOf(plotted[3] ?? '')
 
-      if (values === null || values.length === 0 || values.length > MAX_POINTS) {
+      if (
+        values === null ||
+        values.length === 0 ||
+        values.length > MAX_POINTS
+      ) {
         return null
       }
 
-      series.push({ kind: plotted[1] === 'line' ? 'line' : 'bar', name: unquote(plotted[2] ?? ''), values })
+      series.push({
+        kind: plotted[1] === 'line' ? 'line' : 'bar',
+        name: unquote(plotted[2] ?? ''),
+        values
+      })
     } else {
       return null
     }
@@ -288,11 +395,17 @@ function parseXy(body: readonly string[]): XyChart | null {
     return null
   }
 
-  const points = Math.max(...series.map(one => one.values.length))
-  const all = series.flatMap(one => one.values)
+  const points = Math.max(...series.map((one) => one.values.length))
+  const all = series.flatMap((one) => one.values)
   const low = Math.min(0, ...all)
   const high = Math.max(...all)
-  const [min, max] = range ?? [low, high === low ? low + 1 : low + Math.ceil((high - low) / niceStep(high - low)) * niceStep(high - low)]
+  const [min, max] = range ?? [
+    low,
+    high === low
+      ? low + 1
+      : low +
+        Math.ceil((high - low) / niceStep(high - low)) * niceStep(high - low)
+  ]
 
   if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
     return null
@@ -301,11 +414,14 @@ function parseXy(body: readonly string[]): XyChart | null {
   return {
     kind: 'xy',
     title,
-    labels: Array.from({ length: points }, (_, i) => labels[i] ?? String(i + 1)),
+    labels: Array.from(
+      { length: points },
+      (_, i) => labels[i] ?? String(i + 1)
+    ),
     yLabel,
     min,
     max,
-    series,
+    series
   }
 }
 
@@ -328,7 +444,9 @@ function parsePie(head: string, body: readonly string[]): Pie | null {
 
   const total = slices.reduce((sum, slice) => sum + slice.value, 0)
 
-  return slices.length === 0 || slices.length > MAX_SLICES || total <= 0 ? null : { kind: 'pie', title, slices }
+  return slices.length === 0 || slices.length > MAX_SLICES || total <= 0
+    ? null
+    : { kind: 'pie', title, slices }
 }
 
 // What a chart is called in a card header and how much it holds.
@@ -337,7 +455,13 @@ export function chartHeading(chart: Chart): { kind: string; count: string } {
     case 'flow':
       return { kind: 'Flowchart', count: plural(chart.nodes.length, 'step') }
     case 'xy':
-      return { kind: 'Chart', count: chart.series.length > 1 ? `${chart.series.length} series` : plural(chart.labels.length, 'point') }
+      return {
+        kind: 'Chart',
+        count:
+          chart.series.length > 1
+            ? `${chart.series.length} series`
+            : plural(chart.labels.length, 'point')
+      }
     case 'pie':
       return { kind: 'Pie', count: plural(chart.slices.length, 'slice') }
     case 'gantt':
@@ -347,7 +471,13 @@ export function chartHeading(chart: Chart): { kind: string; count: string } {
     case 'journey':
       return { kind: 'Journey', count: plural(chart.steps.length, 'step') }
     case 'kanban':
-      return { kind: 'Kanban', count: plural(chart.columns.reduce((sum, column) => sum + column.cards.length, 0), 'card') }
+      return {
+        kind: 'Kanban',
+        count: plural(
+          chart.columns.reduce((sum, column) => sum + column.cards.length, 0),
+          'card'
+        )
+      }
     case 'mindmap':
       return { kind: 'Mindmap', count: plural(chart.count, 'node') }
     case 'quadrant':
@@ -357,7 +487,10 @@ export function chartHeading(chart: Chart): { kind: string; count: string } {
     case 'sankey':
       return { kind: 'Sankey', count: plural(chart.links.length, 'flow') }
     case 'git':
-      return { kind: 'Git graph', count: plural(chart.commits.length, 'commit') }
+      return {
+        kind: 'Git graph',
+        count: plural(chart.commits.length, 'commit')
+      }
     case 'treemap':
       return { kind: 'Treemap', count: plural(chart.leaves, 'item') }
     case 'packet':
@@ -365,19 +498,31 @@ export function chartHeading(chart: Chart): { kind: string; count: string } {
     case 'block':
       return { kind: 'Block diagram', count: plural(chart.boxes, 'block') }
     case 'architecture':
-      return { kind: 'Architecture', count: plural(chart.services.filter(service => !service.isJunction).length, 'service') }
+      return {
+        kind: 'Architecture',
+        count: plural(
+          chart.services.filter((service) => !service.isJunction).length,
+          'service'
+        )
+      }
     case 'c4':
-      return { kind: `C4 ${chart.level.toLowerCase()}`, count: plural(chart.boxes, 'element') }
+      return {
+        kind: `C4 ${chart.level.toLowerCase()}`,
+        count: plural(chart.boxes, 'element')
+      }
   }
 }
 
 // A number as a chart labels it: whole where it is, else to two places, with thousands
 // grouped.
 export const formatValue = (value: number): string =>
-  value.toLocaleString('en-US', { maximumFractionDigits: Number.isInteger(value) ? 0 : 2 })
+  value.toLocaleString('en-US', {
+    maximumFractionDigits: Number.isInteger(value) ? 0 : 2
+  })
 
 // A share as a percent, one decimal under 10% and none where it would read `9.0%`.
-export const formatPercent = (share: number): string => `${Number((share * 100).toFixed(share < 0.1 ? 1 : 0))}%`
+export const formatPercent = (share: number): string =>
+  `${Number((share * 100).toFixed(share < 0.1 ? 1 : 0))}%`
 
 // A series' legend name: its own, else its kind, numbered among the unnamed ones of that kind.
 export function seriesName(chart: XyChart, i: number): string {
@@ -387,9 +532,13 @@ export function seriesName(chart: XyChart, i: number): string {
     return series?.name ?? ''
   }
 
-  const same = chart.series.filter(other => other.kind === series.kind && other.name === '')
+  const same = chart.series.filter(
+    (other) => other.kind === series.kind && other.name === ''
+  )
 
-  return same.length === 1 ? series.kind : `${series.kind} ${same.indexOf(series) + 1}`
+  return same.length === 1
+    ? series.kind
+    : `${series.kind} ${same.indexOf(series) + 1}`
 }
 
 // What reaches the model: one short paragraph, sent only while charts are on.
@@ -398,5 +547,5 @@ export const CHART_HINT = [
   'Fenced ```mermaid draws as a picture here: flowchart TD|LR, xychart-beta (bar/line), pie, gantt, timeline, journey,',
   'kanban, mindmap, quadrantChart, radar-beta, sankey-beta, gitGraph, treemap-beta, packet-beta, block-beta,',
   'architecture-beta, C4Context; on the terminal also sequence, state, class and ER diagrams.',
-  'No subgraphs or styling, at most 40 nodes. Draw one when a process, schedule, numeric comparison or breakdown reads better as a picture.',
+  'No subgraphs or styling, at most 40 nodes. Draw one when a process, schedule, numeric comparison or breakdown reads better as a picture.'
 ].join(' ')
