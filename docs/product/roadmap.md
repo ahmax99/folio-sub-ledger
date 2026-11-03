@@ -55,8 +55,8 @@ Development happens on weekends, when there is free time. The roadmap and every 
 - Depends on: R3
 - Rough size: 5 to 7 weekends
 - Scope:
-  - Golden set, rules-only baseline and eval gates in CI, written before the first prompt (story 9.1)
-  - SQS worker and Bedrock proposals with evidence (stories 4.1, 4.2)
+  - Golden set, rules-only baseline and eval gates in CI, written before the first prompt; Mastra evals score the golden set (story 9.1)
+  - SQS worker running a Mastra workflow on Bedrock (Vercel AI SDK provider), producing proposals with evidence (stories 4.1, 4.2)
   - Per-org token budget (story 9.3) and prompt-injection suite (story 9.4)
 
 ## R5 · Review
@@ -66,7 +66,7 @@ Development happens on weekends, when there is free time. The roadmap and every 
 - Depends on: R4
 - Rough size: 4 to 6 weekends
 - Scope:
-  - Review queue and two-pane review UI with precedent search (story 5.1)
+  - Review queue and two-pane review UI with precedent search (story 5.1), built on TanStack Query, Table + Virtual, Hotkeys for the review shortcuts and Pacer for debounced search
   - Rule learning from corrections (story 5.2)
   - Reviewer assignments (story 5.3)
 
@@ -79,7 +79,7 @@ Development happens on weekends, when there is free time. The roadmap and every 
 - Scope:
   - Append-only lots and disposals; FIFO engine with `missing_basis` flagging (stories 6.1, 6.2)
   - Reconciliation of computed vs on-chain balances (story 7.1)
-  - Register and realised-gains exports (story 8.2)
+  - Register and realised-gains exports (story 8.2); grids on TanStack Table + Virtual
 
 ## R7 · Hardening for first clients
 
@@ -100,6 +100,7 @@ Development happens on weekends, when there is free time. The roadmap and every 
 - Scope:
   - LIFO and HIFO methods, journal entries and GL export
   - More chains, direct exchange APIs, billing
+  - Mastra agent features: reconciliation-gap investigation, finding the matching leg of a transfer or missing basis, DeFi and bridge decoding, an accountant Q&A assistant (agents propose; a human posts)
 
 ## Decisions needed before an item starts
 
