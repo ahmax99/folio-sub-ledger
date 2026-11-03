@@ -56,24 +56,23 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/presigned-url',
-    async ({ request, query, user, userService, uploadService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        uploadService.getPresignedUrl(
-          'account',
-          request,
-          query.filename,
-          query.contentType,
-          getUserPermissions(user, dbUser.id).can(
-            'update',
-            subject('User', dbUser)
+    async ({ request, query, user, userService, uploadService }) =>
+      handleApiError(
+        userService
+          .getMe(user.cognitoSub, user.role)
+          .andThen((dbUser) =>
+            uploadService.getPresignedUrl(
+              'account',
+              request,
+              query.filename,
+              query.contentType,
+              getUserPermissions(user, dbUser.id).can(
+                'update',
+                subject('User', dbUser)
+              )
+            )
           )
-        )
-      )
-    },
+      ),
     {
       query: PostModel.uploadImageQuery,
       auth: true,

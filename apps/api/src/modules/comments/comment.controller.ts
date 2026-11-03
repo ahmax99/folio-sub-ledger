@@ -28,21 +28,17 @@ export const commentController = new Elysia({ prefix: '/comments' })
   )
   .post(
     '/',
-    async ({ body, user, commentService, userService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        commentService.create(
-          {
-            ...body,
-            authorId: dbUser.id
-          },
-          getUserPermissions(user, dbUser.id)
-        )
-      )
-    },
+    async ({ body, user, commentService, userService }) =>
+      handleApiError(
+        userService
+          .getMe(user.cognitoSub, user.role)
+          .andThen((dbUser) =>
+            commentService.create(
+              { ...body, authorId: dbUser.id },
+              getUserPermissions(user, dbUser.id)
+            )
+          )
+      ),
     {
       body: CommentModel.createCommentBody.omit({ authorId: true }),
       auth: true,
@@ -55,15 +51,17 @@ export const commentController = new Elysia({ prefix: '/comments' })
   )
   .delete(
     '/:id',
-    async ({ params, user, commentService, userService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        commentService.delete(params.id, getUserPermissions(user, dbUser.id))
-      )
-    },
+    async ({ params, user, commentService, userService }) =>
+      handleApiError(
+        userService
+          .getMe(user.cognitoSub, user.role)
+          .andThen((dbUser) =>
+            commentService.delete(
+              params.id,
+              getUserPermissions(user, dbUser.id)
+            )
+          )
+      ),
     {
       params: CommentModel.commentIdParams,
       auth: true,

@@ -2,7 +2,7 @@ import type { CommentIdParams, CreateCommentBody } from '@shared/config'
 import { prisma } from '@shared/neon'
 
 import { catchAsyncError } from '@/error/utils/catchError.js'
-import { authorizeResource } from '@/lib/authorizeResource.js'
+import { authorize, findAuthorized } from '@/lib/authorizeResource.js'
 import { type AppAbility, accessibleBy, subject } from '@/lib/casl-prisma.js'
 
 export const CommentService = {
@@ -21,10 +21,11 @@ export const CommentService = {
     ),
 
   create: (input: CreateCommentBody, ability: AppAbility) =>
-    authorizeResource(
+    authorize(
       ability.can('create', 'Comment'),
-      'Cannot create comment',
-      () =>
+      'Cannot create comment'
+    ).andThen(() =>
+      catchAsyncError(
         prisma.comment.create({
           data: {
             content: input.content,
@@ -32,20 +33,23 @@ export const CommentService = {
             authorId: input.authorId
           }
         })
+      )
     ),
 
   delete: (id: CommentIdParams['id'], ability: AppAbility) =>
-    authorizeResource(
+    findAuthorized(
       prisma.comment.findUnique({ where: { id, deletedAt: null } }),
       {
         notFound: 'Comment not found',
         forbidden: 'Cannot delete this comment',
         can: (comment) => ability.can('delete', subject('Comment', comment))
-      },
-      () =>
+      }
+    ).andThen(() =>
+      catchAsyncError(
         prisma.comment.update({
           where: { id },
           data: { deletedAt: new Date() }
         })
+      )
     )
 } as const

@@ -1,46 +1,34 @@
+import { err, errAsync, ok, okAsync, type ResultAsync } from 'neverthrow'
+
 import { AppError } from '@/error/lib/AppError.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
 
-interface AuthorizeResourceOptions<TRecord> {
+interface FindAuthorizedOptions<TRecord> {
   notFound: string
   forbidden: string
   can: (record: TRecord) => boolean
 }
 
-export const authorizeResource = <TRecord extends object, TResult>(
-  queryOrAllowed: Promise<TRecord | null> | boolean,
-  optionsOrForbidden: AuthorizeResourceOptions<TRecord> | string,
-  action?: ((record: TRecord) => Promise<TResult>) | (() => Promise<TResult>)
-) => {
-  if (typeof queryOrAllowed === 'boolean') {
-    const allowed = queryOrAllowed
-    const forbidden = optionsOrForbidden as string
-    const perform = action as () => Promise<TResult>
+const authorize = (
+  allowed: boolean,
+  forbidden: string
+): ResultAsync<void, AppError> =>
+  allowed ? okAsync(undefined) : errAsync(new AppError('FORBIDDEN', forbidden))
 
-    return catchAsyncError(
-      (async () => {
-        if (!allowed) throw new AppError('FORBIDDEN', forbidden)
-        return perform()
-      })()
-    )
-  }
-
-  const query = queryOrAllowed
-  const options = optionsOrForbidden as AuthorizeResourceOptions<TRecord>
-
-  return catchAsyncError(
-    (async () => {
-      const record = await query
-      switch (true) {
-        case !record:
-          throw new AppError('NOT_FOUND', options.notFound)
-        case !options.can(record!):
-          throw new AppError('FORBIDDEN', options.forbidden)
-        default:
-          if (action)
-            return (action as (record: TRecord) => Promise<TResult>)(record!)
-          return record!
-      }
-    })()
+const findOrFail = <TRecord>(
+  query: Promise<TRecord | null>,
+  notFound: string
+) =>
+  catchAsyncError(query).andThen((record) =>
+    record ? ok(record) : err(new AppError('NOT_FOUND', notFound))
   )
-}
+
+const findAuthorized = <TRecord>(
+  query: Promise<TRecord | null>,
+  { notFound, forbidden, can }: FindAuthorizedOptions<TRecord>
+) =>
+  findOrFail(query, notFound).andThen((record) =>
+    can(record) ? ok(record) : err(new AppError('FORBIDDEN', forbidden))
+  )
+
+export { authorize, findAuthorized, findOrFail }
