@@ -1,4 +1,5 @@
 import type { ProcessRunResult } from 'claude-code'
+
 import type { Palette, Skin } from './skin'
 
 // Every skin works on a light background too. A skin may carry its own light palette;
@@ -8,15 +9,21 @@ import type { Palette, Skin } from './skin'
 const channels = (hex: string): [number, number, number] => [
   parseInt(hex.slice(1, 3), 16),
   parseInt(hex.slice(3, 5), 16),
-  parseInt(hex.slice(5, 7), 16),
+  parseInt(hex.slice(5, 7), 16)
 ]
 
 const toHex = (rgb: readonly number[]): string =>
-  `#${rgb.map(value => Math.round(Math.max(0, Math.min(255, value))).toString(16).padStart(2, '0')).join('')}`
+  `#${rgb
+    .map((value) =>
+      Math.round(Math.max(0, Math.min(255, value)))
+        .toString(16)
+        .padStart(2, '0')
+    )
+    .join('')}`
 
 // `amount` of the way from `hex` to black.
 export const deepen = (hex: string, amount: number): string =>
-  toHex(channels(hex).map(value => value * (1 - amount)))
+  toHex(channels(hex).map((value) => value * (1 - amount)))
 
 export function toLight(palette: Palette): Palette {
   const deep = (hex: string) => deepen(hex, 0.45)
@@ -36,7 +43,7 @@ export function toLight(palette: Palette): Palette {
     zebra: '#f2f2f2',
     ok: deepen(palette.ok, 0.5),
     err: deepen(palette.err, 0.25),
-    warn: deepen(palette.warn, 0.5),
+    warn: deepen(palette.warn, 0.5)
   }
 }
 
@@ -44,20 +51,27 @@ export const forTheme = (skin: Skin, isLight: boolean): Skin =>
   isLight ? { ...skin, palette: skin.light ?? toLight(skin.palette) } : skin
 
 // Claude Code's theme names say light or dark in them: `light`, `light-daltonized`, ...
-export const isLightTheme = (value: unknown): boolean => typeof value === 'string' && value.includes('light')
+export const isLightTheme = (value: unknown): boolean =>
+  typeof value === 'string' && value.includes('light')
 
 // Light, dark, or undefined when the name says neither (`auto`).
 const named = (value: unknown): boolean | undefined => {
   const name = typeof value === 'string' ? value.trim().toLowerCase() : ''
 
-  return name.includes('light') ? true : name.includes('dark') ? false : undefined
+  return name.includes('light')
+    ? true
+    : name.includes('dark')
+      ? false
+      : undefined
 }
 
 // `COLORFGBG` is `<fg>;<bg>` (sometimes `<fg>;<default>;<bg>`); background 7 or 15 is a light one.
 const terminalLight = (colorfgbg: string | undefined): boolean | undefined => {
   const bg = Number(colorfgbg?.split(';').at(-1))
 
-  return colorfgbg === undefined || Number.isNaN(bg) ? undefined : bg === 7 || bg === 15
+  return colorfgbg === undefined || Number.isNaN(bg)
+    ? undefined
+    : bg === 7 || bg === 15
 }
 
 export type ThemeHints = {
@@ -84,13 +98,21 @@ type ProbeOutput = Pick<ProcessRunResult, 'exitCode' | 'stdout' | 'stderr'>
 
 // `defaults read -g AppleInterfaceStyle`: "Dark", or unset ("does not exist") when light.
 export const macDark = (out: ProbeOutput): boolean | undefined =>
-  out.exitCode === 0 ? out.stdout.trim() === 'Dark' : /does not exist/.test(out.stderr) ? false : undefined
+  out.exitCode === 0
+    ? out.stdout.trim() === 'Dark'
+    : /does not exist/.test(out.stderr)
+      ? false
+      : undefined
 
 // `reg query ...\Personalize /v AppsUseLightTheme`: 0x0 is dark, 0x1 light.
 export const windowsDark = (out: ProbeOutput): boolean | undefined => {
-  const value = /AppsUseLightTheme\s+REG_DWORD\s+0x([0-9a-f]+)/i.exec(out.stdout)?.[1]
+  const value = /AppsUseLightTheme\s+REG_DWORD\s+0x([0-9a-f]+)/i.exec(
+    out.stdout
+  )?.[1]
 
-  return out.exitCode !== 0 || value === undefined ? undefined : parseInt(value, 16) === 0
+  return out.exitCode !== 0 || value === undefined
+    ? undefined
+    : parseInt(value, 16) === 0
 }
 
 // `gsettings get org.gnome.desktop.interface color-scheme`: 'prefer-dark', 'default', ...

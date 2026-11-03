@@ -8,7 +8,11 @@ export const FONT = `ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Inter,
 export const MONO = `ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace`
 
 export const escape = (text: string): string =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 
 // Width of a string in pixels, close enough to lay out a card without a renderer.
 export function measure(text: string, isMono: boolean, size: number): number {
@@ -17,7 +21,7 @@ export function measure(text: string, isMono: boolean, size: number): number {
   }
 
   return [...text].reduce((sum, char) => {
-    if ('iljtf.,:;|!\'` '.includes(char)) {
+    if ("iljtf.,:;|!'` ".includes(char)) {
       return sum + size * 0.3
     }
 
@@ -29,7 +33,12 @@ export function measure(text: string, isMono: boolean, size: number): number {
   }, 0)
 }
 
-export function fitText(text: string, width: number, isMono: boolean, size: number): string {
+export function fitText(
+  text: string,
+  width: number,
+  isMono: boolean,
+  size: number
+): string {
   if (measure(text, isMono, size) <= width) {
     return text
   }
@@ -73,26 +82,45 @@ export const MOTION = [
   `.card{animation:fade ${FADE_MS}ms ease-out}`,
   '@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1}}',
   '@keyframes fade{from{opacity:0}to{opacity:1}}',
-  '@media (prefers-reduced-motion:reduce){.rise,.card{animation:none;opacity:1}}',
+  '@media (prefers-reduced-motion:reduce){.rise,.card{animation:none;opacity:1}}'
 ].join('')
 
 // Every entrance at its end state. The desktop draws each new source as a new image and
 // plays its animation from the start, so a card drawn again (a reply streaming in, a
 // scroll) is drawn settled, or it would fade out and back in on each redraw.
-const SETTLED = '.rise,.card,.row,.rule,.fill{animation:none!important;opacity:1!important;stroke-dashoffset:0!important}'
+const SETTLED =
+  '.rise,.card,.row,.rule,.fill{animation:none!important;opacity:1!important;stroke-dashoffset:0!important}'
 
-export const settled = (source: string): string => source.replace('</style>', `${SETTLED}</style>`)
+export const settled = (source: string): string =>
+  source.replace('</style>', `${SETTLED}</style>`)
 
-export const staggerStep = (count: number, stepMs: number): number => Math.min(stepMs, STAGGER_BUDGET_MS / Math.max(1, count - 1))
+export const staggerStep = (count: number, stepMs: number): number =>
+  Math.min(stepMs, STAGGER_BUDGET_MS / Math.max(1, count - 1))
 
-export const riseDelay =(index: number, stepMs: number, startMs = 80): string =>
-  `style="animation-delay:${Math.round(startMs + index * stepMs)}ms"`
+export const riseDelay = (
+  index: number,
+  stepMs: number,
+  startMs = 80
+): string => `style="animation-delay:${Math.round(startMs + index * stepMs)}ms"`
 
-export const staggerEnd = (count: number, stepMs: number, startMs = 80, durationMs = RISE_MS): number =>
-  Math.max(FADE_MS, Math.ceil(startMs + Math.max(0, count - 1) * stepMs + durationMs))
+export const staggerEnd = (
+  count: number,
+  stepMs: number,
+  startMs = 80,
+  durationMs = RISE_MS
+): number =>
+  Math.max(
+    FADE_MS,
+    Math.ceil(startMs + Math.max(0, count - 1) * stepMs + durationMs)
+  )
 
 export const riseEnd = (source: string): number =>
-  Math.max(RISE_MS, ...[...source.matchAll(/animation-delay:(\d+)ms/g)].map(([, delay = '0']) => Number(delay) + RISE_MS))
+  Math.max(
+    RISE_MS,
+    ...[...source.matchAll(/animation-delay:(\d+)ms/g)].map(
+      ([, delay = '0']) => Number(delay) + RISE_MS
+    )
+  )
 
 const RADIUS = 12
 
@@ -104,7 +132,13 @@ export const CONTROL_SLOT = 84
 export const HEADER_MID = 29
 
 // The card: a rounded hairline outline, with everything inside clipped to its corners.
-export function svgCard(width: number, height: number, palette: Palette, style: string, body: string): string {
+export function svgCard(
+  width: number,
+  height: number,
+  palette: Palette,
+  style: string,
+  body: string
+): string {
   // Unique per size, so cards placed together in one document keep their own corners.
   const clip = `corners-${width}x${height}`
 
@@ -116,21 +150,39 @@ export function svgCard(width: number, height: number, palette: Palette, style: 
     `<style>text{fill:${palette.fg}}text:not([font-family]){font-family:${FONT}}${MOTION}${style}</style>`,
     `<g class="card"><g clip-path="url(#${clip})">${body}</g>`,
     `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="${RADIUS - 0.5}" fill="none" stroke="${palette.fg}" stroke-opacity=".16"/></g>`,
-    `</svg>`,
+    `</svg>`
   ].join('')
 }
 
 // A band behind a row, as a faint tint of the text colour, so it reads on any page.
-export const tint = (palette: Palette, y: number, width: number, height: number, opacity = 0.05): string =>
+export const tint = (
+  palette: Palette,
+  y: number,
+  width: number,
+  height: number,
+  opacity = 0.05
+): string =>
   `<rect y="${y}" width="${width}" height="${height}" fill="${palette.fg}" fill-opacity="${opacity}"/>`
 
 // A small rounded label, such as `exit 0` or `new file`, right-aligned at `right`.
-export function pill(right: number, y: number, text: string, color: string, palette: Palette): string {
+export function pill(
+  right: number,
+  y: number,
+  text: string,
+  color: string,
+  palette: Palette
+): string {
   const width = Math.ceil(measure(text, true, 11) + 16)
   const left = right - width
 
   return `<rect x="${left}" y="${y}" width="${width}" height="20" rx="10" fill="${color}" fill-opacity=".14"/><text x="${left + width / 2}" y="${y + 14}" text-anchor="middle" font-family="${MONO}" font-size="11" style="fill:${color}">${escape(text)}</text>`
 }
 
-export const strokeIcon = (path: string, x: number, y: number, size: number, color: string): string =>
+export const strokeIcon = (
+  path: string,
+  x: number,
+  y: number,
+  size: number,
+  color: string
+): string =>
   `<g transform="translate(${x} ${y}) scale(${size / 24})" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</g>`

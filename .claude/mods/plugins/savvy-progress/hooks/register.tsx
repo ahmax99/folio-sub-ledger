@@ -8,14 +8,20 @@ const agents = atom({ plugin: 'savvy-progress', key: 'agents' } as const, [])
 const panel = atom({ plugin: 'savvy-progress', key: 'panel' } as const, {
   isCompact: false,
   isDoneCollapsed: false,
-  autoOpenedFor: '',
+  autoOpenedFor: ''
 })
 const now = atom({ plugin: 'savvy-progress', key: 'now' } as const, 0)
 
 const TOOL = 'mcp__savvy-progress__progress'
 const STEP_TOOL = 'mcp__savvy-progress__step'
 const PANE = 'savvy-agents'
-const PHASES: readonly Phase[] = ['plan', 'design', 'delegate', 'review', 'close']
+const PHASES: readonly Phase[] = [
+  'plan',
+  'design',
+  'delegate',
+  'review',
+  'close'
+]
 const ACCENT = '#8f8cf4'
 const DONE = '#5fbf8f'
 
@@ -61,7 +67,7 @@ const STRINGS = {
     design: 'Design',
     tasks: 'Tasks',
     review: 'Review',
-    busy: 'running',
+    busy: 'running'
   },
   ru: {
     pane: 'Агенты',
@@ -89,25 +95,30 @@ const STRINGS = {
     design: 'Дизайн',
     tasks: 'Задачи',
     review: 'Ревью',
-    busy: 'в работе',
-  },
+    busy: 'в работе'
+  }
 } as const
 
 // Module scope is fine here: session.start sets it again on every (re)load.
 let lang: Lang = 'en'
 const tr = () => STRINGS[lang]
 
-const isRussian = (v: unknown): boolean => typeof v === 'string' && /^(ru|russian|рус)/i.test(v.trim())
+const isRussian = (v: unknown): boolean =>
+  typeof v === 'string' && /^(ru|russian|рус)/i.test(v.trim())
 
 async function detectLang($: EngineInterface, option: unknown): Promise<Lang> {
   if (option === 'en' || option === 'ru') return option
   try {
     const settings = (await $.settings.read()) as Record<string, unknown>
-    if (typeof settings.language === 'string' && settings.language.trim()) return isRussian(settings.language) ? 'ru' : 'en'
+    if (typeof settings.language === 'string' && settings.language.trim())
+      return isRussian(settings.language) ? 'ru' : 'en'
   } catch {
     // No settings: fall through to the locale.
   }
-  const locale = (await $.env.get('LC_ALL')) || (await $.env.get('LC_MESSAGES')) || (await $.env.get('LANG'))
+  const locale =
+    (await $.env.get('LC_ALL')) ||
+    (await $.env.get('LC_MESSAGES')) ||
+    (await $.env.get('LANG'))
   return isRussian(locale) ? 'ru' : 'en'
 }
 
@@ -118,28 +129,41 @@ const blank = (): Flow => ({
   running: 0,
   phase: 'plan',
   isFinished: false,
-  tasks: [],
+  tasks: []
 })
 
 const isNewFlow = (prev: Flow | null, input: ProgressInput): boolean =>
-  !prev || prev.isFinished || (input.title !== undefined && input.title.trim() !== prev.title)
+  !prev ||
+  prev.isFinished ||
+  (input.title !== undefined && input.title.trim() !== prev.title)
 
 const cleanTasks = (tasks: ProgressInput['tasks']): PlannedTask[] | undefined =>
   tasks
-    ?.filter(t => t.title?.trim())
-    .map(t => ({
+    ?.filter((t) => t.title?.trim())
+    .map((t) => ({
       title: (t.title ?? '').trim(),
-      tier: (t.tier ?? '').replace(/^savvy-/, '').trim().toLowerCase(),
-      after: (t.after ?? []).filter(n => Number.isInteger(n) && n > 0),
+      tier: (t.tier ?? '')
+        .replace(/^savvy-/, '')
+        .trim()
+        .toLowerCase(),
+      after: (t.after ?? []).filter((n) => Number.isInteger(n) && n > 0)
     }))
 
 const merge = (prev: Flow | null, input: ProgressInput): Flow => {
   // A new title means a new flow: never carry counters over from an earlier one.
-  const base = isNewFlow(prev, input) || !prev ? blank() : { ...blank(), ...prev }
+  const base =
+    isNewFlow(prev, input) || !prev ? blank() : { ...blank(), ...prev }
   const tasks = cleanTasks(input.tasks) ?? base.tasks
-  const total = Math.max(0, Math.round(input.total ?? (input.tasks ? tasks.length : base.total)))
-  const done = Math.min(total || Infinity, Math.max(0, Math.round(input.done ?? base.done)))
-  const phase = input.phase && PHASES.includes(input.phase) ? input.phase : base.phase
+  const total = Math.max(
+    0,
+    Math.round(input.total ?? (input.tasks ? tasks.length : base.total))
+  )
+  const done = Math.min(
+    total || Infinity,
+    Math.max(0, Math.round(input.done ?? base.done))
+  )
+  const phase =
+    input.phase && PHASES.includes(input.phase) ? input.phase : base.phase
   return {
     ...base,
     title: input.title?.trim() || base.title,
@@ -147,7 +171,7 @@ const merge = (prev: Flow | null, input: ProgressInput): Flow => {
     done,
     phase: input.finished ? 'close' : phase,
     isFinished: input.finished === true,
-    tasks,
+    tasks
   }
 }
 
@@ -160,7 +184,8 @@ const label = (f: Flow): string => {
   return `${f.phase === 'review' ? s.review : s.tasks} ${count}`
 }
 
-const ratio = (f: Flow): number => (f.isFinished ? 1 : f.total ? f.done / f.total : 0)
+const ratio = (f: Flow): number =>
+  f.isFinished ? 1 : f.total ? f.done / f.total : 0
 
 // Deterministic noise so the dither does not shimmer between redraws.
 const noise = (x: number, y: number): number => {
@@ -175,18 +200,28 @@ const H = 22
 const BAR_H = 16
 const CRAB_W = 26
 const CELL = 3
-const FONT = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif"
+const FONT =
+  "-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif"
 
 const xml = (s: string): string =>
-  s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c)
+  s.replace(
+    /[&<>"]/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c
+  )
 
-const clip = (s: string, max: number): string => (s.length > max ? s.slice(0, Math.max(1, max - 1)) + '…' : s)
+const clip = (s: string, max: number): string =>
+  s.length > max ? s.slice(0, Math.max(1, max - 1)) + '…' : s
 
 // Rough advance of system UI text, in em; good enough to size the title's slot.
 const charEm = (ch: string): number =>
-  /[\s.,:;'|!il1()[\]]/.test(ch) ? 0.3 : /[A-ZА-ЯЁmwшщжюМШЩЖЮ@%]/.test(ch) ? 0.72 : 0.56
+  /[\s.,:;'|!il1()[\]]/.test(ch)
+    ? 0.3
+    : /[A-ZА-ЯЁmwшщжюМШЩЖЮ@%]/.test(ch)
+      ? 0.72
+      : 0.56
 
-const textWidth = (s: string, size: number): number => [...s].reduce((w, ch) => w + charEm(ch) * size, 0)
+const textWidth = (s: string, size: number): number =>
+  [...s].reduce((w, ch) => w + charEm(ch) * size, 0)
 
 // Cuts `s` to fit `maxW` pixels, with an ellipsis when it had to cut.
 const fitText = (s: string, size: number, maxW: number): string => {
@@ -207,7 +242,9 @@ const rowSvg = (f: Flow, W: number, isWorking: boolean): string => {
   const color = f.isFinished ? DONE : ACCENT
   const y0 = (H - BAR_H) / 2
   const fillW = Math.round(BAR_W * ratio(f))
-  const runW = f.total ? Math.round((BAR_W * Math.min(f.total, f.done + f.running)) / f.total) : 0
+  const runW = f.total
+    ? Math.round((BAR_W * Math.min(f.total, f.done + f.running)) / f.total)
+    : 0
   const dots: string[] = []
 
   // Dithered fill: sparse at the start, dense toward the head.
@@ -216,21 +253,30 @@ const rowSvg = (f: Flow, W: number, isWorking: boolean): string => {
   for (let c = 0; c < cols; c++) {
     const density = 0.35 + 0.6 * Math.pow(c / Math.max(1, cols), 1.2)
     for (let r = 0; r < rows; r++) {
-      if (noise(c, r) < density) dots.push(`<rect class="t${Math.floor(noise(r, c) * 4)}" x="${c * CELL + 1}" y="${r * CELL + 1}" width="2" height="2"/>`)
+      if (noise(c, r) < density)
+        dots.push(
+          `<rect class="t${Math.floor(noise(r, c) * 4)}" x="${c * CELL + 1}" y="${r * CELL + 1}" width="2" height="2"/>`
+        )
     }
   }
   // Handed to workers, not yet accepted: a faint second layer.
   const faint: string[] = []
   for (let c = cols; c < Math.floor(runW / CELL); c++) {
     for (let r = 0; r < rows; r++) {
-      if (noise(c + 7, r + 3) < 0.2) faint.push(`<rect class="t${Math.floor(noise(r + 5, c) * 4)}" x="${c * CELL + 1}" y="${r * CELL + 1}" width="1.7" height="1.7"/>`)
+      if (noise(c + 7, r + 3) < 0.2)
+        faint.push(
+          `<rect class="t${Math.floor(noise(r + 5, c) * 4)}" x="${c * CELL + 1}" y="${r * CELL + 1}" width="1.7" height="1.7"/>`
+        )
     }
   }
 
   const ticks: string[] = []
   for (let i = 1; i < f.total; i++) {
     const x = Math.round((BAR_W * i) / f.total)
-    if (x > fillW + 4) ticks.push(`<rect x="${x}" y="${BAR_H / 2 - 4}" width="1.5" height="8" rx="0.75"/>`)
+    if (x > fillW + 4)
+      ticks.push(
+        `<rect x="${x}" y="${BAR_H / 2 - 4}" width="1.5" height="8" rx="0.75"/>`
+      )
   }
 
   const text = label(f)
@@ -280,7 +326,7 @@ const TIER_COLOR: Record<string, string> = {
   careful: '#BA7517',
   medium: '#378ADD',
   light: '#1D9E75',
-  other: '#888780',
+  other: '#888780'
 }
 
 // What each savvy tier runs on, for planned tasks that have no run yet.
@@ -291,7 +337,7 @@ const TIER_MODEL: Record<string, string> = {
   heavy: 'Opus · xhigh',
   careful: 'Opus · high',
   medium: 'Opus · medium',
-  light: 'Opus · low',
+  light: 'Opus · low'
 }
 
 // USD per million tokens: input, output, cache read, cache write (5-minute TTL).
@@ -301,7 +347,7 @@ const PRICES: [RegExp, [number, number, number, number]][] = [
   [/opus-5-5/, [4, 20, 0.2, 5]],
   [/opus/, [5, 25, 0.5, 6.25]],
   [/sonnet/, [2, 10, 0.2, 2.5]],
-  [/haiku/, [1, 5, 0.1, 1.25]],
+  [/haiku/, [1, 5, 0.1, 1.25]]
 ]
 
 type Usage = {
@@ -325,7 +371,8 @@ const costOf = (model: string, u: Usage): number => {
   )
 }
 
-const windowOf = (model: string): number => (/haiku/i.test(model) ? 200_000 : 1_000_000)
+const windowOf = (model: string): number =>
+  /haiku/i.test(model) ? 200_000 : 1_000_000
 
 // `savvy-careful`, or `savvy-flow:savvy-careful` when the agents ship in a plugin.
 const tierOf = (type: string): string => {
@@ -335,18 +382,29 @@ const tierOf = (type: string): string => {
 }
 
 const modelName = (id: string): string => {
-  const m = /(fable|mythos|opus|sonnet|haiku)-(\d+)(?:-(\d{1,2})(?!\d))?/i.exec(id)
+  const m = /(fable|mythos|opus|sonnet|haiku)-(\d+)(?:-(\d{1,2})(?!\d))?/i.exec(
+    id
+  )
   const [, family = '', major = '', minor] = m ?? []
   if (!family) return id.replace(/^claude-/, '').replace(/\[.*\]$/, '') || '—'
   return `${family.charAt(0).toUpperCase()}${family.slice(1).toLowerCase()} ${major}${minor ? '.' + minor : ''}`
 }
 
-const norm = (s: string): string => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
+const norm = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
 
 const fmtTokens = (n: number): string =>
-  n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : `${Math.round(n)}`
+  n >= 1e6
+    ? `${(n / 1e6).toFixed(1)}M`
+    : n >= 1e3
+      ? `${Math.round(n / 1e3)}k`
+      : `${Math.round(n)}`
 
-const fmtCost = (usd: number): string => `$${usd < 10 ? usd.toFixed(2) : usd.toFixed(1)}`
+const fmtCost = (usd: number): string =>
+  `$${usd < 10 ? usd.toFixed(2) : usd.toFixed(1)}`
 
 const fmtTime = (ms: number): string => {
   const s = Math.max(0, Math.round(ms / 1000))
@@ -356,21 +414,26 @@ const fmtTime = (ms: number): string => {
   return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`
 }
 
-const elapsed = (a: AgentRun, at: number): number => (a.endedAt ?? Math.max(at, a.startedAt)) - a.startedAt
+const elapsed = (a: AgentRun, at: number): number =>
+  (a.endedAt ?? Math.max(at, a.startedAt)) - a.startedAt
 
 type Planned = PlannedTask & { n: number }
 
 const plannedOf = (f: Flow | null, list: AgentRun[]): Planned[] => {
   if (!f || f.isFinished) return []
-  const started = new Set(list.map(a => norm(a.description)))
-  return (f.tasks ?? []).map((t, i) => ({ ...t, n: i + 1 })).filter(t => !started.has(norm(t.title)))
+  const started = new Set(list.map((a) => norm(a.description)))
+  return (f.tasks ?? [])
+    .map((t, i) => ({ ...t, n: i + 1 }))
+    .filter((t) => !started.has(norm(t.title)))
 }
 
 const totals = (list: AgentRun[], at: number) => {
   const cost = list.reduce((s, a) => s + a.costUsd, 0)
   const tokens = list.reduce((s, a) => s + a.tokens, 0)
-  const start = Math.min(...list.map(a => a.startedAt))
-  const end = Math.max(...list.map(a => a.endedAt ?? Math.max(at, a.startedAt)))
+  const start = Math.min(...list.map((a) => a.startedAt))
+  const end = Math.max(
+    ...list.map((a) => a.endedAt ?? Math.max(at, a.startedAt))
+  )
   return { cost, tokens, time: list.length ? end - start : 0 }
 }
 
@@ -390,10 +453,28 @@ const INK = '#1F1E1D'
 
 // `cls` puts a pixel in a named group: `bd` (the default) is the body and its
 // costume, `la`/`lb` the leg pairs, anything else a prop with its own motion.
-type Fill = (x: number, y: number, w: number, h: number, c: string, cls?: string) => void
+type Fill = (
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  c: string,
+  cls?: string
+) => void
 
-const stamp = (f: Fill, x: number, y: number, rows: string[], map: Record<string, string>, cls?: string): void =>
-  rows.forEach((row, dy) => [...row].forEach((ch, dx) => map[ch] && f(x + dx, y + dy, 1, 1, map[ch] ?? '', cls)))
+const stamp = (
+  f: Fill,
+  x: number,
+  y: number,
+  rows: string[],
+  map: Record<string, string>,
+  cls?: string
+): void =>
+  rows.forEach((row, dy) =>
+    [...row].forEach(
+      (ch, dx) => map[ch] && f(x + dx, y + dy, 1, 1, map[ch] ?? '', cls)
+    )
+  )
 
 // `armCls` lets a raised claw travel with the prop it holds.
 const crabBody = (f: Fill, armFront = 0, armCls?: string): void => {
@@ -454,97 +535,279 @@ const COSTUMES: Record<string, (f: Fill, t: string) => void> = {
   // Fable: astronaut in a glass dome; floats instead of walking, the antenna and the star blink.
   fable: (f, t) => {
     crabBody(f)
-    f(6, 7, 18, 1, '#E6E8EE'); f(5, 8, 1, 14, '#E6E8EE'); f(24, 8, 1, 14, '#E6E8EE'); f(6, 22, 18, 1, '#C9CCD2')
-    f(6, 8, 18, 14, 'rgba(169,214,245,.32)'); f(8, 9, 2, 1, '#fff'); f(8, 10, 1, 2, '#fff')
-    f(14, 4, 2, 3, '#C9CCD2'); f(14, 2, 2, 2, t, 'ant'); f(13, 18, 4, 2, t)
-    f(27, 3, 1, 3, '#F5C542', 'star'); f(26, 4, 3, 1, '#F5C542', 'star')
+    f(6, 7, 18, 1, '#E6E8EE')
+    f(5, 8, 1, 14, '#E6E8EE')
+    f(24, 8, 1, 14, '#E6E8EE')
+    f(6, 22, 18, 1, '#C9CCD2')
+    f(6, 8, 18, 14, 'rgba(169,214,245,.32)')
+    f(8, 9, 2, 1, '#fff')
+    f(8, 10, 1, 2, '#fff')
+    f(14, 4, 2, 3, '#C9CCD2')
+    f(14, 2, 2, 2, t, 'ant')
+    f(13, 18, 4, 2, t)
+    f(27, 3, 1, 3, '#F5C542', 'star')
+    f(26, 4, 3, 1, '#F5C542', 'star')
   },
   // Heavy: detective with a deerstalker; the magnifier sweeps and glints.
   heavy: (f, t) => {
     crabBody(f, -4, 'it')
-    stamp(f, 6, 3, ['......bbbbbb......', '....bbcbbcbbbb....', '...bbbbbbbbbbbb...', '..bcbbcbbcbbcbbb..', '.bbbbbbbbbbbbbbbb.', 'dddddddddddddddddd'], { b: '#7A4A26', c: '#A0703F', d: '#5A3519' })
+    stamp(
+      f,
+      6,
+      3,
+      [
+        '......bbbbbb......',
+        '....bbcbbcbbbb....',
+        '...bbbbbbbbbbbb...',
+        '..bcbbcbbcbbcbbb..',
+        '.bbbbbbbbbbbbbbbb.',
+        'dddddddddddddddddd'
+      ],
+      { b: '#7A4A26', c: '#A0703F', d: '#5A3519' }
+    )
     f(6, 9, 18, 1, t)
-    stamp(f, 23, 1, ['.kkk.', 'k...k', 'k...k', 'k...k', '.kkk.'], { k: '#3A3A3C' }, 'it')
-    f(24, 2, 3, 3, 'rgba(169,214,245,.7)', 'it'); f(25, 6, 1, 4, '#7A4A26', 'it'); f(24, 2, 1, 1, '#fff', 'gl')
+    stamp(
+      f,
+      23,
+      1,
+      ['.kkk.', 'k...k', 'k...k', 'k...k', '.kkk.'],
+      { k: '#3A3A3C' },
+      'it'
+    )
+    f(24, 2, 3, 3, 'rgba(169,214,245,.7)', 'it')
+    f(25, 6, 1, 4, '#7A4A26', 'it')
+    f(24, 2, 1, 1, '#fff', 'gl')
   },
   // Careful: engineer in a hard hat; the wrench turns a bolt.
   careful: (f, t) => {
     crabBody(f)
-    stamp(f, 6, 4, ['.....yyyyyyyy.....', '...yyyyyhhyyyyy...', '..yyyyyyhhyyyyyy..', '..yyyyyyhhyyyyyy..', '.yyyyyyyhhyyyyyyy.', 'dddddddddddddddddd'], { y: '#F5C542', h: '#FBE08A', d: '#C99A1E' })
+    stamp(
+      f,
+      6,
+      4,
+      [
+        '.....yyyyyyyy.....',
+        '...yyyyyhhyyyyy...',
+        '..yyyyyyhhyyyyyy..',
+        '..yyyyyyhhyyyyyy..',
+        '.yyyyyyyhhyyyyyyy.',
+        'dddddddddddddddddd'
+      ],
+      { y: '#F5C542', h: '#FBE08A', d: '#C99A1E' }
+    )
     f(13, 5, 4, 2, t)
     stamp(f, 0, 10, ['.s.s', 'sss.', '.s..', '.s..'], { s: '#8E929A' }, 'it')
   },
   // Medium: chef, the toque traced from DockCrab's Sprites.chefHat; tosses the omelette.
   medium: (f, t) => {
     crabBody(f, -4, 'pan')
-    stamp(f, 6, 0, ['........lll.......', '.......lllll......', '.wwwwgwwwwwwgwwwww', 'wwwwwwwwwwwwwwwwww', 'wwwwwwwwwwwwwwwwww', 'wwwwwgwwwwwggwwwww', '.wwwwgwwwwwggwwwww', '.dddbbbbbbbbbbbbb.', '.dddbbbbbbbbbbbbb.', '.dddbbbbbbbbbbbbb.'], { w: '#F4F3EE', l: '#F7F6F2', g: '#D2D1C8', b: t, d: '#B45F43' })
-    f(22, 8, 7, 2, '#4A4A48', 'pan'); f(26, 10, 1, 1, '#4A4A48', 'pan'); f(24, 7, 3, 1, '#F5B731', 'egg')
+    stamp(
+      f,
+      6,
+      0,
+      [
+        '........lll.......',
+        '.......lllll......',
+        '.wwwwgwwwwwwgwwwww',
+        'wwwwwwwwwwwwwwwwww',
+        'wwwwwwwwwwwwwwwwww',
+        'wwwwwgwwwwwggwwwww',
+        '.wwwwgwwwwwggwwwww',
+        '.dddbbbbbbbbbbbbb.',
+        '.dddbbbbbbbbbbbbb.',
+        '.dddbbbbbbbbbbbbb.'
+      ],
+      { w: '#F4F3EE', l: '#F7F6F2', g: '#D2D1C8', b: t, d: '#B45F43' }
+    )
+    f(22, 8, 7, 2, '#4A4A48', 'pan')
+    f(26, 10, 1, 1, '#4A4A48', 'pan')
+    f(24, 7, 3, 1, '#F5B731', 'egg')
   },
   // Light: racer in a helmet; runs at double pace, the checkered flag flutters.
   light: (f, t) => {
     crabBody(f, -4)
-    stamp(f, 6, 5, ['....rrrrrrrrrr....', '..rrrrrrwwrrrrrr..', '.rrrrrrrwwrrrrrrr.', '.rrrrrrrwwrrrrrrr.', '.rrrrrrrwwrrrrrrr.', '.kkkkkkkkkkkkkkkkr'], { r: t, w: '#F8F6F1', k: INK })
+    stamp(
+      f,
+      6,
+      5,
+      [
+        '....rrrrrrrrrr....',
+        '..rrrrrrwwrrrrrr..',
+        '.rrrrrrrwwrrrrrrr.',
+        '.rrrrrrrwwrrrrrrr.',
+        '.rrrrrrrwwrrrrrrr.',
+        '.kkkkkkkkkkkkkkkkr'
+      ],
+      { r: t, w: '#F8F6F1', k: INK }
+    )
     f(25, 1, 1, 9, '#8E929A')
     stamp(f, 26, 1, ['wkwk', 'kwkw', 'wkwk'], { w: '#F8F6F1', k: INK }, 'flag')
   },
   // Explore: pirate scouting the code; the cutlass fences.
-  explore: f => {
+  explore: (f) => {
     crabBody(f)
-    stamp(f, 5, 3, ['.kk..............kk.', '.kkk....kkkk....kkk.', '..kkkkkkkwwkkkkkkk..', '..kkkkkkkkkkkkkkkk..', '.gggggggggggggggggg.'], { k: '#55514C', w: '#F8F6F1', g: '#F5C542' })
-    f(7, 11, 11, 1, INK); f(18, 11, 4, 3, INK)
-    f(27, 6, 1, 9, '#C9CCD2', 'it'); f(26, 15, 3, 1, '#7A4A26', 'it')
+    stamp(
+      f,
+      5,
+      3,
+      [
+        '.kk..............kk.',
+        '.kkk....kkkk....kkk.',
+        '..kkkkkkkwwkkkkkkk..',
+        '..kkkkkkkkkkkkkkkk..',
+        '.gggggggggggggggggg.'
+      ],
+      { k: '#55514C', w: '#F8F6F1', g: '#F5C542' }
+    )
+    f(7, 11, 11, 1, INK)
+    f(18, 11, 4, 3, INK)
+    f(27, 6, 1, 9, '#C9CCD2', 'it')
+    f(26, 15, 3, 1, '#7A4A26', 'it')
   },
   // general-purpose: developer in a hoodie; types on the laptop, the code on screen blinks.
   dev: (f, t) => {
     crabBody(f, 0, 'ty')
-    stamp(f, 6, 6, ['....hhhhhhhhhh....', '..hhhhhhhhhhhhhh..', '.hhhhhhhhhhhhhhhh.', 'hhh............hhh'], { h: t })
-    f(6, 10, 1, 4, t); f(23, 10, 1, 3, t)
-    f(12, 10, 1, 3, '#F8F6F1'); f(17, 10, 1, 3, '#F8F6F1')
-    f(9, 15, 12, 6, '#2B2B2E'); f(8, 21, 14, 1, '#8E929A')
-    f(10, 16, 5, 1, '#3B9C5F', 'scr'); f(11, 18, 7, 1, '#6FB4F0', 'scr'); f(10, 20, 3, 1, '#F5C542')
+    stamp(
+      f,
+      6,
+      6,
+      [
+        '....hhhhhhhhhh....',
+        '..hhhhhhhhhhhhhh..',
+        '.hhhhhhhhhhhhhhhh.',
+        'hhh............hhh'
+      ],
+      { h: t }
+    )
+    f(6, 10, 1, 4, t)
+    f(23, 10, 1, 3, t)
+    f(12, 10, 1, 3, '#F8F6F1')
+    f(17, 10, 1, 3, '#F8F6F1')
+    f(9, 15, 12, 6, '#2B2B2E')
+    f(8, 21, 14, 1, '#8E929A')
+    f(10, 16, 5, 1, '#3B9C5F', 'scr')
+    f(11, 18, 7, 1, '#6FB4F0', 'scr')
+    f(10, 20, 3, 1, '#F5C542')
   },
   // Plan: architect in a beret; the blueprint unrolls.
   plan: (f, t) => {
     crabBody(f, -4)
-    stamp(f, 7, 5, ['.......b.......', '...bbbbbbbbb...', '.bbbbbbbbbbbbb.', 'bbbbbbbbbbbbbbb'], { b: t })
-    f(22, 8, 8, 2, '#1E4F9E'); f(22, 8, 1, 2, '#DCE7F7'); f(29, 8, 1, 2, '#DCE7F7')
-    f(23, 10, 6, 8, '#3A7BD5', 'sh'); f(24, 12, 4, 1, '#DCE7F7', 'sh'); f(24, 15, 3, 1, '#DCE7F7', 'sh'); f(26, 11, 1, 5, '#DCE7F7', 'sh')
+    stamp(
+      f,
+      7,
+      5,
+      [
+        '.......b.......',
+        '...bbbbbbbbb...',
+        '.bbbbbbbbbbbbb.',
+        'bbbbbbbbbbbbbbb'
+      ],
+      { b: t }
+    )
+    f(22, 8, 8, 2, '#1E4F9E')
+    f(22, 8, 1, 2, '#DCE7F7')
+    f(29, 8, 1, 2, '#DCE7F7')
+    f(23, 10, 6, 8, '#3A7BD5', 'sh')
+    f(24, 12, 4, 1, '#DCE7F7', 'sh')
+    f(24, 15, 3, 1, '#DCE7F7', 'sh')
+    f(26, 11, 1, 5, '#DCE7F7', 'sh')
   },
   // claude-code-guide: librarian in round glasses; turns the pages of a book.
   guide: (f, t) => {
     crabBody(f)
-    stamp(f, 8, 11, ['.gg.', 'g..g', 'g..g', '.gg.'], { g: '#C9A227' }); stamp(f, 18, 11, ['.gg.', 'g..g', 'g..g', '.gg.'], { g: '#C9A227' })
+    stamp(f, 8, 11, ['.gg.', 'g..g', 'g..g', '.gg.'], { g: '#C9A227' })
+    stamp(f, 18, 11, ['.gg.', 'g..g', 'g..g', '.gg.'], { g: '#C9A227' })
     f(12, 12, 6, 1, '#C9A227')
-    stamp(f, 12, 5, ['..hh..', '.hhhh.', '.hhhh.', '..hh..', 'hhhhhh'], { h: '#55514C' }); f(14, 9, 2, 1, t)
+    stamp(f, 12, 5, ['..hh..', '.hhhh.', '.hhhh.', '..hh..', 'hhhhhh'], {
+      h: '#55514C'
+    })
+    f(14, 9, 2, 1, t)
     f(20, 18, 10, 1, t)
-    f(21, 13, 4, 5, '#F8F6F1'); f(25, 13, 4, 5, '#F1EEE6')
-    f(22, 14, 2, 1, '#9a9a96'); f(22, 16, 2, 1, '#9a9a96'); f(26, 15, 2, 1, '#9a9a96')
+    f(21, 13, 4, 5, '#F8F6F1')
+    f(25, 13, 4, 5, '#F1EEE6')
+    f(22, 14, 2, 1, '#9a9a96')
+    f(22, 16, 2, 1, '#9a9a96')
+    f(26, 15, 2, 1, '#9a9a96')
     f(25, 13, 4, 5, '#FFFFFF', 'pg')
   },
   // claude: wizard in a starry hat; the wand waves and sparkles.
   wizard: (f, t) => {
     crabBody(f, -4, 'wd')
-    stamp(f, 6, 0, ['.........pp.......', '........ppp.......', '........pppp......', '.......ppspp......', '.......pppppp.....', '......pppppspp....', '......ppsppppp....', '.....pppppppppp...', '....tttttttttttt..', 'bbbbbbbbbbbbbbbbbb'], { p: '#4B3B8F', s: '#F5C542', t, b: '#3A2D70' })
-    f(26, 4, 1, 7, '#7A4A26', 'wd'); f(26, 3, 1, 1, '#FFFFFF', 'wd')
-    f(28, 1, 1, 1, '#F5C542', 'sp'); f(24, 2, 1, 1, '#F5C542', 'sp'); f(28, 5, 1, 1, '#F8F6F1', 'sp')
+    stamp(
+      f,
+      6,
+      0,
+      [
+        '.........pp.......',
+        '........ppp.......',
+        '........pppp......',
+        '.......ppspp......',
+        '.......pppppp.....',
+        '......pppppspp....',
+        '......ppsppppp....',
+        '.....pppppppppp...',
+        '....tttttttttttt..',
+        'bbbbbbbbbbbbbbbbbb'
+      ],
+      { p: '#4B3B8F', s: '#F5C542', t, b: '#3A2D70' }
+    )
+    f(26, 4, 1, 7, '#7A4A26', 'wd')
+    f(26, 3, 1, 1, '#FFFFFF', 'wd')
+    f(28, 1, 1, 1, '#F5C542', 'sp')
+    f(24, 2, 1, 1, '#F5C542', 'sp')
+    f(28, 5, 1, 1, '#F8F6F1', 'sp')
   },
   // lint-ninja: black mask with a red band; throws a spinning star.
   ninja: (f, t) => {
     crabBody(f, -4)
-    f(7, 8, 16, 7, '#26262A'); f(7, 10, 16, 1, t); f(7, 11, 16, 1, '#26262A')
-    f(9, 12, 3, 2, '#F8F6F1'); f(18, 12, 3, 2, '#F8F6F1'); f(10, 12, 2, 2, INK); f(19, 12, 2, 2, INK)
-    f(23, 9, 4, 1, t); f(26, 10, 3, 2, t)
-    f(25, 2, 5, 5, '#C9CCD2', 'ss'); f(27, 1, 1, 7, '#C9CCD2', 'ss'); f(24, 4, 7, 1, '#C9CCD2', 'ss'); f(27, 4, 1, 1, INK, 'ss')
+    f(7, 8, 16, 7, '#26262A')
+    f(7, 10, 16, 1, t)
+    f(7, 11, 16, 1, '#26262A')
+    f(9, 12, 3, 2, '#F8F6F1')
+    f(18, 12, 3, 2, '#F8F6F1')
+    f(10, 12, 2, 2, INK)
+    f(19, 12, 2, 2, INK)
+    f(23, 9, 4, 1, t)
+    f(26, 10, 3, 2, t)
+    f(25, 2, 5, 5, '#C9CCD2', 'ss')
+    f(27, 1, 1, 7, '#C9CCD2', 'ss')
+    f(24, 4, 7, 1, '#C9CCD2', 'ss')
+    f(27, 4, 1, 1, INK, 'ss')
   },
   // Link judge (matched by description): barrister wig, robe with white bands; bangs the gavel.
   judge: (f, t) => {
     crabBody(f, -4, 'gv')
-    f(7, 16, 16, 6, '#26262A'); f(13, 16, 4, 1, '#F8F6F1'); f(14, 17, 1, 3, '#F8F6F1'); f(15, 17, 1, 3, '#F8F6F1')
-    stamp(f, 6, 4, ['....wwwwwwwwww....', '..wwgwwgwwgwwgww..', '.wwwwwwwwwwwwwwww.', 'wwgwwgwwgwwgwwgwww', 'wwwwwwwwwwwwwwwwww', '.ww............ww.'], { w: '#F1EEE6', g: '#B9B6AE' })
-    stamp(f, 7, 10, ['ww', 'gg', 'ww', 'gg', 'ww', 'ww'], { w: '#F1EEE6', g: '#B9B6AE' }); stamp(f, 21, 10, ['ww', 'gg', 'ww', 'gg', 'ww', 'ww'], { w: '#F1EEE6', g: '#B9B6AE' })
-    f(26, 5, 1, 6, '#7A4A26', 'gv'); f(24, 2, 5, 3, '#5A3519', 'gv'); f(26, 2, 1, 3, t, 'gv')
+    f(7, 16, 16, 6, '#26262A')
+    f(13, 16, 4, 1, '#F8F6F1')
+    f(14, 17, 1, 3, '#F8F6F1')
+    f(15, 17, 1, 3, '#F8F6F1')
+    stamp(
+      f,
+      6,
+      4,
+      [
+        '....wwwwwwwwww....',
+        '..wwgwwgwwgwwgww..',
+        '.wwwwwwwwwwwwwwww.',
+        'wwgwwgwwgwwgwwgwww',
+        'wwwwwwwwwwwwwwwwww',
+        '.ww............ww.'
+      ],
+      { w: '#F1EEE6', g: '#B9B6AE' }
+    )
+    stamp(f, 7, 10, ['ww', 'gg', 'ww', 'gg', 'ww', 'ww'], {
+      w: '#F1EEE6',
+      g: '#B9B6AE'
+    })
+    stamp(f, 21, 10, ['ww', 'gg', 'ww', 'gg', 'ww', 'ww'], {
+      w: '#F1EEE6',
+      g: '#B9B6AE'
+    })
+    f(26, 5, 1, 6, '#7A4A26', 'gv')
+    f(24, 2, 5, 3, '#5A3519', 'gv')
+    f(26, 2, 1, 3, t, 'gv')
   },
-  other: f => crabBody(f),
+  other: (f) => crabBody(f)
 }
 
 // Costumes for the built-in agent types, and the accent each one wears.
@@ -553,7 +816,7 @@ const TYPE_COSTUME: Record<string, string> = {
   Plan: 'plan',
   'claude-code-guide': 'guide',
   claude: 'wizard',
-  'lint-ninja': 'ninja',
+  'lint-ninja': 'ninja'
 }
 const COSTUME_COLOR: Record<string, string> = {
   dev: '#378ADD',
@@ -561,7 +824,7 @@ const COSTUME_COLOR: Record<string, string> = {
   guide: '#1D9E75',
   wizard: '#7F77DD',
   ninja: '#D0453F',
-  judge: '#B08D57',
+  judge: '#B08D57'
 }
 
 // Some agents share a type and differ only by task: the description picks those.
@@ -569,30 +832,54 @@ const DESCRIPTION_COSTUME: [RegExp, string][] = [[/\bjudge\b/i, 'judge']]
 
 const costumeOf = (type: string, description = ''): string =>
   DESCRIPTION_COSTUME.find(([re]) => re.test(description))?.[1] ??
-  (type === 'Explore' ? 'explore' : TYPE_COSTUME[type.replace(/^[^:]*:/, '')] ?? tierOf(type))
+  (type === 'Explore'
+    ? 'explore'
+    : (TYPE_COSTUME[type.replace(/^[^:]*:/, '')] ?? tierOf(type)))
 
 const CRAB_SCALE = 1.1
 
 // Body and props nest inside `bd` so a prop rides the bob and adds its own motion;
 // legs stay outside it and step on their own.
-const crab = (x: number, y: number, costume: string, dim = false, isWalking = false, scale = CRAB_SCALE): string => {
+const crab = (
+  x: number,
+  y: number,
+  costume: string,
+  dim = false,
+  isWalking = false,
+  scale = CRAB_SCALE
+): string => {
   const groups = new Map<string, string[]>([['bd', []]])
   const f: Fill = (cx, cy, w, h, c, cls = 'bd') => {
     if (!groups.has(cls)) groups.set(cls, [])
-    groups.get(cls)?.push(`<rect x="${cx}" y="${cy}" width="${w}" height="${h}" fill="${c}"/>`)
+    groups
+      .get(cls)
+      ?.push(
+        `<rect x="${cx}" y="${cy}" width="${w}" height="${h}" fill="${c}"/>`
+      )
   }
   const draw = COSTUMES[costume] ?? ((g: Fill) => crabBody(g))
   draw(f, COSTUME_COLOR[costume] ?? colorOf(costume))
-  const group = (cls: string) => `<g class="${cls}">${(groups.get(cls) ?? []).join('')}</g>`
-  const props = [...groups.keys()].filter(k => k !== 'bd' && k !== 'la' && k !== 'lb')
+  const group = (cls: string) =>
+    `<g class="${cls}">${(groups.get(cls) ?? []).join('')}</g>`
+  const props = [...groups.keys()].filter(
+    (k) => k !== 'bd' && k !== 'la' && k !== 'lb'
+  )
   const body = `<g class="bd">${(groups.get('bd') ?? []).join('')}${props.map(group).join('')}</g>`
   return `<g transform="translate(${x},${y}) scale(${scale})" opacity="${dim ? 0.45 : 1}" shape-rendering="crispEdges"><g class="c-${costume}${isWalking ? ' run' : ''}">${body}${group('la')}${group('lb')}</g></g>`
 }
 
-const statusMark = (x: number, y: number, status: string, color: string): string => {
-  if (status === 'running') return `<circle class="live" cx="${x}" cy="${y}" r="3.5" fill="${color}"/>`
-  if (status === 'done') return `<path d="M${x - 5} ${y}l3.5 3.5 6.5-7" fill="none" stroke="#3B9C5F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`
-  if (status === 'failed') return `<path d="M${x - 4} ${y - 4}l8 8M${x + 4} ${y - 4}l-8 8" stroke="#D0453F" stroke-width="1.8" stroke-linecap="round"/>`
+const statusMark = (
+  x: number,
+  y: number,
+  status: string,
+  color: string
+): string => {
+  if (status === 'running')
+    return `<circle class="live" cx="${x}" cy="${y}" r="3.5" fill="${color}"/>`
+  if (status === 'done')
+    return `<path d="M${x - 5} ${y}l3.5 3.5 6.5-7" fill="none" stroke="#3B9C5F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`
+  if (status === 'failed')
+    return `<path d="M${x - 4} ${y - 4}l8 8M${x + 4} ${y - 4}l-8 8" stroke="#D0453F" stroke-width="1.8" stroke-linecap="round"/>`
   return `<circle cx="${x}" cy="${y}" r="5" fill="none" stroke="#9a9a96" stroke-width="1.4"/><path d="M${x} ${y - 2.5}v2.8l1.8 1.2" fill="none" stroke="#9a9a96" stroke-width="1.4" stroke-linecap="round"/>`
 }
 
@@ -600,7 +887,11 @@ const svg = (W: number, H: number, body: string): string =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${PANE_CSS}${CRAB_CSS}${body}</svg>`
 
 // The pane's own title already says "Agents": the header names the flow, if any.
-const headerSvg = (W: number, title: string, t: ReturnType<typeof totals>): string => {
+const headerSvg = (
+  W: number,
+  title: string,
+  t: ReturnType<typeof totals>
+): string => {
   const s = tr()
   const gap = 6
   const tw = (W - gap * 2) / 3
@@ -613,7 +904,7 @@ const headerSvg = (W: number, title: string, t: ReturnType<typeof totals>): stri
     W,
     headerHeight(title),
     `${title ? `<text class="t" x="0" y="15" font-family="${FONT}" font-size="14" font-weight="600">${xml(fitText(title, 14, W))}</text>` : ''}
-${tile(0, s.cost, '≈' + fmtCost(t.cost))}${tile(1, s.tokens, fmtTokens(t.tokens))}${tile(2, s.time, fmtTime(t.time))}`,
+${tile(0, s.cost, '≈' + fmtCost(t.cost))}${tile(1, s.tokens, fmtTokens(t.tokens))}${tile(2, s.time, fmtTime(t.time))}`
   )
 }
 
@@ -626,7 +917,10 @@ const progressOf = (a: AgentRun): number | null => {
   return null
 }
 
-const ctxOf = (a: AgentRun): number => (a.contextMax ? Math.min(100, Math.round((a.contextTokens / a.contextMax) * 100)) : 0)
+const ctxOf = (a: AgentRun): number =>
+  a.contextMax
+    ? Math.min(100, Math.round((a.contextTokens / a.contextMax) * 100))
+    : 0
 
 const agentSvg = (W: number, a: AgentRun, at: number): string => {
   const s = tr()
@@ -634,13 +928,17 @@ const agentSvg = (W: number, a: AgentRun, at: number): string => {
   const color = colorOf(tier)
   const ctx = ctxOf(a)
   const textW = W - 42 - 22
-  const meta = [a.effort ? `${modelName(a.model)} · ${a.effort}` : modelName(a.model)]
+  const meta = [
+    a.effort ? `${modelName(a.model)} · ${a.effort}` : modelName(a.model)
+  ]
   if (a.round > 1) meta.push(`${s.round} ${a.round}`)
   if (a.status === 'failed') meta.push(s.failed)
   const barW = textW
   const progress = progressOf(a)
   const stats = `ctx ${ctx}% · ${fmtTokens(a.contextTokens)}  ≈${fmtCost(a.costUsd)}  ${fmtTime(elapsed(a, at))}`
-  const steps = a.stepTotal ? `${a.stepDone ?? 0}/${a.stepTotal}${a.stepNote ? ' · ' + a.stepNote : ''}` : ''
+  const steps = a.stepTotal
+    ? `${a.stepDone ?? 0}/${a.stepTotal}${a.stepNote ? ' · ' + a.stepNote : ''}`
+    : ''
   const stepsW = Math.max(0, barW - textWidth(stats, 11) - 12)
   // Without reported steps the bar falls back to the context, drawn grey.
   const fillW = Math.round(barW * (progress ?? ctx / 100))
@@ -654,7 +952,7 @@ ${steps && stepsW > 30 ? `<text class="t" x="42" y="49" font-family="${FONT}" fo
 <text class="s" x="${42 + barW}" y="49" text-anchor="end" font-family="${FONT}" font-size="11" font-variant-numeric="tabular-nums">${stats}</text>
 <rect class="k" x="42" y="55" width="${barW}" height="4" rx="2"/><rect${progress === null ? ' class="m"' : ''} x="42" y="55" width="${fillW}" height="4" rx="2"${progress === null ? '' : ` fill="${color}"`}/>
 ${statusMark(W - 8, 16, a.status, color)}
-<line class="ln" x1="0" y1="65.5" x2="${W}" y2="65.5"/>`,
+<line class="ln" x1="0" y1="65.5" x2="${W}" y2="65.5"/>`
   )
 }
 
@@ -671,28 +969,58 @@ const plannedSvg = (W: number, p: Planned): string => {
 <text class="s" x="42" y="18" font-family="${FONT}" font-size="13" font-weight="600">${xml(fitText(`${p.n}. ${p.title}`, 13, textW))}</text>
 <text x="42" y="34" font-family="${FONT}" font-size="11"><tspan fill="${color}">${xml(tier)}</tspan><tspan class="m">  ${xml(meta.filter(Boolean).join('  ·  '))}</tspan></text>
 ${statusMark(W - 8, 16, 'planned', color)}
-<line class="ln" x1="0" y1="45.5" x2="${W}" y2="45.5"/>`,
+<line class="ln" x1="0" y1="45.5" x2="${W}" y2="45.5"/>`
   )
 }
 
-const compactSvg = (W: number, list: AgentRun[], planned: Planned[], t: ReturnType<typeof totals>): string => {
+const compactSvg = (
+  W: number,
+  list: AgentRun[],
+  planned: Planned[],
+  t: ReturnType<typeof totals>
+): string => {
   const icons = [
-    ...list.filter(a => a.status === 'running').map(a => ({ k: costumeOf(a.type, a.description), c: colorOf(tierOf(a.type)), s: 'running', dim: false })),
-    ...list.filter(a => a.status !== 'running').map(a => ({ k: costumeOf(a.type, a.description), c: colorOf(tierOf(a.type)), s: a.status, dim: false })),
-    ...planned.map(p => ({ k: p.tier in TIER_COLOR ? p.tier : 'other', c: colorOf(p.tier), s: 'planned', dim: true })),
+    ...list
+      .filter((a) => a.status === 'running')
+      .map((a) => ({
+        k: costumeOf(a.type, a.description),
+        c: colorOf(tierOf(a.type)),
+        s: 'running',
+        dim: false
+      })),
+    ...list
+      .filter((a) => a.status !== 'running')
+      .map((a) => ({
+        k: costumeOf(a.type, a.description),
+        c: colorOf(tierOf(a.type)),
+        s: a.status,
+        dim: false
+      })),
+    ...planned.map((p) => ({
+      k: p.tier in TIER_COLOR ? p.tier : 'other',
+      c: colorOf(p.tier),
+      s: 'planned',
+      dim: true
+    }))
   ]
   const fit = Math.max(1, Math.floor((W - 150) / 36))
   const shown = icons.slice(0, fit)
   const more = icons.length - shown.length
   const body = shown
-    .map((ic, i) => crab(i * 36, 0, ic.k, ic.dim, ic.s === 'running') + (ic.s === 'running' ? `<circle class="live" cx="${i * 36 + 32}" cy="4" r="3" fill="${ic.c}"/>` : ''))
+    .map(
+      (ic, i) =>
+        crab(i * 36, 0, ic.k, ic.dim, ic.s === 'running') +
+        (ic.s === 'running'
+          ? `<circle class="live" cx="${i * 36 + 32}" cy="4" r="3" fill="${ic.c}"/>`
+          : '')
+    )
     .join('')
   const x = shown.length * 36 + (more ? 4 : 0)
   return svg(
     W,
     32,
     `${body}${more ? `<text class="s" x="${x}" y="21" font-family="${FONT}" font-size="12">+${more}</text>` : ''}
-<text class="s" x="${W}" y="21" text-anchor="end" font-family="${FONT}" font-size="12" font-variant-numeric="tabular-nums">≈${fmtCost(t.cost)} · ${fmtTokens(t.tokens)} · ${fmtTime(t.time)}</text>`,
+<text class="s" x="${W}" y="21" text-anchor="end" font-family="${FONT}" font-size="12" font-variant-numeric="tabular-nums">≈${fmtCost(t.cost)} · ${fmtTokens(t.tokens)} · ${fmtTime(t.time)}</text>`
   )
 }
 
@@ -703,11 +1031,16 @@ const ctxBar = (pct: number, width: number): string => {
   return '█'.repeat(filled) + '░'.repeat(Math.max(0, width - filled))
 }
 
-const STATUS_GLYPH: Record<string, string> = { running: '●', done: '✓', failed: '✗', planned: '◷' }
+const STATUS_GLYPH: Record<string, string> = {
+  running: '●',
+  done: '✓',
+  failed: '✗',
+  planned: '◷'
+}
 
 // Opens the agents pane, or closes it when it is up; true when it ends up open.
 async function togglePane($: EngineInterface): Promise<boolean> {
-  const isOpen = (await $.ui.panes()).some(p => p.id === PANE)
+  const isOpen = (await $.ui.panes()).some((p) => p.id === PANE)
   if (isOpen) {
     await $.ui.close({ id: PANE })
     return false
@@ -721,7 +1054,7 @@ async function togglePane($: EngineInterface): Promise<boolean> {
 async function autoOpen($: EngineInterface, key: string): Promise<void> {
   const p = await read($, panel)
   if (p.autoOpenedFor === key) return
-  await update($, panel, prev => ({ ...prev, autoOpenedFor: key }))
+  await update($, panel, (prev) => ({ ...prev, autoOpenedFor: key }))
   void $.ui.open({ id: PANE, title: tr().pane })
 }
 
@@ -738,11 +1071,25 @@ export const register: Register = (on, options) => {
       inputSchema: {
         type: 'object',
         properties: {
-          title: { type: 'string', description: 'Short name of the overall task, a few words.' },
-          total: { type: 'integer', minimum: 0, description: 'Number of planned worker tasks.' },
-          done: { type: 'integer', minimum: 0, description: 'Number of tasks accepted after review.' },
+          title: {
+            type: 'string',
+            description: 'Short name of the overall task, a few words.'
+          },
+          total: {
+            type: 'integer',
+            minimum: 0,
+            description: 'Number of planned worker tasks.'
+          },
+          done: {
+            type: 'integer',
+            minimum: 0,
+            description: 'Number of tasks accepted after review.'
+          },
           phase: { type: 'string', enum: [...PHASES] },
-          finished: { type: 'boolean', description: 'True once the flow is closed.' },
+          finished: {
+            type: 'boolean',
+            description: 'True once the flow is closed.'
+          },
           tasks: {
             type: 'array',
             description:
@@ -750,15 +1097,26 @@ export const register: Register = (on, options) => {
             items: {
               type: 'object',
               properties: {
-                title: { type: 'string', description: 'A few words; reused verbatim as the Agent description.' },
-                tier: { type: 'string', enum: ['fable', 'heavy', 'careful', 'medium', 'light'] },
-                after: { type: 'array', items: { type: 'integer' }, description: 'Numbers of the tasks this one waits for.' },
+                title: {
+                  type: 'string',
+                  description:
+                    'A few words; reused verbatim as the Agent description.'
+                },
+                tier: {
+                  type: 'string',
+                  enum: ['fable', 'heavy', 'careful', 'medium', 'light']
+                },
+                after: {
+                  type: 'array',
+                  items: { type: 'integer' },
+                  description: 'Numbers of the tasks this one waits for.'
+                }
               },
-              required: ['title', 'tier'],
-            },
-          },
-        },
-      },
+              required: ['title', 'tier']
+            }
+          }
+        }
+      }
     })
     await $.tool.register({
       name: 'step',
@@ -769,23 +1127,35 @@ export const register: Register = (on, options) => {
       inputSchema: {
         type: 'object',
         properties: {
-          done: { type: 'integer', minimum: 0, description: 'Steps finished so far.' },
-          total: { type: 'integer', minimum: 1, description: 'Steps planned; may change if the plan changes.' },
-          note: { type: 'string', description: 'The step in progress, a few words.' },
+          done: {
+            type: 'integer',
+            minimum: 0,
+            description: 'Steps finished so far.'
+          },
+          total: {
+            type: 'integer',
+            minimum: 1,
+            description: 'Steps planned; may change if the plan changes.'
+          },
+          note: {
+            type: 'string',
+            description: 'The step in progress, a few words.'
+          }
         },
-        required: ['done'],
-      },
+        required: ['done']
+      }
     })
     await $.command.register({
       name: 'agents-info',
-      description: 'Show or hide the panel of subagents: running, finished and planned, with model, context, cost and time',
+      description:
+        'Show or hide the panel of subagents: running, finished and planned, with model, context, cost and time'
     })
 
     // Ticks the running agents' clocks; quiet when nothing runs.
     $.clock.every(1000, () => {
       void (async () => {
         const list = await read($, agents)
-        if (!list.some(a => a.status === 'running')) return
+        if (!list.some((a) => a.status === 'running')) return
         const at = await $.clock.now()
         await update($, now, () => at)
       })()
@@ -793,7 +1163,7 @@ export const register: Register = (on, options) => {
     return started
   })
 
-  on('command.run', { command: 'agents-info' }, async $ => {
+  on('command.run', { command: 'agents-info' }, async ($) => {
     const isOpen = await togglePane($)
     return { text: isOpen ? tr().opened : tr().closed }
   })
@@ -803,25 +1173,36 @@ export const register: Register = (on, options) => {
     const prev = await read($, flow)
     if (isNewFlow(prev, input) && input.title !== undefined) {
       // A new flow starts with a clean list; agents still running stay.
-      await update($, agents, list => list.filter(a => a.status === 'running'))
+      await update($, agents, (list) =>
+        list.filter((a) => a.status === 'running')
+      )
     }
-    const next = await update($, flow, p => merge(p, input))
+    const next = await update($, flow, (p) => merge(p, input))
     if (next && input.tasks?.length) await autoOpen($, next.title)
     return { result: `ok: ${label(next ?? blank())}` }
   })
 
   // A worker's own progress: the call runs in the worker's loop, so agentId names it.
   on('tool.call', { tool: STEP_TOOL }, async ($, e) => {
-    const input = e as unknown as { done?: number; total?: number; note?: string }
+    const input = e as unknown as {
+      done?: number
+      total?: number
+      note?: string
+    }
     const agentId = e.agentId
     if (!agentId) return { result: 'ignored: only subagents report steps' }
-    await update($, agents, list =>
-      list.map(a => {
+    await update($, agents, (list) =>
+      list.map((a) => {
         if (a.agentId !== agentId) return a
         const total = Math.max(0, Math.round(input.total ?? a.stepTotal ?? 0))
         const done = Math.max(0, Math.round(input.done ?? a.stepDone ?? 0))
-        return { ...a, stepTotal: total, stepDone: total ? Math.min(total, done) : done, stepNote: input.note?.trim() || undefined }
-      }),
+        return {
+          ...a,
+          stepTotal: total,
+          stepDone: total ? Math.min(total, done) : done,
+          stepNote: input.note?.trim() || undefined
+        }
+      })
     )
     return { result: 'ok' }
   })
@@ -831,14 +1212,20 @@ export const register: Register = (on, options) => {
     const type = String(e.subagent_type ?? '')
     if (!type.startsWith('savvy-')) return next(e)
 
-    await update($, flow, prev => {
+    await update($, flow, (prev) => {
       const base = prev && !prev.isFinished ? { ...blank(), ...prev } : blank()
-      return { ...base, running: base.running + 1, phase: base.phase === 'plan' ? 'delegate' : base.phase }
+      return {
+        ...base,
+        running: base.running + 1,
+        phase: base.phase === 'plan' ? 'delegate' : base.phase
+      }
     })
     try {
       return await next(e)
     } finally {
-      await update($, flow, prev => (prev ? { ...prev, running: Math.max(0, prev.running - 1) } : prev))
+      await update($, flow, (prev) =>
+        prev ? { ...prev, running: Math.max(0, prev.running - 1) } : prev
+      )
     }
   })
 
@@ -847,8 +1234,12 @@ export const register: Register = (on, options) => {
     if (started.deny !== undefined) return started
 
     const at = await $.clock.now()
-    await update($, agents, list => {
-      const round = 1 + list.filter(a => norm(a.description) === norm(e.description) && e.description).length
+    await update($, agents, (list) => {
+      const round =
+        1 +
+        list.filter(
+          (a) => norm(a.description) === norm(e.description) && e.description
+        ).length
       const run: AgentRun = {
         id: started.agentId ?? e.tool_use_id,
         agentId: started.agentId,
@@ -862,9 +1253,9 @@ export const register: Register = (on, options) => {
         tokens: 0,
         costUsd: 0,
         steps: 0,
-        round,
+        round
       }
-      return [...list.filter(a => a.id !== run.id), run].slice(-200)
+      return [...list.filter((a) => a.id !== run.id), run].slice(-200)
     })
     await update($, now, () => at)
     if (e.subagentType.startsWith('savvy-')) {
@@ -882,8 +1273,8 @@ export const register: Register = (on, options) => {
     if (!agentId || !usage) return result
 
     const model = usage.model || e.model
-    await update($, agents, list =>
-      list.map(a =>
+    await update($, agents, (list) =>
+      list.map((a) =>
         a.agentId !== agentId
           ? a
           : {
@@ -905,9 +1296,9 @@ export const register: Register = (on, options) => {
                 (usage.cache_read_input_tokens || 0) +
                 (usage.cache_creation_input_tokens || 0),
               costUsd: a.costUsd + costOf(model, usage),
-              steps: a.steps + 1,
-            },
-      ),
+              steps: a.steps + 1
+            }
+      )
     )
     return result
   })
@@ -916,8 +1307,8 @@ export const register: Register = (on, options) => {
     const agentId = e.agentId
     if (agentId) {
       const at = await $.clock.now()
-      await update($, agents, list =>
-        list.map(a => {
+      await update($, agents, (list) =>
+        list.map((a) => {
           if (a.agentId !== agentId) return a
           // A run whose steps went unseen still gets the turn's own sum.
           const fallback = a.steps === 0 && e.usage
@@ -933,11 +1324,11 @@ export const register: Register = (on, options) => {
                     e.usage.output_tokens +
                     e.usage.cache_read_input_tokens +
                     e.usage.cache_creation_input_tokens,
-                  costUsd: costOf(e.usage.model || a.model, e.usage),
+                  costUsd: costOf(e.usage.model || a.model, e.usage)
                 }
-              : {}),
+              : {})
           }
-        }),
+        })
       )
       await update($, now, () => at)
     }
@@ -951,10 +1342,10 @@ export const register: Register = (on, options) => {
     const list = await read($, agents)
     const f = await read($, flow)
     const p: Panel = await read($, panel)
-    const at = Math.max(await read($, now), ...list.map(a => a.startedAt), 0)
+    const at = Math.max(await read($, now), ...list.map((a) => a.startedAt), 0)
 
-    const running = list.filter(a => a.status === 'running').reverse()
-    const finished = list.filter(a => a.status !== 'running').reverse()
+    const running = list.filter((a) => a.status === 'running').reverse()
+    const finished = list.filter((a) => a.status !== 'running').reverse()
     const planned = plannedOf(f, list)
     const t = totals(list, at)
     // The pane's title says "Agents"; inside, only the flow's own name.
@@ -965,7 +1356,9 @@ export const register: Register = (on, options) => {
         key="compact"
         label={p.isCompact ? s.expand : s.collapse}
         plain
-        onPress={() => update($, panel, prev => ({ ...prev, isCompact: !prev.isCompact }))}
+        onPress={() =>
+          update($, panel, (prev) => ({ ...prev, isCompact: !prev.isCompact }))
+        }
       />
     )
     const toggleDone = (
@@ -973,7 +1366,12 @@ export const register: Register = (on, options) => {
         key="done"
         label={`${p.isDoneCollapsed ? '▸' : '▾'} ${s.finished} · ${finished.length}`}
         plain
-        onPress={() => update($, panel, prev => ({ ...prev, isDoneCollapsed: !prev.isDoneCollapsed }))}
+        onPress={() =>
+          update($, panel, (prev) => ({
+            ...prev,
+            isDoneCollapsed: !prev.isDoneCollapsed
+          }))
+        }
       />
     )
     const isEmpty = list.length === 0 && planned.length === 0
@@ -981,7 +1379,10 @@ export const register: Register = (on, options) => {
 
     if (e.surface === 'desktop' && 'Svg' in ui) {
       const { Svg } = ui
-      const W = Math.max(240, Math.min(900, (e.props.bodyColumns || 40) * 8 - 8))
+      const W = Math.max(
+        240,
+        Math.min(900, (e.props.bodyColumns || 40) * 8 - 8)
+      )
       const section = (key: string, text: string) => (
         <Text key={key} dimColor>
           {text}
@@ -991,28 +1392,58 @@ export const register: Register = (on, options) => {
       if (p.isCompact) {
         return (
           <Box flexDirection="column" gap={1}>
-            <Svg source={compactSvg(W, list, planned, t)} alt={`${list.length} ${s.agentsCount}, ${summary}`} width={W} height={32} />
+            <Svg
+              source={compactSvg(W, list, planned, t)}
+              alt={`${list.length} ${s.agentsCount}, ${summary}`}
+              width={W}
+              height={32}
+            />
             {toggleCompact}
           </Box>
         )
       }
       return (
         <Box flexDirection="column">
-          <Svg source={headerSvg(W, title, t)} alt={title ? `${title}: ${summary}` : summary} width={W} height={headerHeight(title)} />
+          <Svg
+            source={headerSvg(W, title, t)}
+            alt={title ? `${title}: ${summary}` : summary}
+            width={W}
+            height={headerHeight(title)}
+          />
           {toggleCompact}
           {isEmpty && <Text dimColor>{s.empty}</Text>}
-          {running.length > 0 && section('h-run', `${s.running} · ${running.length}`)}
-          {running.map(a => (
-            <Svg key={a.id} source={agentSvg(W, a, at)} alt={`${a.description}: ${modelName(a.model)}, ${s.isRunning}`} width={W} height={66} />
+          {running.length > 0 &&
+            section('h-run', `${s.running} · ${running.length}`)}
+          {running.map((a) => (
+            <Svg
+              key={a.id}
+              source={agentSvg(W, a, at)}
+              alt={`${a.description}: ${modelName(a.model)}, ${s.isRunning}`}
+              width={W}
+              height={66}
+            />
           ))}
           {finished.length > 0 && toggleDone}
           {!p.isDoneCollapsed &&
-            finished.map(a => (
-              <Svg key={a.id} source={agentSvg(W, a, at)} alt={`${a.description}: ${modelName(a.model)}, ${s.isFinished}`} width={W} height={66} />
+            finished.map((a) => (
+              <Svg
+                key={a.id}
+                source={agentSvg(W, a, at)}
+                alt={`${a.description}: ${modelName(a.model)}, ${s.isFinished}`}
+                width={W}
+                height={66}
+              />
             ))}
-          {planned.length > 0 && section('h-plan', `${s.planned} · ${planned.length}`)}
-          {planned.map(pl => (
-            <Svg key={`plan-${pl.n}`} source={plannedSvg(W, pl)} alt={`${pl.n}. ${pl.title}: ${s.isPlanned}`} width={W} height={46} />
+          {planned.length > 0 &&
+            section('h-plan', `${s.planned} · ${planned.length}`)}
+          {planned.map((pl) => (
+            <Svg
+              key={`plan-${pl.n}`}
+              source={plannedSvg(W, pl)}
+              alt={`${pl.n}. ${pl.title}: ${s.isPlanned}`}
+              width={W}
+              height={46}
+            />
           ))}
         </Box>
       )
@@ -1026,8 +1457,12 @@ export const register: Register = (on, options) => {
       const color = colorOf(tier)
       const ctx = ctxOf(a)
       const progress = progressOf(a)
-      const model = a.effort ? `${modelName(a.model)} · ${a.effort}` : modelName(a.model)
-      const steps = a.stepTotal ? `${a.stepDone ?? 0}/${a.stepTotal}${a.stepNote ? ' ' + a.stepNote : ''} · ` : ''
+      const model = a.effort
+        ? `${modelName(a.model)} · ${a.effort}`
+        : modelName(a.model)
+      const steps = a.stepTotal
+        ? `${a.stepDone ?? 0}/${a.stepTotal}${a.stepNote ? ' ' + a.stepNote : ''} · `
+        : ''
       return (
         <Box key={a.id} flexDirection="column" marginBottom={1}>
           <Box flexDirection="row" gap={1}>
@@ -1035,7 +1470,17 @@ export const register: Register = (on, options) => {
             <Text bold wrap="truncate-end">
               {a.description || a.type}
             </Text>
-            <Text color={a.status === 'failed' ? 'red' : a.status === 'done' ? 'green' : color}>{STATUS_GLYPH[a.status]}</Text>
+            <Text
+              color={
+                a.status === 'failed'
+                  ? 'red'
+                  : a.status === 'done'
+                    ? 'green'
+                    : color
+              }
+            >
+              {STATUS_GLYPH[a.status]}
+            </Text>
           </Box>
           <Text dimColor wrap="truncate-end">
             {'  '}
@@ -1044,10 +1489,15 @@ export const register: Register = (on, options) => {
           </Text>
           <Text wrap="truncate-end">
             {'  '}
-            {progress === null ? <Text dimColor>{ctxBar(ctx, barW)}</Text> : <Text color={color}>{ctxBar(progress * 100, barW)}</Text>}
+            {progress === null ? (
+              <Text dimColor>{ctxBar(ctx, barW)}</Text>
+            ) : (
+              <Text color={color}>{ctxBar(progress * 100, barW)}</Text>
+            )}
             <Text dimColor>
               {' '}
-              {steps}ctx {ctx}% · {fmtTokens(a.contextTokens)} ≈{fmtCost(a.costUsd)} {fmtTime(elapsed(a, at))}
+              {steps}ctx {ctx}% · {fmtTokens(a.contextTokens)} ≈
+              {fmtCost(a.costUsd)} {fmtTime(elapsed(a, at))}
             </Text>
           </Text>
         </Box>
@@ -1063,16 +1513,17 @@ export const register: Register = (on, options) => {
           {toggleCompact}
         </Box>
         <Text dimColor>
-          ≈{fmtCost(t.cost)} · {fmtTokens(t.tokens)} {s.tokensWord} · {fmtTime(t.time)}
+          ≈{fmtCost(t.cost)} · {fmtTokens(t.tokens)} {s.tokensWord} ·{' '}
+          {fmtTime(t.time)}
         </Text>
         {p.isCompact ? (
           <Text wrap="truncate-end">
-            {[...running, ...finished].map(a => (
+            {[...running, ...finished].map((a) => (
               <Text key={a.id} color={colorOf(tierOf(a.type))}>
                 {STATUS_GLYPH[a.status]}{' '}
               </Text>
             ))}
-            {planned.map(pl => (
+            {planned.map((pl) => (
               <Text key={`plan-${pl.n}`} dimColor>
                 ◷{' '}
               </Text>
@@ -1081,22 +1532,36 @@ export const register: Register = (on, options) => {
         ) : (
           <Box flexDirection="column" marginTop={1}>
             {isEmpty && <Text dimColor>{s.empty}</Text>}
-            {running.length > 0 && <Text dimColor>{s.running} · {running.length}</Text>}
+            {running.length > 0 && (
+              <Text dimColor>
+                {s.running} · {running.length}
+              </Text>
+            )}
             {running.map(row)}
             {finished.length > 0 && toggleDone}
             {!p.isDoneCollapsed && finished.map(row)}
-            {planned.length > 0 && <Text dimColor>{s.planned} · {planned.length}</Text>}
-            {planned.map(pl => {
+            {planned.length > 0 && (
+              <Text dimColor>
+                {s.planned} · {planned.length}
+              </Text>
+            )}
+            {planned.map((pl) => {
               const tier = pl.tier in TIER_COLOR ? pl.tier : 'other'
               return (
-                <Box key={`plan-${pl.n}`} flexDirection="column" marginBottom={1}>
+                <Box
+                  key={`plan-${pl.n}`}
+                  flexDirection="column"
+                  marginBottom={1}
+                >
                   <Text dimColor wrap="truncate-end">
                     <Text color={colorOf(tier)}>▢</Text> {pl.n}. {pl.title} ◷
                   </Text>
                   <Text dimColor wrap="truncate-end">
                     {'  '}
                     {tier} · {TIER_MODEL[tier] ?? ''}
-                    {pl.after.length ? ` · ${s.after} ${pl.after.join(', ')}` : ''}
+                    {pl.after.length
+                      ? ` · ${s.after} ${pl.after.join(', ')}`
+                      : ''}
                   </Text>
                 </Box>
               )
@@ -1115,9 +1580,14 @@ export const register: Register = (on, options) => {
     const { Box, Text, Button } = ui
     const list = await read($, agents)
     const crew = list.length + plannedOf(f, list).length
-    const isWorking = list.some(a => a.status === 'running')
+    const isWorking = list.some((a) => a.status === 'running')
     const crewButton = (
-      <Button key="savvy-agents" label={`×${crew}`} plain onPress={() => void togglePane($)} />
+      <Button
+        key="savvy-agents"
+        label={`×${crew}`}
+        plain
+        onPress={() => void togglePane($)}
+      />
     )
     const percent = `${Math.round(ratio(f) * 100)}%`
     const dismiss = (
@@ -1134,10 +1604,18 @@ export const register: Register = (on, options) => {
       const { Svg } = ui
       // About 8 CSS px per reported column; the rest is the count, the dismiss
       // and their gaps. No floor above the slot: a row wider than it would wrap.
-      const width = Math.max(180, Math.min(1600, (e.props.bodyColumns || 100) * 8 - 96))
+      const width = Math.max(
+        180,
+        Math.min(1600, (e.props.bodyColumns || 100) * 8 - 96)
+      )
       return (
         <Box flexDirection="row" alignItems="center" gap={1}>
-          <Svg source={rowSvg(f, width, isWorking)} alt={`${f.title}: ${label(f)}, ${percent}`} width={width} height={H} />
+          <Svg
+            source={rowSvg(f, width, isWorking)}
+            alt={`${f.title}: ${label(f)}, ${percent}`}
+            width={width}
+            height={H}
+          />
           {crewButton}
           {dismiss}
         </Box>
@@ -1145,7 +1623,10 @@ export const register: Register = (on, options) => {
     }
 
     const cols = e.props.bodyColumns
-    const titleW = Math.max(8, Math.min(30, f.title.length + 2, Math.floor(cols / 3)))
+    const titleW = Math.max(
+      8,
+      Math.min(30, f.title.length + 2, Math.floor(cols / 3))
+    )
     const width = Math.max(6, Math.min(40, cols - titleW - 32))
     return (
       <Box flexDirection="row" gap={2}>

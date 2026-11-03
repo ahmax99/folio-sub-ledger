@@ -18,7 +18,7 @@ const skin: Skin = {
     zebra: '#343f44',
     ok: '#a7c080',
     err: '#e67e80',
-    warn: '#dbbc7f',
+    warn: '#dbbc7f'
   },
   light: {
     read: '#3a94c5',
@@ -35,10 +35,17 @@ const skin: Skin = {
     zebra: '#f4f0d9',
     ok: '#8da101',
     err: '#f85552',
-    warn: '#dfa000',
+    warn: '#dfa000'
   },
-  spinner: ['Foraging', 'Rooting', 'Sprouting', 'Hiking', 'Mossing', 'Branching'],
-  done: ['Grown', 'Rooted', 'Foraged', 'Camped'],
+  spinner: [
+    'Foraging',
+    'Rooting',
+    'Sprouting',
+    'Hiking',
+    'Mossing',
+    'Branching'
+  ],
+  done: ['Grown', 'Rooted', 'Foraged', 'Camped']
 }
 
 export default skin

@@ -24,7 +24,9 @@ export function formatDuration(ms: number): string {
     return '<1s'
   }
 
-  return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+  return seconds < 60
+    ? `${seconds}s`
+    : `${Math.floor(seconds / 60)}m ${seconds % 60}s`
 }
 
 // A tool call's own time: `340ms`, `2.1s`, `1m 4s`.
@@ -37,22 +39,27 @@ export function formatMs(ms: number): string {
 }
 
 // Lines added and removed, read from an Edit or Write record's patch.
-export function diffstat(output: unknown): { added: number; removed: number } | null {
-  const patch = (output as { structuredPatch?: unknown } | null)?.structuredPatch
+export function diffstat(
+  output: unknown
+): { added: number; removed: number } | null {
+  const patch = (output as { structuredPatch?: unknown } | null)
+    ?.structuredPatch
 
   if (!Array.isArray(patch)) {
     return null
   }
 
-  const lines = patch.flatMap(hunk => {
+  const lines = patch.flatMap((hunk) => {
     const hunkLines = (hunk as { lines?: unknown } | null)?.lines
 
-    return Array.isArray(hunkLines) ? hunkLines.filter(line => typeof line === 'string') : []
+    return Array.isArray(hunkLines)
+      ? hunkLines.filter((line) => typeof line === 'string')
+      : []
   }) as string[]
 
   return {
-    added: lines.filter(line => line.startsWith('+')).length,
-    removed: lines.filter(line => line.startsWith('-')).length,
+    added: lines.filter((line) => line.startsWith('+')).length,
+    removed: lines.filter((line) => line.startsWith('-')).length
   }
 }
 
@@ -79,6 +86,6 @@ export function clipLines(text: string, head: number, tail: number): string {
   return [
     ...lines.slice(0, head),
     `… ${hidden} lines hidden`,
-    ...lines.slice(lines.length - tail),
+    ...lines.slice(lines.length - tail)
   ].join('\n')
 }

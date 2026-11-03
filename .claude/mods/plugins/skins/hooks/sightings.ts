@@ -6,7 +6,7 @@ const LIMIT = 2000
 export function sightings(limit = LIMIT): (key: string) => boolean {
   const seen = new Set<string>()
 
-  return key => {
+  return (key) => {
     if (seen.has(key)) {
       return false
     }

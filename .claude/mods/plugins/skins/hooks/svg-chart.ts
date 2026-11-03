@@ -1,20 +1,72 @@
-import { chartHeading, formatPercent, formatValue, niceStep, seriesName } from './mermaid'
-import type { Chart, Flow, FlowEdge, FlowNode, MindNode, Pie, Shape, TreeNode, XyChart } from './mermaid'
+import {
+  chartHeading,
+  formatPercent,
+  formatValue,
+  niceStep,
+  seriesName
+} from './mermaid'
+import type {
+  Chart,
+  Flow,
+  FlowEdge,
+  FlowNode,
+  MindNode,
+  Pie,
+  Shape,
+  TreeNode,
+  XyChart
+} from './mermaid'
 import type { Palette, Slot } from './skin'
+import { packetBody, treemapBody } from './svg-chart-data'
 import { HEADER_H, PAD, seriesColor } from './svg-chart-kit'
 import type { Body } from './svg-chart-kit'
-import { ganttBody, journeyBody, kanbanBody, timelineBody } from './svg-chart-plan'
-import { gitBody, mindmapBody, quadrantBody, radarBody, sankeyBody } from './svg-chart-shape'
-import { packetBody, treemapBody } from './svg-chart-data'
-import { architectureBody, blockBody, c4Body, systemAlt } from './svg-chart-system'
-import { CONTROL_SLOT, escape, fitText, HEADER_MID, measure, riseDelay, riseEnd, svgCard } from './svg-kit'
+import {
+  ganttBody,
+  journeyBody,
+  kanbanBody,
+  timelineBody
+} from './svg-chart-plan'
+import {
+  gitBody,
+  mindmapBody,
+  quadrantBody,
+  radarBody,
+  sankeyBody
+} from './svg-chart-shape'
+import {
+  architectureBody,
+  blockBody,
+  c4Body,
+  systemAlt
+} from './svg-chart-system'
+import {
+  CONTROL_SLOT,
+  escape,
+  fitText,
+  HEADER_MID,
+  measure,
+  riseDelay,
+  riseEnd,
+  svgCard
+} from './svg-kit'
 
 // A Mermaid fence drawn as a card in the same shell as code and tables: the kind and
 // title in a header, then the drawing in the skin's colours.
 
-type Built = { source: string; width: number; height: number; alt: string; entranceMs: number }
+type Built = {
+  source: string
+  width: number
+  height: number
+  alt: string
+  entranceMs: number
+}
 
-function header(chart: Chart, palette: Palette, width: number, hasControl: boolean): string {
+function header(
+  chart: Chart,
+  palette: Palette,
+  width: number,
+  hasControl: boolean
+): string {
   const { kind, count } = chartHeading(chart)
   const label = kind.toUpperCase()
   const title = chart.title
@@ -24,29 +76,42 @@ function header(chart: Chart, palette: Palette, width: number, hasControl: boole
 
   return [
     `<text x="16" y="${HEADER_MID + 4}" font-size="11" style="fill:${palette.muted};letter-spacing:.1em;font-weight:600">${escape(label)}</text>`,
-    title === '' ? '' : `<text x="${titleX}" y="${HEADER_MID + 4}" font-size="13" style="font-weight:600">${escape(fitText(title, room, false, 13))}</text>`,
+    title === ''
+      ? ''
+      : `<text x="${titleX}" y="${HEADER_MID + 4}" font-size="13" style="font-weight:600">${escape(fitText(title, room, false, 13))}</text>`,
     `<text x="${right}" y="${HEADER_MID + 4}" text-anchor="end" font-size="11" style="fill:${palette.muted}">${escape(count)}</text>`,
-    `<line x1="0" y1="${HEADER_H - 0.5}" x2="${width}" y2="${HEADER_H - 0.5}" stroke="${palette.muted}" stroke-opacity=".3"/>`,
+    `<line x1="0" y1="${HEADER_H - 0.5}" x2="${width}" y2="${HEADER_H - 0.5}" stroke="${palette.muted}" stroke-opacity=".3"/>`
   ].join('')
 }
 
 // Null when the chart cannot be drawn legibly at this width; the fence then keeps its
 // code card.
-export function chartSvg(chart: Chart, palette: Palette, width: number, hasControl = false): Built | null {
+export function chartSvg(
+  chart: Chart,
+  palette: Palette,
+  width: number,
+  hasControl = false
+): Built | null {
   const drawn = bodyOf(chart, palette, width)
 
   if (drawn === null) {
     return null
   }
 
-  const source = svgCard(width, drawn.height, palette, '', header(chart, palette, width, hasControl) + drawn.body)
+  const source = svgCard(
+    width,
+    drawn.height,
+    palette,
+    '',
+    header(chart, palette, width, hasControl) + drawn.body
+  )
 
   return {
     source,
     width,
     height: drawn.height,
     alt: altOf(chart),
-    entranceMs: riseEnd(source),
+    entranceMs: riseEnd(source)
   }
 }
 
@@ -89,59 +154,136 @@ function bodyOf(chart: Chart, palette: Palette, width: number): Body | null {
   }
 }
 
-const titled = (kind: string, title: string): string => `${kind}${title === '' ? '' : `: ${title}`}`
+const titled = (kind: string, title: string): string =>
+  `${kind}${title === '' ? '' : `: ${title}`}`
 
-const mindLines = (node: MindNode, depth: number): string[] => [`${'  '.repeat(depth)}${node.label}`, ...node.children.flatMap(child => mindLines(child, depth + 1))]
+const mindLines = (node: MindNode, depth: number): string[] => [
+  `${'  '.repeat(depth)}${node.label}`,
+  ...node.children.flatMap((child) => mindLines(child, depth + 1))
+]
 
 const treeLines = (node: TreeNode, depth: number): string[] => [
   `${'  '.repeat(depth)}${node.label}: ${formatValue(node.value)}`,
-  ...node.children.flatMap(child => treeLines(child, depth + 1)),
+  ...node.children.flatMap((child) => treeLines(child, depth + 1))
 ]
 
 function altOf(chart: Chart): string {
-  const label = (flow: Flow, id: string) => flow.nodes.find(node => node.id === id)?.label ?? id
+  const label = (flow: Flow, id: string) =>
+    flow.nodes.find((node) => node.id === id)?.label ?? id
 
   switch (chart.kind) {
     case 'flow':
-      return ['Flowchart:', ...chart.edges.map(edge => `${label(chart, edge.from)} → ${label(chart, edge.to)}${edge.label === '' ? '' : ` (${edge.label})`}`)].join('\n')
+      return [
+        'Flowchart:',
+        ...chart.edges.map(
+          (edge) =>
+            `${label(chart, edge.from)} → ${label(chart, edge.to)}${edge.label === '' ? '' : ` (${edge.label})`}`
+        )
+      ].join('\n')
     case 'xy':
       return [
         `Chart${chart.title === '' ? '' : `: ${chart.title}`}`,
-        ...chart.series.map(series => `${series.name || series.kind}: ${series.values.map((value, i) => `${chart.labels[i] ?? i + 1} ${formatValue(value)}`).join(', ')}`),
+        ...chart.series.map(
+          (series) =>
+            `${series.name || series.kind}: ${series.values.map((value, i) => `${chart.labels[i] ?? i + 1} ${formatValue(value)}`).join(', ')}`
+        )
       ].join('\n')
     case 'pie': {
       const total = chart.slices.reduce((sum, slice) => sum + slice.value, 0)
 
-      return [`Pie${chart.title === '' ? '' : `: ${chart.title}`}`, ...chart.slices.map(slice => `${slice.label}: ${formatValue(slice.value)} (${Math.round((slice.value / total) * 100)}%)`)].join('\n')
+      return [
+        `Pie${chart.title === '' ? '' : `: ${chart.title}`}`,
+        ...chart.slices.map(
+          (slice) =>
+            `${slice.label}: ${formatValue(slice.value)} (${Math.round((slice.value / total) * 100)}%)`
+        )
+      ].join('\n')
     }
     case 'gantt':
-      return [titled('Gantt', chart.title), ...chart.tasks.map(task => `${task.label}: ${new Date(task.start).toISOString().slice(0, 10)} to ${new Date(task.end).toISOString().slice(0, 10)}${task.done ? ' (done)' : task.active ? ' (active)' : ''}`)].join('\n')
+      return [
+        titled('Gantt', chart.title),
+        ...chart.tasks.map(
+          (task) =>
+            `${task.label}: ${new Date(task.start).toISOString().slice(0, 10)} to ${new Date(task.end).toISOString().slice(0, 10)}${task.done ? ' (done)' : task.active ? ' (active)' : ''}`
+        )
+      ].join('\n')
     case 'timeline':
-      return [titled('Timeline', chart.title), ...chart.periods.map(period => `${period.label}: ${period.events.join(', ')}`)].join('\n')
+      return [
+        titled('Timeline', chart.title),
+        ...chart.periods.map(
+          (period) => `${period.label}: ${period.events.join(', ')}`
+        )
+      ].join('\n')
     case 'journey':
-      return [titled('Journey', chart.title), ...chart.steps.map(step => `${step.label}: ${step.score}/5`)].join('\n')
+      return [
+        titled('Journey', chart.title),
+        ...chart.steps.map((step) => `${step.label}: ${step.score}/5`)
+      ].join('\n')
     case 'kanban':
-      return [titled('Kanban', chart.title), ...chart.columns.map(column => `${column.label}: ${column.cards.map(card => card.label).join(', ') || 'empty'}`)].join('\n')
+      return [
+        titled('Kanban', chart.title),
+        ...chart.columns.map(
+          (column) =>
+            `${column.label}: ${column.cards.map((card) => card.label).join(', ') || 'empty'}`
+        )
+      ].join('\n')
     case 'mindmap':
-      return [titled('Mindmap', chart.title), ...mindLines(chart.root, 0)].join('\n')
+      return [titled('Mindmap', chart.title), ...mindLines(chart.root, 0)].join(
+        '\n'
+      )
     case 'quadrant':
-      return [titled('Quadrant chart', chart.title), ...chart.points.map(point => `${point.label}: ${point.x.toFixed(2)}, ${point.y.toFixed(2)}`)].join('\n')
+      return [
+        titled('Quadrant chart', chart.title),
+        ...chart.points.map(
+          (point) =>
+            `${point.label}: ${point.x.toFixed(2)}, ${point.y.toFixed(2)}`
+        )
+      ].join('\n')
     case 'radar':
-      return [titled('Radar', chart.title), ...chart.curves.map(curve => `${curve.label || curve.id}: ${chart.axes.map((axis, i) => `${axis.label} ${formatValue(curve.values[i] ?? 0)}`).join(', ')}`)].join('\n')
+      return [
+        titled('Radar', chart.title),
+        ...chart.curves.map(
+          (curve) =>
+            `${curve.label || curve.id}: ${chart.axes.map((axis, i) => `${axis.label} ${formatValue(curve.values[i] ?? 0)}`).join(', ')}`
+        )
+      ].join('\n')
     case 'sankey':
-      return [titled('Sankey', chart.title), ...chart.links.map(link => `${link.from} → ${link.to}: ${formatValue(link.value)}`)].join('\n')
+      return [
+        titled('Sankey', chart.title),
+        ...chart.links.map(
+          (link) => `${link.from} → ${link.to}: ${formatValue(link.value)}`
+        )
+      ].join('\n')
     case 'git':
-      return [titled('Git graph', chart.title), ...chart.commits.map(commit => `${commit.branch}: ${commit.shown || commit.id}${commit.tag === '' ? '' : ` [${commit.tag}]`}`)].join('\n')
+      return [
+        titled('Git graph', chart.title),
+        ...chart.commits.map(
+          (commit) =>
+            `${commit.branch}: ${commit.shown || commit.id}${commit.tag === '' ? '' : ` [${commit.tag}]`}`
+        )
+      ].join('\n')
     case 'treemap':
-      return [titled('Treemap', chart.title), ...chart.roots.flatMap(root => treeLines(root, 0))].join('\n')
+      return [
+        titled('Treemap', chart.title),
+        ...chart.roots.flatMap((root) => treeLines(root, 0))
+      ].join('\n')
     case 'packet':
-      return [titled('Packet', chart.title), ...chart.fields.map(field => `${field.start === field.end ? field.start : `${field.start}-${field.end}`}: ${field.label}`)].join('\n')
+      return [
+        titled('Packet', chart.title),
+        ...chart.fields.map(
+          (field) =>
+            `${field.start === field.end ? field.start : `${field.start}-${field.end}`}: ${field.label}`
+        )
+      ].join('\n')
     case 'block':
       return systemAlt(chart, titled('Block diagram', chart.title))
     case 'architecture':
       return systemAlt(chart, titled('Architecture', chart.title))
     case 'c4':
-      return systemAlt(chart, titled(`C4 ${chart.level.toLowerCase()}`, chart.title))
+      return systemAlt(
+        chart,
+        titled(`C4 ${chart.level.toLowerCase()}`, chart.title)
+      )
   }
 }
 
@@ -154,31 +296,44 @@ const MIN_NODE = 56
 // The room a loop back up the ranks takes beside the nodes.
 const LOOP_ROOM = 44
 
-const SHAPE_SLOT: Readonly<Record<Shape, Slot>> = { box: 'user', round: 'read', diamond: 'warn' }
+const SHAPE_SLOT: Readonly<Record<Shape, Slot>> = {
+  box: 'user',
+  round: 'read',
+  diamond: 'warn'
+}
 
 type Placed = { node: FlowNode; x: number; y: number; w: number }
 
-const naturalWidth = (node: FlowNode): number => Math.min(220, Math.max(72, measure(node.label, false, 12.5) + 28))
+const naturalWidth = (node: FlowNode): number =>
+  Math.min(220, Math.max(72, measure(node.label, false, 12.5) + 28))
 
 function placeDown(flow: Flow, width: number): Map<string, Placed> | null {
   const avail = width - PAD * 2 - (flow.back.length > 0 ? LOOP_ROOM : 0)
   const placed = new Map<string, Placed>()
 
   for (const [r, rank] of flow.ranks.entries()) {
-    const nodes = rank.map(id => flow.nodes.find(node => node.id === id) as FlowNode)
+    const nodes = rank.map(
+      (id) => flow.nodes.find((node) => node.id === id) as FlowNode
+    )
     const share = (avail - SIBLING_GAP * (nodes.length - 1)) / nodes.length
-    const widths = nodes.map(node => Math.min(naturalWidth(node), share))
+    const widths = nodes.map((node) => Math.min(naturalWidth(node), share))
 
     if (share < MIN_NODE) {
       return null
     }
 
-    const total = widths.reduce((sum, w) => sum + w, 0) + SIBLING_GAP * (nodes.length - 1)
+    const total =
+      widths.reduce((sum, w) => sum + w, 0) + SIBLING_GAP * (nodes.length - 1)
     let x = PAD + (avail - total) / 2
 
     for (const [i, node] of nodes.entries()) {
       const w = widths[i] ?? MIN_NODE
-      placed.set(node.id, { node, x, y: HEADER_H + PAD + r * (NODE_H + RANK_GAP), w })
+      placed.set(node.id, {
+        node,
+        x,
+        y: HEADER_H + PAD + r * (NODE_H + RANK_GAP),
+        w
+      })
       x += w + SIBLING_GAP
     }
   }
@@ -191,15 +346,22 @@ const COLUMN_GAP = 56
 
 // Left to right, each rank a column; null when the columns run past the card.
 function placeRight(flow: Flow, width: number): Map<string, Placed> | null {
-  const columns = flow.ranks.map(rank => rank.map(id => flow.nodes.find(node => node.id === id) as FlowNode))
-  const widths = columns.map(column => Math.max(...column.map(naturalWidth)))
-  const total = widths.reduce((sum, w) => sum + w, 0) + COLUMN_GAP * (columns.length - 1)
+  const columns = flow.ranks.map((rank) =>
+    rank.map((id) => flow.nodes.find((node) => node.id === id) as FlowNode)
+  )
+  const widths = columns.map((column) => Math.max(...column.map(naturalWidth)))
+  const total =
+    widths.reduce((sum, w) => sum + w, 0) + COLUMN_GAP * (columns.length - 1)
 
   if (total > width - PAD * 2) {
     return null
   }
 
-  const tallest = Math.max(...columns.map(column => column.length * NODE_H + (column.length - 1) * STACK_GAP))
+  const tallest = Math.max(
+    ...columns.map(
+      (column) => column.length * NODE_H + (column.length - 1) * STACK_GAP
+    )
+  )
   const placed = new Map<string, Placed>()
   let x = PAD + (width - PAD * 2 - total) / 2
 
@@ -208,7 +370,12 @@ function placeRight(flow: Flow, width: number): Map<string, Placed> | null {
     const w = widths[c] ?? MIN_NODE
 
     for (const [i, node] of column.entries()) {
-      placed.set(node.id, { node, x, y: HEADER_H + PAD + (tallest - height) / 2 + i * (NODE_H + STACK_GAP), w })
+      placed.set(node.id, {
+        node,
+        x,
+        y: HEADER_H + PAD + (tallest - height) / 2 + i * (NODE_H + STACK_GAP),
+        w
+      })
     }
 
     x += w + COLUMN_GAP
@@ -229,7 +396,15 @@ function nodeSvg(placed: Placed, palette: Palette): string {
   return `${shape}<text x="${x + w / 2}" y="${y + NODE_H / 2 + 4.5}" text-anchor="middle" font-size="12.5">${escape(fitText(node.label, w - (node.shape === 'diamond' ? 28 : 16), false, 12.5))}</text>`
 }
 
-function edgeSvg(edge: FlowEdge, from: Placed, to: Placed, isDown: boolean, isBack: boolean, palette: Palette, marker: string): string {
+function edgeSvg(
+  edge: FlowEdge,
+  from: Placed,
+  to: Placed,
+  isDown: boolean,
+  isBack: boolean,
+  palette: Palette,
+  marker: string
+): string {
   let path: string
   let labelAt: { x: number; y: number; anchor: string }
 
@@ -286,12 +461,15 @@ function flowBody(flow: Flow, palette: Palette, width: number): Body | null {
   }
 
   const isDown = right === null
-  const bottom = Math.max(...[...placed.values()].map(node => node.y + NODE_H))
+  const bottom = Math.max(
+    ...[...placed.values()].map((node) => node.y + NODE_H)
+  )
   const height = bottom + PAD + (!isDown && flow.back.length > 0 ? 32 : 0)
   const marker = `arrow-${width}x${height}`
-  const rankOf = (id: string) => flow.ranks.findIndex(rank => rank.includes(id))
+  const rankOf = (id: string) =>
+    flow.ranks.findIndex((rank) => rank.includes(id))
 
-  const edges = flow.edges.map(edge => {
+  const edges = flow.edges.map((edge) => {
     const from = placed.get(edge.from)
     const to = placed.get(edge.to)
 
@@ -302,7 +480,10 @@ function flowBody(flow: Flow, palette: Palette, width: number): Body | null {
     return `<g class="rise" ${riseDelay(rankOf(edge.to), 70, 120)}>${edgeSvg(edge, from, to, isDown, flow.back.includes(edge), palette, marker)}</g>`
   })
 
-  const nodes = [...placed.values()].map(node => `<g class="rise" ${riseDelay(rankOf(node.node.id), 70, 60)}>${nodeSvg(node, palette)}</g>`)
+  const nodes = [...placed.values()].map(
+    (node) =>
+      `<g class="rise" ${riseDelay(rankOf(node.node.id), 70, 60)}>${nodeSvg(node, palette)}</g>`
+  )
   const defs = `<defs><marker id="${marker}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L9 5L0 9z" fill="${palette.muted}"/></marker></defs>`
 
   return { body: defs + edges.join('') + nodes.join(''), height }
@@ -316,32 +497,47 @@ function xyBody(chart: XyChart, palette: Palette, width: number): Body {
   const step = niceStep(chart.max - chart.min)
   const ticks: number[] = []
 
-  for (let value = Math.ceil(chart.min / step) * step; value <= chart.max + step / 1e6; value += step) {
+  for (
+    let value = Math.ceil(chart.min / step) * step;
+    value <= chart.max + step / 1e6;
+    value += step
+  ) {
     ticks.push(Number(value.toFixed(10)))
   }
 
-  const gutter = Math.max(32, ...ticks.map(tick => measure(formatValue(tick), false, 11))) + 12
+  const gutter =
+    Math.max(
+      32,
+      ...ticks.map((tick) => measure(formatValue(tick), false, 11))
+    ) + 12
   const x0 = PAD + gutter
   const x1 = width - PAD
   const top = HEADER_H + (chart.yLabel === '' ? 22 : 38)
   const y1 = top + PLOT_H
-  const scale = (value: number) => y1 - ((Math.min(chart.max, Math.max(chart.min, value)) - chart.min) / (chart.max - chart.min)) * PLOT_H
+  const scale = (value: number) =>
+    y1 -
+    ((Math.min(chart.max, Math.max(chart.min, value)) - chart.min) /
+      (chart.max - chart.min)) *
+      PLOT_H
   const band = (x1 - x0) / chart.labels.length
-  const bars = chart.series.filter(series => series.kind === 'bar')
-  const lines = chart.series.filter(series => series.kind === 'line')
-  const colorOf = (series: (typeof chart.series)[number]) => seriesColor(palette, chart.series.indexOf(series))
+  const bars = chart.series.filter((series) => series.kind === 'bar')
+  const lines = chart.series.filter((series) => series.kind === 'line')
+  const colorOf = (series: (typeof chart.series)[number]) =>
+    seriesColor(palette, chart.series.indexOf(series))
   const baseline = scale(Math.max(chart.min, Math.min(chart.max, 0)))
   const parts: string[] = []
 
   if (chart.yLabel !== '') {
-    parts.push(`<text x="${PAD}" y="${HEADER_H + 24}" font-size="11" style="fill:${palette.muted}">${escape(fitText(chart.yLabel, x1 - PAD, false, 11))}</text>`)
+    parts.push(
+      `<text x="${PAD}" y="${HEADER_H + 24}" font-size="11" style="fill:${palette.muted}">${escape(fitText(chart.yLabel, x1 - PAD, false, 11))}</text>`
+    )
   }
 
   for (const tick of ticks) {
     const y = scale(tick)
     parts.push(
       `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${palette.fg}" stroke-opacity="${tick === 0 ? 0.22 : 0.08}"/>`,
-      `<text x="${x0 - 8}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:${palette.muted}">${escape(formatValue(tick))}</text>`,
+      `<text x="${x0 - 8}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:${palette.muted}">${escape(formatValue(tick))}</text>`
     )
   }
 
@@ -366,17 +562,24 @@ function xyBody(chart: XyChart, palette: Palette, width: number): Body {
         : ''
 
       parts.push(
-        `<g class="rise" ${riseDelay(i, 30, 80)}><rect x="${x + 1}" y="${Math.min(y, baseline)}" width="${Math.max(1, barW - 2)}" height="${h}" rx="${Math.min(4, barW / 4)}" fill="${colorOf(series)}" fill-opacity=".85"/>${label}</g>`,
+        `<g class="rise" ${riseDelay(i, 30, 80)}><rect x="${x + 1}" y="${Math.min(y, baseline)}" width="${Math.max(1, barW - 2)}" height="${h}" rx="${Math.min(4, barW / 4)}" fill="${colorOf(series)}" fill-opacity=".85"/>${label}</g>`
       )
     }
   }
 
   for (const series of lines) {
-    const points = series.values.map((value, i) => `${x0 + i * band + band / 2},${scale(value)}`)
+    const points = series.values.map(
+      (value, i) => `${x0 + i * band + band / 2},${scale(value)}`
+    )
     const color = colorOf(series)
-    const dots = series.values.map((value, i) => `<circle cx="${x0 + i * band + band / 2}" cy="${scale(value)}" r="3" fill="${color}"/>`)
+    const dots = series.values.map(
+      (value, i) =>
+        `<circle cx="${x0 + i * band + band / 2}" cy="${scale(value)}" r="3" fill="${color}"/>`
+    )
 
-    parts.push(`<g class="rise" ${riseDelay(0, 0, 200)}><polyline points="${points.join(' ')}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>${dots.join('')}</g>`)
+    parts.push(
+      `<g class="rise" ${riseDelay(0, 0, 200)}><polyline points="${points.join(' ')}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>${dots.join('')}</g>`
+    )
   }
 
   // Labels thin out to every second, third... when the bands are too narrow for each.
@@ -384,7 +587,9 @@ function xyBody(chart: XyChart, palette: Palette, width: number): Body {
 
   for (const [i, label] of chart.labels.entries()) {
     if (i % every === 0) {
-      parts.push(`<text x="${x0 + i * band + band / 2}" y="${y1 + 18}" text-anchor="middle" font-size="11" style="fill:${palette.muted}">${escape(fitText(label, band * every - 6, false, 11))}</text>`)
+      parts.push(
+        `<text x="${x0 + i * band + band / 2}" y="${y1 + 18}" text-anchor="middle" font-size="11" style="fill:${palette.muted}">${escape(fitText(label, band * every - 6, false, 11))}</text>`
+      )
     }
   }
 
@@ -400,7 +605,7 @@ function xyBody(chart: XyChart, palette: Palette, width: number): Body {
         series.kind === 'line'
           ? `<line x1="${x}" y1="${height + 6}" x2="${x + 14}" y2="${height + 6}" stroke="${colorOf(series)}" stroke-width="2.2" stroke-linecap="round"/>`
           : `<rect x="${x}" y="${height}" width="12" height="12" rx="3" fill="${colorOf(series)}" fill-opacity=".85"/>`,
-        `<text x="${x + 20}" y="${height + 10}" font-size="11.5" style="fill:${palette.muted}">${escape(name)}</text>`,
+        `<text x="${x + 20}" y="${height + 10}" font-size="11.5" style="fill:${palette.muted}">${escape(name)}</text>`
       )
       x += 20 + measure(name, false, 11.5) + 20
     }
@@ -436,12 +641,14 @@ function pieBody(pie: Pie, palette: Palette, width: number): Body {
     const color = seriesColor(palette, i)
 
     if (share >= 0.9999) {
-      parts.push(`<circle cx="${cx}" cy="${cy}" r="${(OUTER + INNER) / 2}" fill="none" stroke="${color}" stroke-opacity=".85" stroke-width="${OUTER - INNER}"/>`)
+      parts.push(
+        `<circle cx="${cx}" cy="${cy}" r="${(OUTER + INNER) / 2}" fill="none" stroke="${color}" stroke-opacity=".85" stroke-width="${OUTER - INNER}"/>`
+      )
     } else if (share > 0) {
       const large = share > 0.5 ? 1 : 0
       const end = at + share
       parts.push(
-        `<path class="rise" ${riseDelay(i, 60, 80)} d="M${polar(cx, cy, OUTER, at)}A${OUTER} ${OUTER} 0 ${large} 1 ${polar(cx, cy, OUTER, end)}L${polar(cx, cy, INNER, end)}A${INNER} ${INNER} 0 ${large} 0 ${polar(cx, cy, INNER, at)}Z" fill="${color}" fill-opacity=".85"/>`,
+        `<path class="rise" ${riseDelay(i, 60, 80)} d="M${polar(cx, cy, OUTER, at)}A${OUTER} ${OUTER} 0 ${large} 1 ${polar(cx, cy, OUTER, end)}L${polar(cx, cy, INNER, end)}A${INNER} ${INNER} 0 ${large} 0 ${polar(cx, cy, INNER, at)}Z" fill="${color}" fill-opacity=".85"/>`
       )
     }
 
@@ -450,7 +657,7 @@ function pieBody(pie: Pie, palette: Palette, width: number): Body {
 
   parts.push(
     `<text x="${cx}" y="${cy + 2}" text-anchor="middle" font-size="16" style="font-weight:600">${escape(formatValue(total))}</text>`,
-    `<text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="10.5" style="fill:${palette.muted}">total</text>`,
+    `<text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="10.5" style="fill:${palette.muted}">total</text>`
   )
 
   const legendX = cx + OUTER + 40
@@ -461,7 +668,12 @@ function pieBody(pie: Pie, palette: Palette, width: number): Body {
     const y = legendTop + i * LEGEND_ROW
     const percent = formatPercent(slice.value / total)
     const value = formatValue(slice.value)
-    const room = legendRight - legendX - 20 - measure(`${value}   ${percent}`, false, 12) - 16
+    const room =
+      legendRight -
+      legendX -
+      20 -
+      measure(`${value}   ${percent}`, false, 12) -
+      16
 
     parts.push(
       `<g class="rise" ${riseDelay(i, 40, 120)}>`,
@@ -469,9 +681,12 @@ function pieBody(pie: Pie, palette: Palette, width: number): Body {
       `<text x="${legendX + 20}" y="${y + 16}" font-size="12.5">${escape(fitText(slice.label, room, false, 12.5))}</text>`,
       `<text x="${legendRight - 48}" y="${y + 16}" text-anchor="end" font-size="12" style="fill:${palette.muted}">${escape(value)}</text>`,
       `<text x="${legendRight}" y="${y + 16}" text-anchor="end" font-size="12" style="font-weight:600">${percent}</text>`,
-      `</g>`,
+      `</g>`
     )
   }
 
-  return { body: parts.join(''), height: cy + Math.max(OUTER, legendH / 2) + PAD }
+  return {
+    body: parts.join(''),
+    height: cy + Math.max(OUTER, legendH / 2) + PAD
+  }
 }
