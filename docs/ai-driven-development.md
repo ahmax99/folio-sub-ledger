@@ -25,7 +25,7 @@ understanding) that the next step reads, so the agent never loses the thread:
 - **`/plan`** turns a spec (or a one-line task) into ordered implementation steps.
   Output: `.claude/plans/<date>-<slug>.md`, tracked as the active plan in
   `.claude/plans/.current`.
-- **`/implement`** works the plan step by step, self-checking types and formatting as it goes.
+- **`/implement`** works the plan step by step, test-first: for each logic step it writes the plan's failing Vitest tests, makes them pass with the minimum code, then refactors, self-checking types, formatting and `bun run test` as it goes.
 - **`/qa`** runs the gates and three reviewers (security, correctness,
   acceptance-criteria) and scores the work against the plan.
 - **Ship** — once QA is green, the `superpowers:finishing-a-development-branch` skill walks you through the merge / PR / cleanup decision.
@@ -80,7 +80,7 @@ These don't need a spec or plan — run them on whatever you've changed:
 
 ## Plugin skills that supercharge each phase
 
-The project commands above are _codebase-specific_ orchestrators. This repo also enables general-purpose Claude Code plugins that handle the _meta-work around_ implementation and slot into the same pipeline: brainstorming a fuzzy idea (`superpowers:brainstorming`), exploring existing code before planning (`feature-dev`), building distinctive UI (`impeccable` + the project `app-design` skill), browser-level verification (`playwright` — this repo has no unit-test runner), current library docs (`context7`), Terraform best practice (`terraform-skill` + the `terraform` MCP server), and structured shipping (`superpowers:finishing-a-development-branch`). You rarely invoke them by name; the agent reaches for them when the situation fits.
+The project commands above are _codebase-specific_ orchestrators. This repo also enables general-purpose Claude Code plugins that handle the _meta-work around_ implementation and slot into the same pipeline: brainstorming a fuzzy idea (`superpowers:brainstorming`), exploring existing code before planning (`feature-dev`), building distinctive UI (`impeccable` + the project `app-design` skill), test-driven implementation (`superpowers:test-driven-development`, with Vitest), browser-level verification (`playwright`), current library docs (`context7`), Terraform best practice (`terraform-skill` + the `terraform` MCP server), and structured shipping (`superpowers:finishing-a-development-branch`). You rarely invoke them by name; the agent reaches for them when the situation fits.
 
 The full phase-by-phase mapping — which plugin fits where, and what wins on conflict — lives in **`.claude/rules/harness.md`** ("Where each plugin fits"). That file is the single source of truth the agent loads every session; this doc deliberately doesn't duplicate the table, so update it there.
 

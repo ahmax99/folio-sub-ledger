@@ -54,7 +54,17 @@ After implementing each step, self-check:
 9. If the step touched `infra/**`, run the Terraform gates from `.claude/rules/infra.md` (`terraform fmt -check`, `tflint`, `terraform validate`) and fix failures before moving on — they mirror what `terraform-plan.yml` will reject on the PR. Steps 1–2 (`check-types` / `check-format`) don't cover HCL, so these are the _only_ local gates for infra steps.
 10. Run the step's **Verify:** command from the plan (if the step has one) and read its output. Only check off the step's acceptance criteria after the verification passes — evidence before assertions. If a criterion has no runnable check (UI behaviour, for example), verify it with `playwright` (MCP) or state explicitly that it's unverified rather than silently checking it off.
 
-Vitest runs the tests (`bun run test`). When a step changes testable logic, add or update the tests that cover it. If a quality gate fails, fix it before moving on — do not accumulate technical debt across steps.
+If a quality gate fails, fix it before moving on — do not accumulate technical debt across steps.
+
+### Test-driven development
+
+Every step with a **Tests first:** list is built red → green → refactor, following the `superpowers:test-driven-development` skill:
+
+1. **Red.** Write the listed tests, run `bun run test`, and confirm each fails for the expected reason (a missing route or wrong value, not a typo or import error).
+2. **Green.** Write the minimum code that makes them pass. No code without a failing test asking for it.
+3. **Refactor.** Clean up with the tests green, then run the quality gates above.
+
+Report the red and the green output when you finish the step. Code written before its test is deleted and rewritten test-first. Steps marked `Tests first: None` (config, docs, infra, pure styling) skip the loop; UI behaviour is verified with `playwright` instead.
 
 ### Use subagents for parallel work
 
