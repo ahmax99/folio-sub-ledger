@@ -1,8 +1,12 @@
-import { renderMermaidAscii, seriesColors, setChartSize } from './vendor/mermaid-ascii.js'
-import type { AsciiTheme } from './vendor/mermaid-ascii.js'
 import { widthOf } from './markdown'
 import { frontmatterOf } from './mermaid-lex'
 import type { Slot } from './skin'
+import {
+  renderMermaidAscii,
+  seriesColors,
+  setChartSize
+} from './vendor/mermaid-ascii.js'
+import type { AsciiTheme } from './vendor/mermaid-ascii.js'
 
 // A Mermaid fence laid out in two dimensions by beautiful-mermaid's terminal renderer,
 // then handed back as runs of text tagged with what they draw, so the skin can colour
@@ -10,7 +14,13 @@ import type { Slot } from './skin'
 
 // The same runs carry the charts this mod draws itself (chart-art.ts): those also name a
 // skin slot outright, and a background for half-block cells.
-export type Tone = 'fg' | 'muted' | 'title' | { box: number } | { series: number } | { slot: Slot }
+export type Tone =
+  | 'fg'
+  | 'muted'
+  | 'title'
+  | { box: number }
+  | { series: number }
+  | { slot: Slot }
 
 export interface Run {
   text: string
@@ -30,7 +40,7 @@ const KINDS: readonly (readonly [RegExp, string])[] = [
   [/^sequencediagram\s*$/i, 'Sequence'],
   [/^classdiagram\s*$/i, 'Class'],
   [/^erdiagram\s*$/i, 'ER'],
-  [/^xychart(-beta)?\b/i, 'Chart'],
+  [/^xychart(-beta)?\b/i, 'Chart']
 ]
 
 const MAX_LINES = 80
@@ -50,7 +60,7 @@ const SENTINEL: AsciiTheme = {
   corner: '#000005',
   junction: '#000006',
   accent: '#000007',
-  bg: '#000000',
+  bg: '#000000'
 }
 
 type Role = 'text' | 'border' | 'line' | 'arrow'
@@ -61,7 +71,7 @@ const ROLE_OF: Readonly<Record<string, Role>> = {
   [SENTINEL.line]: 'line',
   [SENTINEL.arrow]: 'arrow',
   [SENTINEL.corner ?? '']: 'line',
-  [SENTINEL.junction ?? '']: 'border',
+  [SENTINEL.junction ?? '']: 'border'
 }
 
 interface Cell {
@@ -77,14 +87,21 @@ const cache = new Map<string, Art | null>()
 
 // What kind of diagram the renderer draws for `source`, or null for one it does not.
 export function artKind(source: string): string | null {
-  const header = frontmatterOf(source).lines.find(line => line.trim() !== '' && !line.trim().startsWith('%%'))?.trim() ?? ''
+  const header =
+    frontmatterOf(source)
+      .lines.find((line) => line.trim() !== '' && !line.trim().startsWith('%%'))
+      ?.trim() ?? ''
 
   return KINDS.find(([pattern]) => pattern.test(header))?.[1] ?? null
 }
 
 // `source` drawn to fit `columns`, or null where it cannot be: unsupported, malformed,
 // too long, or too wide even top to bottom. The fence then shows as code.
-export function mermaidArt(source: string, columns: number, ascii: boolean): Art | null {
+export function mermaidArt(
+  source: string,
+  columns: number,
+  ascii: boolean
+): Art | null {
   const key = `${ascii ? 'a' : 'u'}|${columns}|${source}`
 
   if (cache.has(key)) {
@@ -108,15 +125,20 @@ function drawArt(source: string, columns: number, ascii: boolean): Art | null {
   const { title, lines } = frontmatterOf(source)
   const text = lines.join('\n').trim()
 
-  if (kind === null || text.length > MAX_CHARS || text.split('\n').length > MAX_LINES) {
+  if (
+    kind === null ||
+    text.length > MAX_CHARS ||
+    text.split('\n').length > MAX_LINES
+  ) {
     return null
   }
 
   const room = columns - 2
   // Left to right first where asked; a wide one is tried again top to bottom.
-  const attempts = kind === 'Flowchart' && /^(flowchart|graph)\s+(LR|RL)\b/i.test(text)
-    ? [text, text.replace(/^(flowchart|graph)\s+(LR|RL)\b/i, '$1 TD')]
-    : [text]
+  const attempts =
+    kind === 'Flowchart' && /^(flowchart|graph)\s+(LR|RL)\b/i.test(text)
+      ? [text, text.replace(/^(flowchart|graph)\s+(LR|RL)\b/i, '$1 TD')]
+      : [text]
 
   for (const attempt of attempts) {
     const drawn = render(attempt, kind, room, ascii)
@@ -126,9 +148,15 @@ function drawArt(source: string, columns: number, ascii: boolean): Art | null {
       return null
     }
 
-    const grid = kind === 'Flowchart' || kind === 'State' ? reattach(drawn) : drawn
+    const grid =
+      kind === 'Flowchart' || kind === 'State' ? reattach(drawn) : drawn
 
-    if (grid.length <= MAX_ROWS && grid.every(row => widthOf(row.map(cell => cell.char).join('')) <= room)) {
+    if (
+      grid.length <= MAX_ROWS &&
+      grid.every(
+        (row) => widthOf(row.map((cell) => cell.char).join('')) <= room
+      )
+    ) {
       return { kind, title, rows: paint(grid, kind) }
     }
   }
@@ -140,14 +168,15 @@ const LINE: Cell = { char: '─', role: 'line' }
 const BLANK: Cell = { char: ' ', role: null }
 
 const isGap = (cell: Cell | undefined): boolean => cell?.char === ' '
-const isEdgeLabel = (cell: Cell | undefined): boolean => cell?.role === 'text' && cell.char !== ' '
+const isEdgeLabel = (cell: Cell | undefined): boolean =>
+  cell?.role === 'text' && cell.char !== ' '
 
 // Where the renderer loses a link at a box's side, put it back. Three slips, all seen
 // in real replies: a link leaving sideways starts a few cells out from the border; one
 // leaving upward starts on the row inside the border; and a label written next to a box
 // blanks the link's last cells, arrowhead and all.
 function reattach(grid: Cell[][]): Cell[][] {
-  const rows = grid.map(row => row.slice())
+  const rows = grid.map((row) => row.slice())
 
   // Read from the renderer's grid, so a junction already moved onto a border is not
   // moved again.
@@ -181,7 +210,11 @@ function joinSideways(row: Cell[], x: number, step: -1 | 1): void {
   const onBorder = row[border]
   const onward = row[x - step]?.char ?? ''
 
-  if (border === x + step || onBorder?.char !== '│' || !'─┼◄►'.includes(onward)) {
+  if (
+    border === x + step ||
+    onBorder?.char !== '│' ||
+    !'─┼◄►'.includes(onward)
+  ) {
     return
   }
 
@@ -245,24 +278,38 @@ function rejoinLabel(row: Cell[], x: number, step: -1 | 1): void {
   }
 }
 
-function render(text: string, kind: string, room: number, ascii: boolean): Cell[][] | null {
+function render(
+  text: string,
+  kind: string,
+  room: number,
+  ascii: boolean
+): Cell[][] | null {
   if (kind === 'Chart') {
     const width = Math.max(24, Math.min(60, room - 10))
     setChartSize(width, Math.max(8, Math.min(16, Math.round(width * 0.3))))
   }
 
   try {
-    const html = renderMermaidAscii(text, { useAscii: ascii, paddingX: 4, paddingY: 2, colorMode: 'html', theme: SENTINEL })
-    const series = new Map(seriesColors(8, SENTINEL).map((hex, i) => [hex.toLowerCase(), i]))
+    const html = renderMermaidAscii(text, {
+      useAscii: ascii,
+      paddingX: 4,
+      paddingY: 2,
+      colorMode: 'html',
+      theme: SENTINEL
+    })
+    const series = new Map(
+      seriesColors(8, SENTINEL).map((hex, i) => [hex.toLowerCase(), i])
+    )
     series.set(SENTINEL.accent ?? '', 0)
 
-    return trimGrid(html.split('\n').map(line => cellsOf(line, series)))
+    return trimGrid(html.split('\n').map((line) => cellsOf(line, series)))
   } catch {
     return null
   }
 }
 
-const unescape = (text: string): string => text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+const unescape = (text: string): string =>
+  text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
 
 // One line of the renderer's HTML as cells, each with the role its colour names.
 function cellsOf(line: string, series: ReadonlyMap<string, number>): Cell[] {
@@ -283,7 +330,11 @@ function cellsOf(line: string, series: ReadonlyMap<string, number>): Cell[] {
     const index = role === undefined ? series.get(hex) : undefined
 
     for (const char of unescape(match[2] ?? '')) {
-      cells.push(index === undefined ? { char, role: role ?? 'text' } : { char, role: null, series: index })
+      cells.push(
+        index === undefined
+          ? { char, role: role ?? 'text' }
+          : { char, role: null, series: index }
+      )
     }
 
     at = (match.index ?? 0) + match[0].length
@@ -296,7 +347,7 @@ function cellsOf(line: string, series: ReadonlyMap<string, number>): Cell[] {
 
 // Trailing blanks off every row, and blank rows off both ends.
 function trimGrid(grid: Cell[][]): Cell[][] {
-  const rows = grid.map(row => {
+  const rows = grid.map((row) => {
     let end = row.length
 
     while (end > 0 && row[end - 1]?.char === ' ') {
@@ -321,7 +372,10 @@ function trimGrid(grid: Cell[][]): Cell[][] {
 
 function paint(grid: Cell[][], kind: string): Run[][] {
   const boxes = kind === 'Chart' ? null : boxColours(grid)
-  const titleRow = kind === 'Chart' ? grid.findIndex(row => row.some(cell => cell.role === 'text')) : -1
+  const titleRow =
+    kind === 'Chart'
+      ? grid.findIndex((row) => row.some((cell) => cell.role === 'text'))
+      : -1
 
   return grid.map((row, y) => {
     const runs: Run[] = []
@@ -341,7 +395,11 @@ function paint(grid: Cell[][], kind: string): Run[][] {
   })
 }
 
-function toneOf(cell: Cell, box: number | undefined, title: boolean): Tone | null {
+function toneOf(
+  cell: Cell,
+  box: number | undefined,
+  title: boolean
+): Tone | null {
   if (cell.series !== undefined) {
     return { series: cell.series }
   }
@@ -363,11 +421,21 @@ function toneOf(cell: Cell, box: number | undefined, title: boolean): Tone | nul
   }
 }
 
-export const sameTone = (a: Tone | null | undefined, b: Tone | null | undefined): boolean =>
-  a === b || (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null && JSON.stringify(a) === JSON.stringify(b))
+export const sameTone = (
+  a: Tone | null | undefined,
+  b: Tone | null | undefined
+): boolean =>
+  a === b ||
+  (typeof a === 'object' &&
+    typeof b === 'object' &&
+    a !== null &&
+    b !== null &&
+    JSON.stringify(a) === JSON.stringify(b))
 
 const isBorder = (cell: Cell | undefined): boolean =>
-  cell !== undefined && (cell.role === 'border' || (cell.role === 'text' && BOX_GLYPHS.has(cell.char)))
+  cell !== undefined &&
+  (cell.role === 'border' ||
+    (cell.role === 'text' && BOX_GLYPHS.has(cell.char)))
 
 // Every box outline found, its cells mapped to a colour index. Outlines with the same
 // label inside share one, so an actor drawn at both ends of a sequence matches itself.
@@ -394,7 +462,12 @@ function boxColours(grid: Cell[][]): Map<string, number> {
   return colours
 }
 
-function floodBorder(grid: Cell[][], x: number, y: number, seen: Set<string>): [number, number][] {
+function floodBorder(
+  grid: Cell[][],
+  x: number,
+  y: number,
+  seen: Set<string>
+): [number, number][] {
   const outline: [number, number][] = []
   const stack: [number, number][] = [[x, y]]
   seen.add(`${x},${y}`)
@@ -403,7 +476,12 @@ function floodBorder(grid: Cell[][], x: number, y: number, seen: Set<string>): [
     const [cx, cy] = stack.pop() ?? [0, 0]
     outline.push([cx, cy])
 
-    for (const [nx, ny] of [[cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]] as const) {
+    for (const [nx, ny] of [
+      [cx + 1, cy],
+      [cx - 1, cy],
+      [cx, cy + 1],
+      [cx, cy - 1]
+    ] as const) {
       if (!seen.has(`${nx},${ny}`) && isBorder(grid[ny]?.[nx])) {
         seen.add(`${nx},${ny}`)
         stack.push([nx, ny])
@@ -414,10 +492,18 @@ function floodBorder(grid: Cell[][], x: number, y: number, seen: Set<string>): [
   return outline
 }
 
-function labelInside(grid: Cell[][], outline: readonly [number, number][]): string {
+function labelInside(
+  grid: Cell[][],
+  outline: readonly [number, number][]
+): string {
   const xs = outline.map(([x]) => x)
   const ys = outline.map(([, y]) => y)
-  const [left, right, top, bottom] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
+  const [left, right, top, bottom] = [
+    Math.min(...xs),
+    Math.max(...xs),
+    Math.min(...ys),
+    Math.max(...ys)
+  ]
   let label = ''
 
   for (let y = top + 1; y < bottom; y++) {

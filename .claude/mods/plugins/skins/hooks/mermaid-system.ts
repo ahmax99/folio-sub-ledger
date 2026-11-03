@@ -29,9 +29,26 @@ export type BoxShape =
 
 // A box carries a label and lines of small print under it; a frame holds more parts on a
 // grid of its own; a gap is the room `space` leaves.
-export type BoxPart = { type: 'box'; id: string; label: string; notes: string[]; shape: BoxShape; tone: number; isExternal: boolean; span: number }
+export type BoxPart = {
+  type: 'box'
+  id: string
+  label: string
+  notes: string[]
+  shape: BoxShape
+  tone: number
+  isExternal: boolean
+  span: number
+}
 
-export type FramePart = { type: 'frame'; id: string; label: string; tone: number; span: number; columns: Columns; parts: Part[] }
+export type FramePart = {
+  type: 'frame'
+  id: string
+  label: string
+  tone: number
+  span: number
+  columns: Columns
+  parts: Part[]
+}
 
 export type GapPart = { type: 'gap'; span: number }
 
@@ -40,33 +57,95 @@ export type Part = BoxPart | FramePart | GapPart
 // A count of columns, every part on one row, or as many columns as the width fits.
 export type Columns = number | 'row' | 'fit'
 
-export type Link = { from: string; to: string; label: string; arrow: 'to' | 'both' | 'none'; line: 'solid' | 'dotted' | 'thick' }
+export type Link = {
+  from: string
+  to: string
+  label: string
+  arrow: 'to' | 'both' | 'none'
+  line: 'solid' | 'dotted' | 'thick'
+}
 
-export type Block = { kind: 'block'; title: string; columns: Columns; parts: Part[]; links: Link[]; boxes: number }
+export type Block = {
+  kind: 'block'
+  title: string
+  columns: Columns
+  parts: Part[]
+  links: Link[]
+  boxes: number
+}
 
-export type C4Level = 'Context' | 'Container' | 'Component' | 'Dynamic' | 'Deployment'
+export type C4Level =
+  | 'Context'
+  | 'Container'
+  | 'Component'
+  | 'Dynamic'
+  | 'Deployment'
 
-export type C4 = { kind: 'c4'; title: string; level: C4Level; parts: Part[]; links: Link[]; boxes: number }
+export type C4 = {
+  kind: 'c4'
+  title: string
+  level: C4Level
+  parts: Part[]
+  links: Link[]
+  boxes: number
+}
 
 export type Side = 'T' | 'B' | 'L' | 'R'
 
-export type ArchIcon = 'cloud' | 'database' | 'disk' | 'internet' | 'server' | 'generic'
+export type ArchIcon =
+  | 'cloud'
+  | 'database'
+  | 'disk'
+  | 'internet'
+  | 'server'
+  | 'generic'
 
 // A service or a junction, at its cell on the architecture grid.
-export type ArchService = { id: string; label: string; icon: ArchIcon; group: string | null; isJunction: boolean; col: number; row: number }
+export type ArchService = {
+  id: string
+  label: string
+  icon: ArchIcon
+  group: string | null
+  isJunction: boolean
+  col: number
+  row: number
+}
 
-export type ArchGroup = { id: string; label: string; icon: ArchIcon; parent: string | null }
+export type ArchGroup = {
+  id: string
+  label: string
+  icon: ArchIcon
+  parent: string | null
+}
 
-export type ArchEdge = { from: string; fromSide: Side; to: string; toSide: Side; label: string; arrow: 'to' | 'from' | 'both' | 'none' }
+export type ArchEdge = {
+  from: string
+  fromSide: Side
+  to: string
+  toSide: Side
+  label: string
+  arrow: 'to' | 'from' | 'both' | 'none'
+}
 
-export type Architecture = { kind: 'architecture'; title: string; groups: ArchGroup[]; services: ArchService[]; edges: ArchEdge[]; columns: number; rows: number }
+export type Architecture = {
+  kind: 'architecture'
+  title: string
+  groups: ArchGroup[]
+  services: ArchService[]
+  edges: ArchEdge[]
+  columns: number
+  rows: number
+}
 
 const MAX_BOXES = 40
 const MAX_DEPTH = 4
 const MAX_COLUMNS = 12
 const MAX_GRID = 8
 
-const cleanLabel = (text: string): string => unquote(text).replace(/&nbsp;/gi, ' ').trim()
+const cleanLabel = (text: string): string =>
+  unquote(text)
+    .replace(/&nbsp;/gi, ' ')
+    .trim()
 
 // --- Block --------------------------------------------------------------------------
 
@@ -86,22 +165,41 @@ const BLOCK_SHAPES: readonly (readonly [BoxShape | 'arrow', RegExp])[] = (
     ['asymmetric', `>${LABEL}\\]`],
     ['box', `\\[${LABEL}\\]`],
     ['round', `\\(${LABEL}\\)`],
-    ['diamond', `\\{${LABEL}\\}`],
+    ['diamond', `\\{${LABEL}\\}`]
   ] as const
 ).map(([shape, pattern]) => [shape, new RegExp(`^${pattern}`)] as const)
 
-const ARROWS: Readonly<Record<string, BoxShape>> = { right: 'arrow-right', left: 'arrow-left', up: 'arrow-up', down: 'arrow-down', x: 'arrow-x', y: 'arrow-y' }
+const ARROWS: Readonly<Record<string, BoxShape>> = {
+  right: 'arrow-right',
+  left: 'arrow-left',
+  up: 'arrow-up',
+  down: 'arrow-down',
+  x: 'arrow-x',
+  y: 'arrow-y'
+}
 
 // The edges flowcharts know, the label either between pipes or between the dashes.
 const BLOCK_EDGE =
   /^(?:(-->|---|-\.->|-\.-|==>|===)\s*(?:\|([^|]*)\|)?|(--|-\.|==)\s*("[^"]*"|[^|>\-\s"][^>]*?)\s*(-->|---|\.->|\.-|==>|===))\s*/
 
-type BlockNode = { id: string; label: string | null; shape: BoxShape; span: number; rest: string }
+type BlockNode = {
+  id: string
+  label: string | null
+  shape: BoxShape
+  span: number
+  rest: string
+}
 
 function readBlockNode(text: string): BlockNode | null {
   const id = /^[A-Za-z0-9_]+/.exec(text)?.[0]
 
-  if (id === undefined || id === 'end' || id === 'space' || id === 'block' || id === 'columns') {
+  if (
+    id === undefined ||
+    id === 'end' ||
+    id === 'space' ||
+    id === 'block' ||
+    id === 'columns'
+  ) {
     return null
   }
 
@@ -114,7 +212,8 @@ function readBlockNode(text: string): BlockNode | null {
 
     if (match !== null) {
       label = cleanLabel(match[1] ?? '')
-      shape = kind === 'arrow' ? (ARROWS[match[2] ?? ''] ?? 'arrow-right') : kind
+      shape =
+        kind === 'arrow' ? (ARROWS[match[2] ?? ''] ?? 'arrow-right') : kind
       rest = rest.slice(match[0].length)
       break
     }
@@ -122,7 +221,13 @@ function readBlockNode(text: string): BlockNode | null {
 
   const span = /^:(\d+)/.exec(rest)
 
-  return { id, label, shape, span: Math.max(1, Number(span?.[1] ?? 1)), rest: rest.slice(span?.[0].length ?? 0) }
+  return {
+    id,
+    label,
+    shape,
+    span: Math.max(1, Number(span?.[1] ?? 1)),
+    rest: rest.slice(span?.[0].length ?? 0)
+  }
 }
 
 // Blocks are coloured by the family of their shape, as flowchart nodes are.
@@ -144,13 +249,22 @@ const SHAPE_TONE: Readonly<Record<BoxShape, number>> = {
   'arrow-up': 5,
   'arrow-down': 5,
   'arrow-x': 5,
-  'arrow-y': 5,
+  'arrow-y': 5
 }
 
-const lineOf = (op: string): Link['line'] => (op.includes('.') ? 'dotted' : op.includes('=') ? 'thick' : 'solid')
+const lineOf = (op: string): Link['line'] =>
+  op.includes('.') ? 'dotted' : op.includes('=') ? 'thick' : 'solid'
 
 export function parseBlock(body: readonly string[]): Block | null {
-  const root: FramePart = { type: 'frame', id: '', label: '', tone: 0, span: 1, columns: 'row', parts: [] }
+  const root: FramePart = {
+    type: 'frame',
+    id: '',
+    label: '',
+    tone: 0,
+    span: 1,
+    columns: 'row',
+    parts: []
+  }
   const stack: FramePart[] = [root]
   const ids = new Set<string>()
   const links: Link[] = []
@@ -162,7 +276,16 @@ export function parseBlock(body: readonly string[]): Block | null {
     if (!ids.has(node.id)) {
       ids.add(node.id)
       boxes++
-      into.parts.push({ type: 'box', id: node.id, label: node.label ?? node.id, notes: [], shape: node.shape, tone: SHAPE_TONE[node.shape], isExternal: false, span: node.span })
+      into.parts.push({
+        type: 'box',
+        id: node.id,
+        label: node.label ?? node.id,
+        notes: [],
+        shape: node.shape,
+        tone: SHAPE_TONE[node.shape],
+        isExternal: false,
+        span: node.span
+      })
     }
   }
 
@@ -198,7 +321,15 @@ export function parseBlock(body: readonly string[]): Block | null {
         return null
       }
 
-      const frame: FramePart = { type: 'frame', id, label: '', tone: frames++, span: Math.max(1, Number(open[2] ?? 1)), columns: 'row', parts: [] }
+      const frame: FramePart = {
+        type: 'frame',
+        id,
+        label: '',
+        tone: frames++,
+        span: Math.max(1, Number(open[2] ?? 1)),
+        columns: 'row',
+        parts: []
+      }
       ids.add(id)
       top.parts.push(frame)
       stack.push(frame)
@@ -211,7 +342,10 @@ export function parseBlock(body: readonly string[]): Block | null {
       const space = /^space(?::(\d+))?(?=\s|$)/.exec(rest)
 
       if (space !== null) {
-        top.parts.push({ type: 'gap', span: Math.max(1, Number(space[1] ?? 1)) })
+        top.parts.push({
+          type: 'gap',
+          span: Math.max(1, Number(space[1] ?? 1))
+        })
         rest = rest.slice(space[0].length).trim()
         continue
       }
@@ -226,7 +360,11 @@ export function parseBlock(body: readonly string[]): Block | null {
       rest = node.rest.trim()
 
       // `a --> b --> c`: each edge reads the next block along.
-      for (let from = node.id, edge = BLOCK_EDGE.exec(rest); edge !== null; edge = BLOCK_EDGE.exec(rest)) {
+      for (
+        let from = node.id, edge = BLOCK_EDGE.exec(rest);
+        edge !== null;
+        edge = BLOCK_EDGE.exec(rest)
+      ) {
         const target = readBlockNode(rest.slice(edge[0].length))
         const op = edge[1] ?? edge[5] ?? ''
 
@@ -235,34 +373,67 @@ export function parseBlock(body: readonly string[]): Block | null {
         }
 
         meet(target, top)
-        links.push({ from, to: target.id, label: cleanLabel(edge[2] ?? edge[4] ?? ''), arrow: op.endsWith('>') ? 'to' : 'none', line: lineOf(op) })
+        links.push({
+          from,
+          to: target.id,
+          label: cleanLabel(edge[2] ?? edge[4] ?? ''),
+          arrow: op.endsWith('>') ? 'to' : 'none',
+          line: lineOf(op)
+        })
         from = target.id
         rest = target.rest.trim()
       }
     }
   }
 
-  if (boxes === 0 || boxes > MAX_BOXES || links.some(link => !ids.has(link.from) || !ids.has(link.to))) {
+  if (
+    boxes === 0 ||
+    boxes > MAX_BOXES ||
+    links.some((link) => !ids.has(link.from) || !ids.has(link.to))
+  ) {
     return null
   }
 
-  return { kind: 'block', title: '', columns: root.columns, parts: root.parts, links, boxes }
+  return {
+    kind: 'block',
+    title: '',
+    columns: root.columns,
+    parts: root.parts,
+    links,
+    boxes
+  }
 }
 
 // --- Architecture -------------------------------------------------------------------
 
-const ICONS: readonly ArchIcon[] = ['cloud', 'database', 'disk', 'internet', 'server']
+const ICONS: readonly ArchIcon[] = [
+  'cloud',
+  'database',
+  'disk',
+  'internet',
+  'server'
+]
 
-const iconOf = (name: string | undefined): ArchIcon => ICONS.find(icon => icon === name) ?? 'generic'
+const iconOf = (name: string | undefined): ArchIcon =>
+  ICONS.find((icon) => icon === name) ?? 'generic'
 
-const DECLARE = /^(group|service)\s+([\w-]+)\s*(?:\(([\w:.-]+)\))?\s*(?:\[([^\]]*)\])?\s*(?:in\s+([\w-]+))?$/
+const DECLARE =
+  /^(group|service)\s+([\w-]+)\s*(?:\(([\w:.-]+)\))?\s*(?:\[([^\]]*)\])?\s*(?:in\s+([\w-]+))?$/
 const JUNCTION = /^junction\s+([\w-]+)\s*(?:in\s+([\w-]+))?$/
-const ARCH_EDGE = /^([\w-]+)(?:\{group\})?\s*:\s*([TBLR])\s*(<)?\s*(?:--|-\[([^\]]*)\]-)\s*(>)?\s*([TBLR])\s*:\s*([\w-]+)(?:\{group\})?$/
+const ARCH_EDGE =
+  /^([\w-]+)(?:\{group\})?\s*:\s*([TBLR])\s*(<)?\s*(?:--|-\[([^\]]*)\]-)\s*(>)?\s*([TBLR])\s*:\s*([\w-]+)(?:\{group\})?$/
 
 // Which way a side faces, as a step on the grid.
-const STEP: Readonly<Record<Side, readonly [number, number]>> = { T: [0, -1], B: [0, 1], L: [-1, 0], R: [1, 0] }
+const STEP: Readonly<Record<Side, readonly [number, number]>> = {
+  T: [0, -1],
+  B: [0, 1],
+  L: [-1, 0],
+  R: [1, 0]
+}
 
-export function parseArchitecture(body: readonly string[]): Architecture | null {
+export function parseArchitecture(
+  body: readonly string[]
+): Architecture | null {
   const groups: ArchGroup[] = []
   const services: Omit<ArchService, 'col' | 'row'>[] = []
   const edges: ArchEdge[] = []
@@ -276,7 +447,11 @@ export function parseArchitecture(body: readonly string[]): Architecture | null 
 
     if (declare !== null) {
       const [, what, id = '', icon, label, parent] = declare
-      const named = { id, label: cleanLabel(label ?? '') || id, icon: iconOf(icon) }
+      const named = {
+        id,
+        label: cleanLabel(label ?? '') || id,
+        icon: iconOf(icon)
+      }
 
       if (what === 'group') {
         groups.push({ ...named, parent: parent ?? null })
@@ -284,7 +459,13 @@ export function parseArchitecture(body: readonly string[]): Architecture | null 
         services.push({ ...named, group: parent ?? null, isJunction: false })
       }
     } else if (junction !== null) {
-      services.push({ id: junction[1] ?? '', label: '', icon: 'generic', group: junction[2] ?? null, isJunction: true })
+      services.push({
+        id: junction[1] ?? '',
+        label: '',
+        icon: 'generic',
+        group: junction[2] ?? null,
+        isJunction: true
+      })
     } else if (edge !== null) {
       const [, from = '', fromSide, into, label, out, toSide, to = ''] = edge
       edges.push({
@@ -293,7 +474,14 @@ export function parseArchitecture(body: readonly string[]): Architecture | null 
         to,
         toSide: toSide as Side,
         label: cleanLabel(label ?? ''),
-        arrow: into !== undefined && out !== undefined ? 'both' : into !== undefined ? 'from' : out !== undefined ? 'to' : 'none',
+        arrow:
+          into !== undefined && out !== undefined
+            ? 'both'
+            : into !== undefined
+              ? 'from'
+              : out !== undefined
+                ? 'to'
+                : 'none'
       })
     } else if (titled !== null) {
       title = cleanLabel(titled[1] ?? '')
@@ -302,14 +490,14 @@ export function parseArchitecture(body: readonly string[]): Architecture | null 
     }
   }
 
-  const ids = new Set(services.map(service => service.id))
-  const groupIds = new Set(groups.map(group => group.id))
+  const ids = new Set(services.map((service) => service.id))
+  const groupIds = new Set(groups.map((group) => group.id))
   // Each group's chain of parents ends, so no group sits inside itself.
   const isNested = (group: ArchGroup): boolean => {
     let parent = group.parent
 
     for (let step = 0; parent !== null && step <= groups.length; step++) {
-      parent = groups.find(other => other.id === parent)?.parent ?? null
+      parent = groups.find((other) => other.id === parent)?.parent ?? null
     }
 
     return parent === null
@@ -318,20 +506,32 @@ export function parseArchitecture(body: readonly string[]): Architecture | null 
     groups.every(isNested) &&
     ids.size === services.length &&
     groupIds.size === groups.length &&
-    groups.every(group => group.parent === null || (groupIds.has(group.parent) && group.parent !== group.id)) &&
-    services.every(service => service.group === null || groupIds.has(service.group)) &&
-    edges.every(edge => ids.has(edge.from) && ids.has(edge.to) && edge.from !== edge.to)
+    groups.every(
+      (group) =>
+        group.parent === null ||
+        (groupIds.has(group.parent) && group.parent !== group.id)
+    ) &&
+    services.every(
+      (service) => service.group === null || groupIds.has(service.group)
+    ) &&
+    edges.every(
+      (edge) => ids.has(edge.from) && ids.has(edge.to) && edge.from !== edge.to
+    )
 
-  if (!known || services.filter(service => !service.isJunction).length === 0 || services.length > MAX_BOXES) {
+  if (
+    !known ||
+    services.filter((service) => !service.isJunction).length === 0 ||
+    services.length > MAX_BOXES
+  ) {
     return null
   }
 
   const cells = archGrid(
-    services.map(service => service.id),
-    edges,
+    services.map((service) => service.id),
+    edges
   )
-  const columns = Math.max(...[...cells.values()].map(cell => cell.col)) + 1
-  const rows = Math.max(...[...cells.values()].map(cell => cell.row)) + 1
+  const columns = Math.max(...[...cells.values()].map((cell) => cell.col)) + 1
+  const rows = Math.max(...[...cells.values()].map((cell) => cell.row)) + 1
 
   if (columns > MAX_GRID || rows > MAX_GRID) {
     return null
@@ -341,17 +541,23 @@ export function parseArchitecture(body: readonly string[]): Architecture | null 
     kind: 'architecture',
     title,
     groups,
-    services: services.map(service => ({ ...service, ...(cells.get(service.id) ?? { col: 0, row: 0 }) })),
+    services: services.map((service) => ({
+      ...service,
+      ...(cells.get(service.id) ?? { col: 0, row: 0 })
+    })),
     edges,
     columns,
-    rows,
+    rows
   }
 }
 
 // Each connected run of services walked out from its first one, every neighbour placed a
 // step off the side its edge leaves by (further along if that cell is taken), and the
 // runs set side by side in the order the source named them.
-function archGrid(ids: readonly string[], edges: readonly ArchEdge[]): Map<string, { col: number; row: number }> {
+function archGrid(
+  ids: readonly string[],
+  edges: readonly ArchEdge[]
+): Map<string, { col: number; row: number }> {
   const cells = new Map<string, { col: number; row: number }>()
   let offset = 0
 
@@ -368,7 +574,12 @@ function archGrid(ids: readonly string[], edges: readonly ArchEdge[]): Map<strin
       const here = local.get(id) ?? { col: 0, row: 0 }
 
       for (const edge of edges) {
-        const [other, side] = edge.from === id ? [edge.to, edge.fromSide] : edge.to === id ? [edge.from, edge.toSide] : [null, null]
+        const [other, side] =
+          edge.from === id
+            ? [edge.to, edge.fromSide]
+            : edge.to === id
+              ? [edge.from, edge.toSide]
+              : [null, null]
 
         if (other === null || local.has(other)) {
           continue
@@ -389,14 +600,14 @@ function archGrid(ids: readonly string[], edges: readonly ArchEdge[]): Map<strin
       }
     }
 
-    const minCol = Math.min(...[...local.values()].map(cell => cell.col))
-    const minRow = Math.min(...[...local.values()].map(cell => cell.row))
+    const minCol = Math.min(...[...local.values()].map((cell) => cell.col))
+    const minRow = Math.min(...[...local.values()].map((cell) => cell.row))
 
     for (const [id, cell] of local) {
       cells.set(id, { col: cell.col - minCol + offset, row: cell.row - minRow })
     }
 
-    offset = Math.max(...[...cells.values()].map(cell => cell.col)) + 1
+    offset = Math.max(...[...cells.values()].map((cell) => cell.col)) + 1
   }
 
   return cells
@@ -405,17 +616,31 @@ function archGrid(ids: readonly string[], edges: readonly ArchEdge[]): Map<strin
 // --- C4 -----------------------------------------------------------------------------
 
 const ELEMENT = /^(Person|System|Container|Component)(Db|Queue)?(_Ext)?$/
-const BOUNDARY = /^(Boundary|Enterprise_Boundary|System_Boundary|Container_Boundary|Deployment_Node|Node|Node_L|Node_R)$/
+const BOUNDARY =
+  /^(Boundary|Enterprise_Boundary|System_Boundary|Container_Boundary|Deployment_Node|Node|Node_L|Node_R)$/
 const REL = /^(Bi)?Rel(?:_(U|D|L|R|Up|Down|Left|Right|Back|Neighbor))?$/
 // Calls that only style or nudge the drawing Mermaid makes.
-const C4_STYLE = /^(Update\w+|Lay_\w+|SHOW_LEGEND|SHOW_FLOATING_LEGEND|HIDE_STEREOTYPE|ShowLegend)$/
+const C4_STYLE =
+  /^(Update\w+|Lay_\w+|SHOW_LEGEND|SHOW_FLOATING_LEGEND|HIDE_STEREOTYPE|ShowLegend)$/
 
-const BOUNDARY_TYPE: Readonly<Record<string, string>> = { Enterprise_Boundary: 'enterprise', System_Boundary: 'system', Container_Boundary: 'container' }
+const BOUNDARY_TYPE: Readonly<Record<string, string>> = {
+  Enterprise_Boundary: 'enterprise',
+  System_Boundary: 'system',
+  Container_Boundary: 'container'
+}
 
-const ELEMENT_TONE: Readonly<Record<string, number>> = { Person: 0, System: 1, Container: 2, Component: 3 }
+const ELEMENT_TONE: Readonly<Record<string, number>> = {
+  Person: 0,
+  System: 1,
+  Container: 2,
+  Component: 3
+}
 
 // A call's arguments: the positional ones in order, and the `$name="..."` ones by name.
-function argsOf(text: string): { at: (i: number) => string; named: (name: string) => string } {
+function argsOf(text: string): {
+  at: (i: number) => string
+  named: (name: string) => string
+} {
   const args: string[] = []
   let current = ''
   let quoted = false
@@ -435,22 +660,38 @@ function argsOf(text: string): { at: (i: number) => string; named: (name: string
 
   args.push(current)
 
-  const positional = args.map(arg => arg.trim()).filter(arg => !arg.startsWith('$'))
+  const positional = args
+    .map((arg) => arg.trim())
+    .filter((arg) => !arg.startsWith('$'))
   const named = new Map(
     args
-      .map(arg => /^\s*\$(\w+)\s*=\s*(.*)$/.exec(arg))
-      .filter(match => match !== null)
-      .map(match => [match[1] ?? '', cleanLabel(match[2] ?? '')]),
+      .map((arg) => /^\s*\$(\w+)\s*=\s*(.*)$/.exec(arg))
+      .filter((match) => match !== null)
+      .map((match) => [match[1] ?? '', cleanLabel(match[2] ?? '')])
   )
 
-  return { at: i => cleanLabel(positional[i] ?? ''), named: name => named.get(name) ?? '' }
+  return {
+    at: (i) => cleanLabel(positional[i] ?? ''),
+    named: (name) => named.get(name) ?? ''
+  }
 }
 
-const capital = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
+const capital = (text: string): string =>
+  text.charAt(0).toUpperCase() + text.slice(1)
 
 export function parseC4(head: string, body: readonly string[]): C4 | null {
-  const level = (/^C4(Context|Container|Component|Dynamic|Deployment)\b/.exec(head)?.[1] ?? 'Context') as C4Level
-  const root: FramePart = { type: 'frame', id: '', label: '', tone: 0, span: 1, columns: 'fit', parts: [] }
+  const level = (/^C4(Context|Container|Component|Dynamic|Deployment)\b/.exec(
+    head
+  )?.[1] ?? 'Context') as C4Level
+  const root: FramePart = {
+    type: 'frame',
+    id: '',
+    label: '',
+    tone: 0,
+    span: 1,
+    columns: 'fit',
+    parts: []
+  }
   const stack: FramePart[] = [root]
   const ids = new Set<string>()
   const links: Link[] = []
@@ -492,11 +733,21 @@ export function parseC4(head: string, body: readonly string[]): C4 | null {
     if (element !== null) {
       const [, base = '', store, external] = element
       const id = args.at(0)
-      const tech = base === 'Container' || base === 'Component' ? args.at(2) || args.named('techn') : args.named('techn')
-      const descr = (base === 'Container' || base === 'Component' ? args.at(3) : args.at(2)) || args.named('descr')
+      const tech =
+        base === 'Container' || base === 'Component'
+          ? args.at(2) || args.named('techn')
+          : args.named('techn')
+      const descr =
+        (base === 'Container' || base === 'Component'
+          ? args.at(3)
+          : args.at(2)) || args.named('descr')
       const kind = `${external === undefined ? '' : 'external '}${base === 'System' ? 'system' : base.toLowerCase()}${store === undefined ? '' : ` ${store === 'Db' ? 'database' : 'queue'}`}`
 
-      if (id === '' || ids.has(id) || (base === 'Person' && store !== undefined)) {
+      if (
+        id === '' ||
+        ids.has(id) ||
+        (base === 'Person' && store !== undefined)
+      ) {
         return null
       }
 
@@ -506,11 +757,21 @@ export function parseC4(head: string, body: readonly string[]): C4 | null {
         type: 'box',
         id,
         label: args.at(1) || id,
-        notes: [`${capital(kind)}${tech === '' ? '' : ` · ${tech}`}`, ...(descr === '' ? [] : [descr])],
-        shape: base === 'Person' ? 'person' : store === 'Db' ? 'cylinder' : store === 'Queue' ? 'queue' : 'box',
+        notes: [
+          `${capital(kind)}${tech === '' ? '' : ` · ${tech}`}`,
+          ...(descr === '' ? [] : [descr])
+        ],
+        shape:
+          base === 'Person'
+            ? 'person'
+            : store === 'Db'
+              ? 'cylinder'
+              : store === 'Queue'
+                ? 'queue'
+                : 'box',
         tone: ELEMENT_TONE[base] ?? 0,
         isExternal: external !== undefined,
-        span: 1,
+        span: 1
       })
     } else if (BOUNDARY.test(name)) {
       const id = args.at(0)
@@ -520,24 +781,45 @@ export function parseC4(head: string, body: readonly string[]): C4 | null {
         return null
       }
 
-      const frame: FramePart = { type: 'frame', id, label: `${args.at(1) || id}${type === '' ? '' : ` · ${type}`}`, tone: stack.length - 1, span: 1, columns: 'fit', parts: [] }
+      const frame: FramePart = {
+        type: 'frame',
+        id,
+        label: `${args.at(1) || id}${type === '' ? '' : ` · ${type}`}`,
+        tone: stack.length - 1,
+        span: 1,
+        columns: 'fit',
+        parts: []
+      }
       ids.add(id)
       top.parts.push(frame)
       stack.push(frame)
     } else if (rel !== null || name === 'RelIndex') {
       // `RelIndex` numbers its relationship first; `Rel_Back` points the other way.
       const shift = name === 'RelIndex' ? 1 : 0
-      const [from, to] = rel?.[2] === 'Back' ? [args.at(shift + 1), args.at(shift)] : [args.at(shift), args.at(shift + 1)]
+      const [from, to] =
+        rel?.[2] === 'Back'
+          ? [args.at(shift + 1), args.at(shift)]
+          : [args.at(shift), args.at(shift + 1)]
       const label = args.at(shift + 2) || args.named('label')
       const tech = args.at(shift + 3) || args.named('techn')
 
-      links.push({ from, to, label: `${label}${tech === '' ? '' : ` [${tech}]`}`, arrow: rel?.[1] === 'Bi' ? 'both' : 'to', line: 'solid' })
+      links.push({
+        from,
+        to,
+        label: `${label}${tech === '' ? '' : ` [${tech}]`}`,
+        arrow: rel?.[1] === 'Bi' ? 'both' : 'to',
+        line: 'solid'
+      })
     } else if (!C4_STYLE.test(name)) {
       return null
     }
   }
 
-  if (boxes === 0 || boxes > MAX_BOXES || links.some(link => !ids.has(link.from) || !ids.has(link.to))) {
+  if (
+    boxes === 0 ||
+    boxes > MAX_BOXES ||
+    links.some((link) => !ids.has(link.from) || !ids.has(link.to))
+  ) {
     return null
   }
 
@@ -561,10 +843,28 @@ export type Metrics = {
   boxHeight: (box: BoxPart, width: number) => number
 }
 
-export type Placed = { part: BoxPart | FramePart; x: number; y: number; w: number; h: number; depth: number }
+export type Placed = {
+  part: BoxPart | FramePart
+  x: number
+  y: number
+  w: number
+  h: number
+  depth: number
+}
 
-const columnsFor = (parts: readonly Part[], columns: Columns, width: number, metrics: Metrics): number => {
-  const fit = Math.max(1, Math.min(metrics.most, Math.floor((width + metrics.gap) / (metrics.least + metrics.gap))))
+const columnsFor = (
+  parts: readonly Part[],
+  columns: Columns,
+  width: number,
+  metrics: Metrics
+): number => {
+  const fit = Math.max(
+    1,
+    Math.min(
+      metrics.most,
+      Math.floor((width + metrics.gap) / (metrics.least + metrics.gap))
+    )
+  )
 
   if (columns === 'fit') {
     return fit
@@ -574,7 +874,10 @@ const columnsFor = (parts: readonly Part[], columns: Columns, width: number, met
     const total = parts.reduce((sum, part) => sum + part.span, 0)
 
     // A row too long for the width wraps rather than squeezing every part.
-    return Math.max(1, (width - metrics.gap * (total - 1)) / total >= metrics.least ? total : fit)
+    return Math.max(
+      1,
+      (width - metrics.gap * (total - 1)) / total >= metrics.least ? total : fit
+    )
   }
 
   return columns
@@ -583,7 +886,15 @@ const columnsFor = (parts: readonly Part[], columns: Columns, width: number, met
 // The parts left to right across `columns`, wrapping to a new row when the next one's
 // span runs past the end. Frames come before what they hold, so a drawing taken in order
 // paints them underneath. Null when a column would come out narrower than `least`.
-export function placeParts(parts: readonly Part[], columns: Columns, x: number, y: number, width: number, metrics: Metrics, depth = 0): { height: number; placed: Placed[] } | null {
+export function placeParts(
+  parts: readonly Part[],
+  columns: Columns,
+  x: number,
+  y: number,
+  width: number,
+  metrics: Metrics,
+  depth = 0
+): { height: number; placed: Placed[] } | null {
   const count = columnsFor(parts, columns, width, metrics)
   const column = (width - metrics.gap * (count - 1)) / count
   const placed: Placed[] = []
@@ -596,7 +907,14 @@ export function placeParts(parts: readonly Part[], columns: Columns, x: number, 
 
   for (const part of parts) {
     // In a `fit` grid, frames sit two to a row when there are four columns, else alone.
-    const span = Math.min(count, columns === 'fit' && part.type === 'frame' ? (count >= 4 ? 2 : count) : part.span)
+    const span = Math.min(
+      count,
+      columns === 'fit' && part.type === 'frame'
+        ? count >= 4
+          ? 2
+          : count
+        : part.span
+    )
 
     if (at + span > count) {
       rows.push([])
@@ -609,7 +927,7 @@ export function placeParts(parts: readonly Part[], columns: Columns, x: number, 
 
   let top = y
 
-  for (const row of rows.filter(row => row.length > 0)) {
+  for (const row of rows.filter((row) => row.length > 0)) {
     const boxes: { part: BoxPart; x: number; w: number; h: number }[] = []
     let tallest = 0
 
@@ -622,7 +940,15 @@ export function placeParts(parts: readonly Part[], columns: Columns, x: number, 
         boxes.push({ part, x: left, w, h })
         tallest = Math.max(tallest, h)
       } else if (part.type === 'frame') {
-        const inner = placeParts(part.parts, part.columns, left + metrics.side, top + metrics.head, w - metrics.side * 2, metrics, depth + 1)
+        const inner = placeParts(
+          part.parts,
+          part.columns,
+          left + metrics.side,
+          top + metrics.head,
+          w - metrics.side * 2,
+          metrics,
+          depth + 1
+        )
 
         if (inner === null) {
           return null
@@ -635,8 +961,17 @@ export function placeParts(parts: readonly Part[], columns: Columns, x: number, 
     }
 
     // Boxes on a row share the tallest box's height, so their edges line up.
-    const boxHeight = Math.max(0, ...boxes.map(box => box.h))
-    placed.push(...boxes.map(box => ({ part: box.part, x: box.x, y: top, w: box.w, h: boxHeight, depth })))
+    const boxHeight = Math.max(0, ...boxes.map((box) => box.h))
+    placed.push(
+      ...boxes.map((box) => ({
+        part: box.part,
+        x: box.x,
+        y: top,
+        w: box.w,
+        h: boxHeight,
+        depth
+      }))
+    )
     top += tallest + metrics.rowGap
   }
 

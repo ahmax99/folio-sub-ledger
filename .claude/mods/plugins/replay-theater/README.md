@@ -100,10 +100,10 @@ No environment variables or configuration.
    - Press `ctrl+x` then `Tab` to focus the band above the prompt, then press `r` (or Enter on the Replay button).
 6. In the pane:
 
-   | Key | Does |
-   |---|---|
-   | `n` | Next step |
-   | `p` | Previous step |
+   | Key             | Does           |
+   | --------------- | -------------- |
+   | `n`             | Next step      |
+   | `p`             | Previous step  |
    | `c` or `Escape` | Close the pane |
 
    Mouse clicks on the buttons work too. The replay stays available until the next turn that edits files. A turn with no edits keeps the previous replay.
@@ -123,8 +123,8 @@ No environment variables or configuration.
 ## Dependencies
 
 | Name | Version | License (SPDX) | Source |
-| --- | --- | --- | --- |
-| None | | | |
+| ---- | ------- | -------------- | ------ |
+| None |         |                |        |
 
 ## Third-party notices
 

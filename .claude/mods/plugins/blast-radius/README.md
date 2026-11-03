@@ -6,15 +6,15 @@ A Claude Code mod that holds a risky shell command and shows you what it would c
 
 When Claude calls Bash with one of the commands below, Blast Radius stops the call, works out what the command would touch, and opens a pane with two buttons: **Proceed** runs the command, **Cancel** refuses it. Claude sees the refusal and the reason.
 
-| Command | What the pane shows |
-|---|---|
-| `rm -r`, `rm -f`, `rm -rf` | The files it would delete, with the count and total size. Globs and `~` are expanded. |
-| `git reset --hard` | The files with uncommitted changes, from `git status --porcelain`, and `git diff --shortstat`. |
-| `git checkout -- .`, `git restore .` | The files with unstaged changes. |
-| `git clean` | The untracked paths it would remove, from `git clean -n` with the same flags. |
-| `git push --force` (also `-f`, `--force-with-lease`, `+ref`) | The commits on the remote branch that your HEAD doesn't have, which the push would drop. |
-| `manage.py migrate`, `db:migrate`, `alembic upgrade`, `prisma migrate` | The pending migrations, from the tool's own status command. |
-| any other `migrate` | A note that it can't list the pending migrations for that tool. |
+| Command                                                                | What the pane shows                                                                            |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `rm -r`, `rm -f`, `rm -rf`                                             | The files it would delete, with the count and total size. Globs and `~` are expanded.          |
+| `git reset --hard`                                                     | The files with uncommitted changes, from `git status --porcelain`, and `git diff --shortstat`. |
+| `git checkout -- .`, `git restore .`                                   | The files with unstaged changes.                                                               |
+| `git clean`                                                            | The untracked paths it would remove, from `git clean -n` with the same flags.                  |
+| `git push --force` (also `-f`, `--force-with-lease`, `+ref`)           | The commits on the remote branch that your HEAD doesn't have, which the push would drop.       |
+| `manage.py migrate`, `db:migrate`, `alembic upgrade`, `prisma migrate` | The pending migrations, from the tool's own status command.                                    |
+| any other `migrate`                                                    | A note that it can't list the pending migrations for that tool.                                |
 
 Every other command runs as normal. If the command line moves first, with `cd dir &&`, `pushd`/`popd` or `git -C dir`, Blast Radius measures in that folder. A `cd` inside `( ... )` only applies inside the parentheses, as in the shell.
 
@@ -128,8 +128,8 @@ No environment variables or configuration.
 ## Dependencies
 
 | Name | Version | License (SPDX) | Source |
-| --- | --- | --- | --- |
-| None | | | |
+| ---- | ------- | -------------- | ------ |
+| None |         |                |        |
 
 The mod has no packages to install. It calls tools that are already on the machine (listed under Requirements).
 

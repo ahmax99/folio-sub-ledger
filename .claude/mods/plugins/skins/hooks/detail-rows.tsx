@@ -27,10 +27,17 @@ export type Opened = {
 const SHELL_FOLD = { head: 8, tail: 4 }
 
 // Shell output shows whole when folding is off or the person opened it.
-const isWhole = (look: Look, opened: Opened): boolean => opened.isAll || !look.prefs.fold || look.folds?.open.has(OUTPUT_FOLD) === true
+const isWhole = (look: Look, opened: Opened): boolean =>
+  opened.isAll || !look.prefs.fold || look.folds?.open.has(OUTPUT_FOLD) === true
 
 // The row with its chevron at the right; `▸` closed, `▾` open.
-export function disclosedRow(look: Look, row: RenderElement, isOpen: boolean, toggle: () => void, opened?: RenderElement) {
+export function disclosedRow(
+  look: Look,
+  row: RenderElement,
+  isOpen: boolean,
+  toggle: () => void,
+  opened?: RenderElement
+) {
   const { Box, Button } = look.ui
   const ascii = look.prefs.icons === 'ascii'
   const chevron = isOpen ? (ascii ? 'v' : '▾') : ascii ? '>' : '▸'
@@ -42,7 +49,13 @@ export function disclosedRow(look: Look, row: RenderElement, isOpen: boolean, to
           {row}
         </Box>
         <Box flexShrink={0} paddingLeft={1}>
-          <Button key="disclose" label={chevron} plain dimColor onPress={toggle} />
+          <Button
+            key="disclose"
+            label={chevron}
+            plain
+            dimColor
+            onPress={toggle}
+          />
         </Box>
       </Box>
       {opened ?? ''}
@@ -54,10 +67,14 @@ function fieldRows(look: Look, fields: readonly Field[]) {
   const { Text } = look.ui
   const { palette } = look.skin
 
-  return fields.map(field => (
+  return fields.map((field) => (
     <Text>
       <Text color={palette.muted}>{`${field.label}  `}</Text>
-      <Text color={palette.fg}>{field.value.length > MAX_BLOCK ? `${field.value.slice(0, MAX_BLOCK)}…` : field.value}</Text>
+      <Text color={palette.fg}>
+        {field.value.length > MAX_BLOCK
+          ? `${field.value.slice(0, MAX_BLOCK)}…`
+          : field.value}
+      </Text>
     </Text>
   ))
 }
@@ -69,17 +86,28 @@ function moreButton(look: Look, total: number, opened: Opened) {
   return total <= DETAIL_LINES ? (
     ''
   ) : (
-    <Button key="show-all" label={opened.isAll ? 'show less' : `show all ${total} lines`} plain dimColor onPress={opened.toggleAll} />
+    <Button
+      key="show-all"
+      label={opened.isAll ? 'show less' : `show all ${total} lines`}
+      plain
+      dimColor
+      onPress={opened.toggleAll}
+    />
   )
 }
 
-function textLines(look: Look, lines: readonly string[], color: string, opened: Opened) {
+function textLines(
+  look: Look,
+  lines: readonly string[],
+  color: string,
+  opened: Opened
+) {
   const { Box, Text } = look.ui
   const shown = opened.isAll ? lines : lines.slice(0, DETAIL_LINES)
 
   return (
     <Box flexDirection="column">
-      {shown.map(line => (
+      {shown.map((line) => (
         <Text color={color} wrap="truncate-end">
           {line === '' ? ' ' : line}
         </Text>
@@ -89,7 +117,10 @@ function textLines(look: Look, lines: readonly string[], color: string, opened: 
   )
 }
 
-async function bodyRows(look: Look, opened: Opened): Promise<RenderElement | string> {
+async function bodyRows(
+  look: Look,
+  opened: Opened
+): Promise<RenderElement | string> {
   const { Box, Code, Text } = look.ui
   const { palette } = look.skin
   const { body } = opened
@@ -101,8 +132,13 @@ async function bodyRows(look: Look, opened: Opened): Promise<RenderElement | str
 
       return (
         <Box flexDirection="column">
-          {chunksOf(shown, body.startLine).map(chunk => (
-            <Code source={chunk.text} path={body.path} startLine={chunk.startLine} wrap="truncate-end" />
+          {chunksOf(shown, body.startLine).map((chunk) => (
+            <Code
+              source={chunk.text}
+              path={body.path}
+              startLine={chunk.startLine}
+              wrap="truncate-end"
+            />
           ))}
           {moreButton(look, lines.length, opened)}
         </Box>
@@ -111,16 +147,27 @@ async function bodyRows(look: Look, opened: Opened): Promise<RenderElement | str
     case 'matches':
       return (
         <Box flexDirection="column">
-          {body.note === '' ? '' : <Text color={palette.muted}>{body.note}</Text>}
+          {body.note === '' ? (
+            ''
+          ) : (
+            <Text color={palette.muted}>{body.note}</Text>
+          )}
           {textLines(look, body.lines, palette.fg, opened)}
         </Box>
       )
     case 'shell':
       return look.svg !== undefined
-        ? terminalCard(look, look.svg, body.result, opened.isErrored, opened.columns)
+        ? terminalCard(
+            look,
+            look.svg,
+            body.result,
+            opened.isErrored,
+            opened.columns
+          )
         : shellRows(look, opened.command, body.result, opened.isErrored, {
             stdout: isWhole(look, opened) ? null : SHELL_FOLD,
-            stderr: isWhole(look, opened) || opened.isErrored ? null : SHELL_FOLD,
+            stderr:
+              isWhole(look, opened) || opened.isErrored ? null : SHELL_FOLD
           })
     case 'diff': {
       const path = shortenPath(body.diff.path, opened.cwd)
@@ -132,10 +179,24 @@ async function bodyRows(look: Look, opened: Opened): Promise<RenderElement | str
       const source = unifiedDiff(body.diff)
 
       // A diff cut mid-hunk no longer parses: one too long for a block is Claude Code's.
-      return source.length > MAX_BLOCK ? opened.stock() : <Code source={source} format="diff" path={body.diff.path} wrap="truncate-end" />
+      return source.length > MAX_BLOCK ? (
+        opened.stock()
+      ) : (
+        <Code
+          source={source}
+          format="diff"
+          path={body.diff.path}
+          wrap="truncate-end"
+        />
+      )
     }
     case 'text':
-      return textLines(look, body.text.split('\n'), body.isError ? palette.err : palette.fg, opened)
+      return textLines(
+        look,
+        body.text.split('\n'),
+        body.isError ? palette.err : palette.fg,
+        opened
+      )
     case 'none':
       return ''
     case 'stock':
@@ -151,7 +212,16 @@ export async function openedRows(look: Look, opened: Opened) {
   return (
     <Box flexDirection="column" paddingLeft={2} marginBottom={1}>
       {fieldRows(look, opened.fields)}
-      {body === '' ? '' : <Box marginTop={opened.fields.length === 0 ? 0 : 1} flexDirection="column">{body}</Box>}
+      {body === '' ? (
+        ''
+      ) : (
+        <Box
+          marginTop={opened.fields.length === 0 ? 0 : 1}
+          flexDirection="column"
+        >
+          {body}
+        </Box>
+      )}
     </Box>
   )
 }

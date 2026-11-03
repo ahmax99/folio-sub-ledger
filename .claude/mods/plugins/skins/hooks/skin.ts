@@ -26,7 +26,17 @@ export type Skin = {
 export type IconSet = 'unicode' | 'ascii'
 
 export type Icons = Readonly<
-  Record<'running' | 'ok' | 'err' | 'interrupted' | 'done' | 'rail' | 'branch' | 'prompt', string>
+  Record<
+    | 'running'
+    | 'ok'
+    | 'err'
+    | 'interrupted'
+    | 'done'
+    | 'rail'
+    | 'branch'
+    | 'prompt',
+    string
+  >
 > & { readonly frames: readonly string[] }
 
 // Single-cell glyphs with no emoji presentation; each status has its own shape, not only a colour.
@@ -40,7 +50,7 @@ export const ICONS: Readonly<Record<IconSet, Icons>> = {
     rail: '┃',
     branch: '─',
     prompt: '▍',
-    frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
+    frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
   },
   ascii: {
     running: 'o',
@@ -51,6 +61,6 @@ export const ICONS: Readonly<Record<IconSet, Icons>> = {
     rail: '|',
     branch: '-',
     prompt: '>',
-    frames: ['|', '/', '-', '\\'],
-  },
+    frames: ['|', '/', '-', '\\']
+  }
 }

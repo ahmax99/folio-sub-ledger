@@ -1,14 +1,32 @@
-import { linesOf, NUMBER, numbersOf, statementsOf, unquote } from './mermaid-lex'
+import {
+  linesOf,
+  NUMBER,
+  numbersOf,
+  statementsOf,
+  unquote
+} from './mermaid-lex'
 
 // The kinds of Mermaid that draw a shape rather than a plan: mind maps, quadrant
 // charts, radar charts, sankey flows and git graphs. Each reads as null where the
 // source says something it cannot draw.
 
-export type MindShape = 'plain' | 'square' | 'round' | 'circle' | 'bang' | 'cloud' | 'hexagon'
+export type MindShape =
+  | 'plain'
+  | 'square'
+  | 'round'
+  | 'circle'
+  | 'bang'
+  | 'cloud'
+  | 'hexagon'
 
 export type MindNode = { label: string; shape: MindShape; children: MindNode[] }
 
-export type Mindmap = { kind: 'mindmap'; title: string; root: MindNode; count: number }
+export type Mindmap = {
+  kind: 'mindmap'
+  title: string
+  root: MindNode
+  count: number
+}
 
 export type QuadrantPoint = { label: string; x: number; y: number }
 
@@ -39,13 +57,31 @@ export type Radar = {
 
 export type SankeyLink = { from: string; to: string; value: number }
 
-export type Sankey = { kind: 'sankey'; title: string; nodes: string[]; links: SankeyLink[] }
+export type Sankey = {
+  kind: 'sankey'
+  title: string
+  nodes: string[]
+  links: SankeyLink[]
+}
 
 export type CommitType = 'normal' | 'reverse' | 'highlight' | 'merge' | 'cherry'
 
-export type Commit = { id: string; shown: string; branch: string; type: CommitType; tag: string; parents: string[]; from: string }
+export type Commit = {
+  id: string
+  shown: string
+  branch: string
+  type: CommitType
+  tag: string
+  parents: string[]
+  from: string
+}
 
-export type GitGraph = { kind: 'git'; title: string; branches: string[]; commits: Commit[] }
+export type GitGraph = {
+  kind: 'git'
+  title: string
+  branches: string[]
+  commits: Commit[]
+}
 
 const MAX_MIND = 60
 const MAX_POINTS = 40
@@ -64,7 +100,7 @@ const MIND_SHAPES: readonly (readonly [RegExp, MindShape])[] = [
   [/^\S*?\)(.*)\($/, 'cloud'],
   [/^\S*?\{\{(.*)\}\}$/, 'hexagon'],
   [/^\S*?\[(.*)\]$/, 'square'],
-  [/^\S*?\((.*)\)$/, 'round'],
+  [/^\S*?\((.*)\)$/, 'round']
 ]
 
 function mindNode(text: string): MindNode {
@@ -74,11 +110,19 @@ function mindNode(text: string): MindNode {
     const match = pattern.exec(bare)
 
     if (match !== null) {
-      return { label: unquote((match[1] ?? '').replace(/^"`?|`?"$/g, '')), shape, children: [] }
+      return {
+        label: unquote((match[1] ?? '').replace(/^"`?|`?"$/g, '')),
+        shape,
+        children: []
+      }
     }
   }
 
-  return { label: unquote(bare.replace(/^"`?|`?"$/g, '')), shape: 'plain', children: [] }
+  return {
+    label: unquote(bare.replace(/^"`?|`?"$/g, '')),
+    shape: 'plain',
+    children: []
+  }
 }
 
 export function parseMindmap(body: readonly string[]): Mindmap | null {
@@ -95,7 +139,10 @@ export function parseMindmap(body: readonly string[]): Mindmap | null {
     const indent = line.length - line.trimStart().length
     const node = mindNode(line.trim())
 
-    while (stack.length > 0 && (stack[stack.length - 1]?.indent ?? 0) >= indent) {
+    while (
+      stack.length > 0 &&
+      (stack[stack.length - 1]?.indent ?? 0) >= indent
+    ) {
       stack.pop()
     }
 
@@ -116,7 +163,9 @@ export function parseMindmap(body: readonly string[]): Mindmap | null {
     count++
   }
 
-  return root === null || count > MAX_MIND ? null : { kind: 'mindmap', title: '', root, count }
+  return root === null || count > MAX_MIND
+    ? null
+    : { kind: 'mindmap', title: '', root, count }
 }
 
 // --- Quadrant chart -----------------------------------------------------------------
@@ -135,9 +184,14 @@ export function parseQuadrant(body: readonly string[]): Quadrant | null {
   const points: QuadrantPoint[] = []
 
   for (const statement of statementsOf(body)) {
-    const setting = /^(title|x-axis|y-axis|quadrant-([1-4]))\s+(.*)$/.exec(statement)
+    const setting = /^(title|x-axis|y-axis|quadrant-([1-4]))\s+(.*)$/.exec(
+      statement
+    )
     // A point may trail a style (`radius: 10`) or a class (`:::hot`).
-    const point = /^(.+?)\s*(?::::\S+)?\s*:\s*\[\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\]/.exec(statement)
+    const point =
+      /^(.+?)\s*(?::::\S+)?\s*:\s*\[\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\]/.exec(
+        statement
+      )
 
     if (setting?.[1] === 'title') {
       title = unquote(setting[3] ?? '')
@@ -160,7 +214,8 @@ export function parseQuadrant(body: readonly string[]): Quadrant | null {
     }
   }
 
-  return points.length > MAX_POINTS || (points.length === 0 && quadrants.every(name => name === ''))
+  return points.length > MAX_POINTS ||
+    (points.length === 0 && quadrants.every((name) => name === ''))
     ? null
     : { kind: 'quadrant', title, x, y, quadrants, points }
 }
@@ -179,8 +234,10 @@ export function parseRadar(body: readonly string[]): Radar | null {
   const axes: RadarAxis[] = []
   const pending: { id: string; label: string; values: string }[] = []
 
-  for (const statement of linesOf(body).map(line => line.trim())) {
-    const setting = /^(title|max|min|graticule|ticks|showLegend)\s+(.*)$/.exec(statement)
+  for (const statement of linesOf(body).map((line) => line.trim())) {
+    const setting = /^(title|max|min|graticule|ticks|showLegend)\s+(.*)$/.exec(
+      statement
+    )
 
     if (setting !== null) {
       const value = (setting[2] ?? '').trim()
@@ -194,7 +251,11 @@ export function parseRadar(body: readonly string[]): Radar | null {
           return null
         }
 
-        setting[1] === 'max' ? (max = Number(value)) : setting[1] === 'min' ? (min = Number(value)) : (ticks = Math.max(1, Math.min(10, Math.round(Number(value)))))
+        setting[1] === 'max'
+          ? (max = Number(value))
+          : setting[1] === 'min'
+            ? (min = Number(value))
+            : (ticks = Math.max(1, Math.min(10, Math.round(Number(value)))))
       }
     } else if (/^axis\s/.test(statement)) {
       const read = namedList(statement.slice(4))
@@ -203,7 +264,12 @@ export function parseRadar(body: readonly string[]): Radar | null {
         return null
       }
 
-      axes.push(...read.map(({ id, label }) => ({ id, label: label === '' ? id : label })))
+      axes.push(
+        ...read.map(({ id, label }) => ({
+          id,
+          label: label === '' ? id : label
+        }))
+      )
     } else if (/^curve\s/.test(statement)) {
       const read = curveList(statement.slice(5))
 
@@ -217,7 +283,12 @@ export function parseRadar(body: readonly string[]): Radar | null {
     }
   }
 
-  if (axes.length < 3 || axes.length > MAX_AXES || pending.length === 0 || pending.length > MAX_CURVES) {
+  if (
+    axes.length < 3 ||
+    axes.length > MAX_AXES ||
+    pending.length === 0 ||
+    pending.length > MAX_CURVES
+  ) {
     return null
   }
 
@@ -230,12 +301,18 @@ export function parseRadar(body: readonly string[]): Radar | null {
       return null
     }
 
-    curves.push({ id: curve.id, label: curve.label === '' ? curve.id : curve.label, values })
+    curves.push({
+      id: curve.id,
+      label: curve.label === '' ? curve.id : curve.label,
+      values
+    })
   }
 
-  const top = max ?? Math.max(...curves.flatMap(curve => curve.values))
+  const top = max ?? Math.max(...curves.flatMap((curve) => curve.values))
 
-  return top > min ? { kind: 'radar', title, axes, curves, min, max: top, graticule, ticks } : null
+  return top > min
+    ? { kind: 'radar', title, axes, curves, min, max: top, graticule, ticks }
+    : null
 }
 
 function namedList(text: string): { id: string; label: string }[] | null {
@@ -256,9 +333,12 @@ function namedList(text: string): { id: string; label: string }[] | null {
 }
 
 // `a["A"]{1, 2, 3}, b{ x: 1, y: 2 }`: several curves to a line, each with its values.
-function curveList(text: string): { id: string; label: string; values: string }[] | null {
+function curveList(
+  text: string
+): { id: string; label: string; values: string }[] | null {
   const curves: { id: string; label: string; values: string }[] = []
-  const pattern = /\s*([A-Za-z_][\w-]*)\s*(?:\[\s*"([^"]*)"\s*\])?\s*\{([^}]*)\}\s*(,|$)/y
+  const pattern =
+    /\s*([A-Za-z_][\w-]*)\s*(?:\[\s*"([^"]*)"\s*\])?\s*\{([^}]*)\}\s*(,|$)/y
   let at = 0
 
   while (at < text.length) {
@@ -269,28 +349,36 @@ function curveList(text: string): { id: string; label: string; values: string }[
       return text.slice(at).trim() === '' ? curves : null
     }
 
-    curves.push({ id: match[1] ?? '', label: unquote(match[2] ?? ''), values: match[3] ?? '' })
+    curves.push({
+      id: match[1] ?? '',
+      label: unquote(match[2] ?? ''),
+      values: match[3] ?? ''
+    })
     at = pattern.lastIndex
   }
 
   return curves
 }
 
-function curveValues(text: string, axes: readonly RadarAxis[], min: number): number[] | null {
+function curveValues(
+  text: string,
+  axes: readonly RadarAxis[],
+  min: number
+): number[] | null {
   if (text.includes(':')) {
     const keyed = new Map<string, number>()
 
     for (const pair of text.split(',')) {
       const match = /^\s*([\w-]+)\s*:\s*(-?\d+(?:\.\d+)?)\s*$/.exec(pair)
 
-      if (match === null || !axes.some(axis => axis.id === match[1])) {
+      if (match === null || !axes.some((axis) => axis.id === match[1])) {
         return null
       }
 
       keyed.set(match[1] ?? '', Number(match[2]))
     }
 
-    return axes.map(axis => keyed.get(axis.id) ?? min)
+    return axes.map((axis) => keyed.get(axis.id) ?? min)
   }
 
   const values = numbersOf(text)
@@ -322,7 +410,7 @@ function csvOf(line: string): string[] {
     }
   }
 
-  return [...fields, field].map(item => item.trim())
+  return [...fields, field].map((item) => item.trim())
 }
 
 export function parseSankey(body: readonly string[]): Sankey | null {
@@ -332,7 +420,13 @@ export function parseSankey(body: readonly string[]): Sankey | null {
   for (const line of linesOf(body)) {
     const [from = '', to = '', value = '', ...rest] = csvOf(line.trim())
 
-    if (rest.length > 0 || from === '' || to === '' || !NUMBER.test(value) || Number(value) <= 0) {
+    if (
+      rest.length > 0 ||
+      from === '' ||
+      to === '' ||
+      !NUMBER.test(value) ||
+      Number(value) <= 0
+    ) {
       return null
     }
 
@@ -345,21 +439,33 @@ export function parseSankey(body: readonly string[]): Sankey | null {
     }
   }
 
-  return links.length === 0 || links.length > MAX_LINKS || order(nodes, links) === null ? null : { kind: 'sankey', title: '', nodes: order(nodes, links) ?? nodes, links }
+  return links.length === 0 ||
+    links.length > MAX_LINKS ||
+    order(nodes, links) === null
+    ? null
+    : { kind: 'sankey', title: '', nodes: order(nodes, links) ?? nodes, links }
 }
 
 // The nodes upstream first, each ahead of every node it feeds; null for a cycle, which
 // a sankey cannot draw.
-function order(nodes: readonly string[], links: readonly SankeyLink[]): string[] | null {
-  const into = new Map(nodes.map(node => [node, links.filter(link => link.to === node && link.from !== node).length]))
-  const ready = nodes.filter(node => into.get(node) === 0)
+function order(
+  nodes: readonly string[],
+  links: readonly SankeyLink[]
+): string[] | null {
+  const into = new Map(
+    nodes.map((node) => [
+      node,
+      links.filter((link) => link.to === node && link.from !== node).length
+    ])
+  )
+  const ready = nodes.filter((node) => into.get(node) === 0)
   const sorted: string[] = []
 
   while (ready.length > 0) {
     const node = ready.shift() ?? ''
     sorted.push(node)
 
-    for (const link of links.filter(link => link.from === node)) {
+    for (const link of links.filter((link) => link.from === node)) {
       const left = (into.get(link.to) ?? 0) - 1
       into.set(link.to, left)
 
@@ -369,7 +475,10 @@ function order(nodes: readonly string[], links: readonly SankeyLink[]): string[]
     }
   }
 
-  return sorted.length === nodes.length && links.every(link => link.from !== link.to) ? sorted : null
+  return sorted.length === nodes.length &&
+    links.every((link) => link.from !== link.to)
+    ? sorted
+    : null
 }
 
 // --- Git graph ----------------------------------------------------------------------
@@ -395,7 +504,11 @@ function optionsOf(text: string): Map<string, string> | null {
   return options
 }
 
-const TYPES: Readonly<Record<string, CommitType>> = { NORMAL: 'normal', REVERSE: 'reverse', HIGHLIGHT: 'highlight' }
+const TYPES: Readonly<Record<string, CommitType>> = {
+  NORMAL: 'normal',
+  REVERSE: 'reverse',
+  HIGHLIGHT: 'highlight'
+}
 
 export function parseGitGraph(body: readonly string[]): GitGraph | null {
   const heads = new Map<string, string | null>([['main', null]])
@@ -403,10 +516,18 @@ export function parseGitGraph(body: readonly string[]): GitGraph | null {
   const commits: Commit[] = []
   let current = 'main'
 
-  const add = (options: Map<string, string>, type: CommitType, parents: string[], from = ''): boolean => {
+  const add = (
+    options: Map<string, string>,
+    type: CommitType,
+    parents: string[],
+    from = ''
+  ): boolean => {
     const id = options.get('id') ?? `#${commits.length}`
 
-    if (commits.some(commit => commit.id === id) || (options.has('type') && TYPES[options.get('type') ?? ''] === undefined)) {
+    if (
+      commits.some((commit) => commit.id === id) ||
+      (options.has('type') && TYPES[options.get('type') ?? ''] === undefined)
+    ) {
       return false
     }
 
@@ -417,7 +538,7 @@ export function parseGitGraph(body: readonly string[]): GitGraph | null {
       type: TYPES[options.get('type') ?? ''] ?? type,
       tag: options.get('tag') ?? '',
       parents,
-      from,
+      from
     })
     heads.set(current, id)
 
@@ -425,7 +546,10 @@ export function parseGitGraph(body: readonly string[]): GitGraph | null {
   }
 
   for (const statement of statementsOf(body)) {
-    const verb = /^(commit|branch|checkout|switch|merge|cherry-pick)\b\s*(\S*)\s*(.*)$/.exec(statement)
+    const verb =
+      /^(commit|branch|checkout|switch|merge|cherry-pick)\b\s*(\S*)\s*(.*)$/.exec(
+        statement
+      )
     const head = heads.get(current) ?? null
 
     if (verb === null) {
@@ -433,7 +557,11 @@ export function parseGitGraph(body: readonly string[]): GitGraph | null {
     }
 
     const [, action = '', first = '', rest = ''] = verb
-    const options = optionsOf(action === 'commit' || action === 'cherry-pick' ? `${first} ${rest}` : rest)
+    const options = optionsOf(
+      action === 'commit' || action === 'cherry-pick'
+        ? `${first} ${rest}`
+        : rest
+    )
     const name = unquote(first)
 
     if (options === null) {
@@ -461,11 +589,17 @@ export function parseGitGraph(body: readonly string[]): GitGraph | null {
     } else if (action === 'merge') {
       const other = heads.get(name)
 
-      if (name === current || other === undefined || other === null || head === null || !add(options, 'merge', [head, other], name)) {
+      if (
+        name === current ||
+        other === undefined ||
+        other === null ||
+        head === null ||
+        !add(options, 'merge', [head, other], name)
+      ) {
         return null
       }
     } else {
-      const picked = commits.find(commit => commit.id === options.get('id'))
+      const picked = commits.find((commit) => commit.id === options.get('id'))
 
       if (picked === undefined || picked.branch === current) {
         return null
@@ -473,15 +607,24 @@ export function parseGitGraph(body: readonly string[]): GitGraph | null {
 
       options.delete('id')
 
-      if (!add(options, 'cherry', head === null ? [] : [head], picked.shown || picked.id)) {
+      if (
+        !add(
+          options,
+          'cherry',
+          head === null ? [] : [head],
+          picked.shown || picked.id
+        )
+      ) {
         return null
       }
     }
   }
 
   const branches = [...heads.keys()]
-    .filter(branch => commits.some(commit => commit.branch === branch))
+    .filter((branch) => commits.some((commit) => commit.branch === branch))
     .sort((a, b) => (orders.get(a) ?? 0) - (orders.get(b) ?? 0))
 
-  return commits.length === 0 || commits.length > MAX_COMMITS ? null : { kind: 'git', title: '', branches, commits }
+  return commits.length === 0 || commits.length > MAX_COMMITS
+    ? null
+    : { kind: 'git', title: '', branches, commits }
 }

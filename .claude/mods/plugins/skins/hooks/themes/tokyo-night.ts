@@ -18,7 +18,7 @@ const skin: Skin = {
     zebra: '#1d2030',
     ok: '#9ece6a',
     err: '#f7768e',
-    warn: '#e0af68',
+    warn: '#e0af68'
   },
   light: {
     read: '#007197',
@@ -35,10 +35,17 @@ const skin: Skin = {
     zebra: '#dfe2eb',
     ok: '#587539',
     err: '#f52a65',
-    warn: '#8c6c3e',
+    warn: '#8c6c3e'
   },
-  spinner: ['Neon-ing', 'Drizzling', 'Glowing', 'Wiring', 'Night-driving', 'Rain-checking'],
-  done: ['Lit up', 'Wired', 'Shipped', 'Landed'],
+  spinner: [
+    'Neon-ing',
+    'Drizzling',
+    'Glowing',
+    'Wiring',
+    'Night-driving',
+    'Rain-checking'
+  ],
+  done: ['Lit up', 'Wired', 'Shipped', 'Landed']
 }
 
 export default skin

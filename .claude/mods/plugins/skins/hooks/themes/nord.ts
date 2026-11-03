@@ -18,10 +18,10 @@ const skin: Skin = {
     zebra: '#353b49',
     ok: '#a3be8c',
     err: '#bf616a',
-    warn: '#ebcb8b',
+    warn: '#ebcb8b'
   },
   spinner: ['Drifting', 'Frosting', 'Chilling', 'Thawing', 'Skiing', 'Gliding'],
-  done: ['Frozen', 'Thawed', 'Charted', 'Crossed'],
+  done: ['Frozen', 'Thawed', 'Charted', 'Crossed']
 }
 
 export default skin

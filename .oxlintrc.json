@@ -11,6 +11,7 @@
     "**/routeTree.gen.ts",
     "**/generated/**",
     "**/graphify-out/**",
+    ".claude/mods/**",
     "**/*.d.ts"
   ]
 }

@@ -211,7 +211,7 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 > lets it do its job:
 >
 > - **`TF_PLAN_ROLE_ARN`** (repo-level, read-only `gha-plan`) — PR `terraform
-plan`. `ReadOnlyAccess` plus a scoped `secretsmanager:GetSecretValue` on the
+>   plan`. `ReadOnlyAccess` plus a scoped `secretsmanager:GetSecretValue` on the
 >   dev project secrets (plan must read them to refresh the secret-version
 >   resources — `ReadOnlyAccess` alone omits that action). No write/apply, so a
 >   tampered PR can't mutate state or resources; plans run `-lock=false` since
@@ -324,11 +324,11 @@ bootstrap mode only applies + publishes Lambda versions.
 > **New prod accounts start with a Lambda concurrency quota of 10.** Prod's
 > `env_config` (`infra/locals.tf`) reserves concurrency
 > (`reserved_concurrent_executions = 10`, `provisioned_concurrent_executions =
-2`), but AWS caps brand-new accounts at a total **Concurrent executions**
+> 2`), but AWS caps brand-new accounts at a total **Concurrent executions**
 > quota of 10 and always keeps a floor of 10 unreserved — so the apply fails
 > with `InvalidParameterValueException: Specified ReservedConcurrentExecutions
-for function decreases account's UnreservedConcurrentExecution below its
-minimum value of [10]`. Request an increase in the **prod account**, region
+> for function decreases account's UnreservedConcurrentExecution below its
+> minimum value of [10]`. Request an increase in the **prod account**, region
 > `ap-northeast-1`:
 >
 > ```bash
@@ -341,11 +341,11 @@ minimum value of [10]`. Request an increase in the **prod account**, region
 > `CASE_OPENED` if AWS routes it to a support review (common for freshly-created
 > accounts; can take hours to a couple of business days). Track it with
 > `aws service-quotas list-requested-service-quota-change-history-by-quota
---service-code lambda --quota-code L-B99A9384 --region ap-northeast-1`, and
+> --service-code lambda --quota-code L-B99A9384 --region ap-northeast-1`, and
 > confirm `aws lambda get-account-settings --region ap-northeast-1` reports
 > `AccountLimit.ConcurrentExecutions = 1000` before re-running the apply. To
 > unblock without waiting, temporarily set prod's `reserved_concurrent_executions
-= -1` and `provisioned_concurrent_executions = 0` in `locals.tf` (matches dev;
+> = -1` and `provisioned_concurrent_executions = 0` in `locals.tf` (matches dev;
 > revert once the quota lands).
 
 **P4 — Capture Terraform outputs** into the `prod` environment:
