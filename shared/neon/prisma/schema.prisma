@@ -7,15 +7,35 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id         String    @id @default(uuid())
-  cognitoSub String    @unique @map("cognito_sub")
-  email      String  
-  name       String
-  imagePath  String?
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+enum Role {
+  OWNER
+  ANALYST
+  REVIEWER
+}
 
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  users     User[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("organizations")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  orgId        String       @map("org_id")
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  role         Role
+  cognitoSub   String       @unique @map("cognito_sub")
+  email        String
+  name         String
+  imagePath    String?
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  @@unique([orgId, id])
   @@index([cognitoSub])
   @@index([email])
   @@map("users")
