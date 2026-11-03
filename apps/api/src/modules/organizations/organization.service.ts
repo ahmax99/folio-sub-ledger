@@ -5,7 +5,7 @@ import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from '@/config/logger.js'
 import { AppError } from '@/error/lib/AppError.js'
 import { captureError } from '@/error/utils/captureError.js'
-import { catchAsyncError, mapToAppError } from '@/error/utils/catchError.js'
+import { catchAsyncError } from '@/error/utils/catchError.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
 
 type Identity = Pick<AuthUser, 'cognitoSub' | 'email' | 'name'>
@@ -20,6 +20,11 @@ const findOrganization = (cognitoSub: Identity['cognitoSub']) =>
 const isUniqueViolation = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError &&
   error.code === 'P2002'
+
+const redact = (error: unknown) =>
+  new Error(
+    `Firm setup failed (${error instanceof Prisma.PrismaClientKnownRequestError ? error.code : 'unknown'})`
+  )
 
 const recoverFromRace = (cognitoSub: Identity['cognitoSub']) =>
   findOrganization(cognitoSub).andThen((organization) =>
@@ -58,7 +63,9 @@ const createFirm = (
     .orElse((error) =>
       isUniqueViolation(error)
         ? recoverFromRace(cognitoSub)
-        : errAsync(mapToAppError(error)).orTee(captureError)
+        : errAsync(new AppError('INTERNAL_ERROR', 'Firm setup failed')).orTee(
+            () => captureError(redact(error))
+          )
     )
 
 export const OrganizationService = {

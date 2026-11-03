@@ -1,8 +1,10 @@
 import { AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider'
 import type { UpdateUserBody, User, UserIdParams } from '@shared/config'
 import { prisma } from '@shared/neon'
+import { errAsync, okAsync } from 'neverthrow'
 
 import { env } from '@/config/env.js'
+import { AppError } from '@/error/lib/AppError.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
 import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
@@ -19,6 +21,18 @@ const findUser = (
     can: (user) =>
       ability.can(action, subject('User', user)) || ability.can('manage', 'all')
   })
+
+const ensureSoleMember = (orgId: string) =>
+  catchAsyncError(prisma.user.count({ where: { orgId } })).andThen((count) =>
+    count > 1
+      ? errAsync(
+          new AppError(
+            'BAD_REQUEST',
+            'Remove the other members before deleting the firm Owner'
+          )
+        )
+      : okAsync(count)
+  )
 
 export const UserService = {
   getAll: (ability: AppAbility) =>
@@ -52,6 +66,9 @@ export const UserService = {
 
   delete: (id: UserIdParams['id'], ability: AppAbility) =>
     findUser(id, ability, 'delete')
+      .andThrough((user) =>
+        user.role === 'OWNER' ? ensureSoleMember(user.orgId) : okAsync(user)
+      )
       .andThrough((user) =>
         catchAsyncError(
           user.role === 'OWNER'

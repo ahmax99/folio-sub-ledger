@@ -122,6 +122,33 @@ describe('user controller', () => {
     expect(await prisma.organization.count()).toBe(0)
   })
 
+  it('DELETE /users/:id by an Owner is refused while other members remain', async () => {
+    const org = await seedOwner()
+    const owner = await prisma.user.findFirstOrThrow({
+      where: { orgId: org.id }
+    })
+    await prisma.user.create({
+      data: {
+        cognitoSub: 'colleague-sub',
+        email: 'colleague@example.com',
+        name: 'Colleague',
+        role: 'ANALYST',
+        orgId: org.id
+      }
+    })
+
+    const res = await userController.handle(
+      new Request(`http://localhost/users/${owner.id}`, {
+        method: 'DELETE',
+        headers: { ...authHeaders, authorization: 'Bearer member-token' }
+      })
+    )
+
+    expect(res.status).toBe(400)
+    expect(await prisma.user.count()).toBe(2)
+    expect(await prisma.organization.count()).toBe(1)
+  })
+
   it('GET /users/me without a token returns 401 and creates nothing', async () => {
     const res = await userController.handle(
       new Request('http://localhost/users/me')

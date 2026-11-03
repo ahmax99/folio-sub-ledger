@@ -1,3 +1,4 @@
+-- Requires an empty users table: org_id and role are NOT NULL with no backfill.
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('OWNER', 'ANALYST', 'REVIEWER');
 

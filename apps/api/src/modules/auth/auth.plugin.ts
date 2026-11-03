@@ -40,7 +40,8 @@ export const authPlugin = new Elysia({ name: 'auth' })
           user: {
             cognitoSub: payload.sub,
             email: payload.email,
-            name: (payload.name as string | undefined) ?? payload.email,
+            name:
+              typeof payload.name === 'string' ? payload.name : payload.email,
             role: payload['cognito:groups'],
             payload
           } as AuthUser
