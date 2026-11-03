@@ -24,18 +24,6 @@ export const UserService = {
         ability.can('manage', 'all')
     }),
 
-  ensureSoleMember: (orgId: string) =>
-    catchAsyncError(prisma.user.count({ where: { orgId } })).andThen((count) =>
-      count > 1
-        ? errAsync(
-            new AppError(
-              'BAD_REQUEST',
-              'Remove the other members before deleting the firm Owner'
-            )
-          )
-        : okAsync(count)
-    ),
-
   getAll: (ability: AppAbility) =>
     authorizeResource(ability, {
       forbidden: 'Only admins can list users',
@@ -69,7 +57,18 @@ export const UserService = {
     UserService.findUser(id, ability, 'delete')
       .andThrough((user) =>
         user.role === 'OWNER'
-          ? UserService.ensureSoleMember(user.orgId)
+          ? catchAsyncError(
+              prisma.user.count({ where: { orgId: user.orgId } })
+            ).andThen((count) =>
+              count > 1
+                ? errAsync(
+                    new AppError(
+                      'BAD_REQUEST',
+                      'Remove the other members before deleting the firm Owner'
+                    )
+                  )
+                : okAsync(count)
+            )
           : okAsync(user)
       )
       .andThrough((user) =>
