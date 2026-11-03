@@ -11,6 +11,22 @@ Development happens on weekends, when there is free time. The roadmap and every 
 - **Sprint `Dates` are a loose window.** The sprint-plan format needs them, so set the end date 6 weeks after the start. A skipped weekend should never force a sprint review. If the window passes with stories still open, they carry over; that is expected, not a failure.
 - **Run `/run-sprint` by hand** at the start of a weekend session, not on a daily `/loop`.
 - **Weekend estimates below are rough** and only for ordering. They are not commitments.
+- **Design is part of the story, not extra work.** A UI story's Figma screens (`/spec` runs the `product-designer` agent in Design mode) and its `/design-review` after `/implement` count inside that story's place in the 2-to-3-story budget.
+
+## Design track
+
+Design runs alongside the build, not as a separate phase. R0 sets up the foundations once; after that, each roadmap item with screens carries a **Design** line: its screens are designed in Figma before `/implement` and checked with `/design-review` after.
+
+## R0 · Design foundations
+
+- Status: now (runs alongside R1; it needs no code)
+- Outcome: Folio has its own product context, design tokens, Figma library and personas, so every later screen is designed from the same base.
+- Depends on: none
+- Rough size: 1 to 2 weekends
+- Scope:
+  - Replace the boilerplate `apps/web/PRODUCT.md` and `DESIGN.md` with Folio's (re-run `/impeccable init`): accounting-firm users, a dense review surface for operators and a calm reporting surface for clients
+  - Figma file with Foundations and Components pages that mirror `DESIGN.md` tokens and the atomic component layers (`product-designer` agent)
+  - Personas for Owner (Priya), Analyst (Sam) and Reviewer (Dana) and their main journeys in `docs/research/` (`ux-researcher` agent)
 
 ## R1 · Foundation: tests, CI checks and tenancy
 
@@ -24,6 +40,7 @@ Development happens on weekends, when there is free time. The roadmap and every 
   - Organization, Membership and Owner/Analyst/Reviewer roles; signup creates user, firm and Owner membership in one transaction (story 1.1)
   - `orgId` on every domain table, CASL built from org and role, two-firm test expecting 404 (story 1.3)
   - Postgres row-level security proven by a raw cross-tenant query test (story 1.3); prototype on Neon first
+  - Design: signup, firm creation, member invites and role management screens
 
 ## R2 · Data in
 
@@ -37,6 +54,7 @@ Development happens on weekends, when there is free time. The roadmap and every 
   - Exchange CSV import first, then Ethereum ingestion
   - Coverage panel and untracked-counterparty warning (story 2.4)
   - Provisional transactions and reorg handling (story 3.4)
+  - Design: portfolio list, source connection and import flow with progress, coverage panel
 
 ## R3 · Deterministic classification
 
@@ -69,6 +87,7 @@ Development happens on weekends, when there is free time. The roadmap and every 
   - Review queue and two-pane review UI with precedent search (story 5.1), built on TanStack Query, Table + Virtual, Hotkeys for the review shortcuts and Pacer for debounced search
   - Rule learning from corrections (story 5.2)
   - Reviewer assignments (story 5.3)
+  - Design: review queue, two-pane proposal view with evidence and precedents, keyboard-shortcut map, Reviewer's assigned queue; a usability walkthrough with the Analyst and Reviewer personas (`ux-researcher`)
 
 ## R6 · Cost basis, reconciliation and exports
 
@@ -80,6 +99,7 @@ Development happens on weekends, when there is free time. The roadmap and every 
   - Append-only lots and disposals; FIFO engine with `missing_basis` flagging (stories 6.1, 6.2)
   - Reconciliation of computed vs on-chain balances (story 7.1)
   - Register and realised-gains exports (story 8.2); grids on TanStack Table + Virtual
+  - Design: lots and gains views, reconciliation gap view, export screens and the client-facing report layout
 
 ## R7 · Hardening for first clients
 
