@@ -16,9 +16,9 @@ fi
 aws cloudfront wait distribution-deployed --id "$DISTRIBUTION_ID"
 
 if [ "$ENABLED" = "true" ]; then
-  paths=("/" "/some/deep/link" "/api/v1/posts")
+  paths=("/" "/some/deep/link" "/api/v1/openapi/json")
 else
-  paths=("/" "/api/v1/posts")
+  paths=("/" "/api/v1/openapi/json")
 fi
 
 for path in "${paths[@]}"; do
