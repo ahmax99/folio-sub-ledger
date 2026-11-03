@@ -37,7 +37,7 @@ Design runs alongside the build, not as a separate phase. R0 sets up the foundat
 - Scope:
   - Vitest with a test database, and a CI workflow that runs type-check, lint, format and tests on every PR (enabler for the proofs below)
   - Remove the Post/Comment/image boilerplate and reset the `init` migration
-  - Organization, Membership and Owner/Analyst/Reviewer roles; signup creates user, firm and Owner membership in one transaction (story 1.1)
+  - Organization, and Owner/Analyst/Reviewer roles as `orgId` and `role` on User; signup creates the user, firm and Owner in one transaction (story 1.1)
   - `orgId` on every domain table, CASL built from org and role, two-firm test expecting 404 (story 1.3)
   - Postgres row-level security proven by a raw cross-tenant query test (story 1.3); prototype on Neon first
   - Design: signup, firm creation, member invites and role management screens
