@@ -46,7 +46,7 @@ TanStack Start (file-based TanStack Router, SSR via Nitro). The app is a **BFF**
 - `_authorized.tsx` + `_authorized/` — pages requiring a session. Its `beforeLoad` calls `fetchRequiredUser` and redirects to `/auth/login` when signed out; children read `user` from route context.
 - `_main.tsx` + `_main/` — public pages with the header; `beforeLoad` resolves an optional `user`. `auth/` — the login/callback pages.
 - `api/` — server routes (`server.handlers`). These are thin: they call a feature's `server/api` function and `Response.json` the result, wrapped in `withRequestLogging`.
-- Data for pages comes from route `loader`s calling server functions; `head()` sets per-page meta via `generatePageMetadata`, `pendingComponent` is the loading skeleton.
+- Data for pages comes from route `loader`s that prime TanStack Query (`context.queryClient.ensureQueryData(<feature>QueryOptions())`, whose `queryFn` calls a server function); the component reads it with `useSuspenseQuery` on the same options. `router.tsx` creates one `QueryClient` per request and wires SSR dehydration with `setupRouterSsrQueryIntegration`; `head()` sets per-page meta via `generatePageMetadata`, `pendingComponent` is the loading skeleton.
 - `src/start.ts` registers global request middleware (Sentry, the edge route guard); `src/server.ts` / `src/client.tsx` are the entries; `src/router.tsx` builds the router.
 
 **Feature modules** under `src/features/<name>/` are split by execution context:
@@ -55,7 +55,10 @@ TanStack Start (file-based TanStack Router, SSR via Nitro). The app is a **BFF**
 - `server/functions.ts` — `createServerFn` wrappers that loaders and client hooks call; the handler body (and its server-only imports) is stripped from the client bundle.
 - Server-only modules start with `import '@tanstack/react-start/server-only'`, so importing one from client code fails the build.
 - `client/` — interactive components, hooks, and client-side API callers. `components/` — presentational components rendered from loader data (isomorphic: no hooks, no server-only imports).
+- `lib/queries.ts` — the feature's query-key factory and `queryOptions`, shared by loaders and components. Mutations are `useMutation` hooks in `client/hooks/`; failures are reported once by the `MutationCache` in `src/lib/queryClient.ts`, so hooks don't handle errors themselves.
 - `schemas/` — Zod; `lib/`, `utils/`, `constants/`, `providers/`.
+
+**Forms** use TanStack Form through `useAppForm` (`src/lib/form.ts`, built with `createFormHook`): fields render as `<form.AppField name>{(field) => <field.Input label />}</form.AppField>` and the layout as `form.FormCard` / `form.Form` + `form.SubmitButton` (organisms `FormField.tsx` / `FormCard.tsx`). Pass the Zod schema as `validators: { onChange: schema }`; errors show once a field is touched. `onSubmit` awaits a mutation's `mutateAsync`.
 
 **Component system** (`src/components/`): Atomic-design layers for cross-feature shared UI:
 
@@ -98,7 +101,7 @@ Authorization mirrors the backend with CASL (`@casl/react`, `src/lib/casl.ts`, `
 
 UI is shadcn/ui + Tailwind CSS 4. Import alias is `@/*` → `src/*`.
 
-**TanStack libraries (adopted, being phased in).** New code uses the TanStack library for each job instead of a hand-rolled or third-party equivalent: Query for client-side server state (loaders still fetch first-paint data), Table + Virtual for data grids, Form for forms (new forms use it; existing `react-hook-form` forms migrate when touched), Hotkeys for keyboard shortcuts, Pacer for debounce/throttle, Devtools in dev only. Not adopted: TanStack AI (the AI pipeline is Mastra, below), DB, Store. Install only versions older than `bunfig.toml`'s `minimumReleaseAge`, pinned exactly.
+**TanStack libraries (adopted, being phased in).** New code uses the TanStack library for each job instead of a hand-rolled or third-party equivalent: Query for server state (loaders prime it for first paint), Table + Virtual for data grids, Form for forms, Hotkeys for keyboard shortcuts, Pacer for debounce/throttle, Devtools in dev only. Not adopted: TanStack AI (the AI pipeline is Mastra, below), DB, Store. Install only versions older than `bunfig.toml`'s `minimumReleaseAge`, pinned exactly. `ky` stays as the HTTP transport under Query: Query caches, it doesn't fetch, and the server client's hook order (ID token before SigV4) lives in ky hooks.
 
 ## AI pipeline (planned)
 

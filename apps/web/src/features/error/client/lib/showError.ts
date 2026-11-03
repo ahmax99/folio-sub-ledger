@@ -1,5 +1,3 @@
-'use client'
-
 import { ERROR_DEFINITIONS, type ErrorCode } from '@shared/config'
 import { toast } from 'sonner'
 
@@ -15,12 +13,9 @@ const ERROR_DISPLAY: Record<ErrorCode, 'toast' | 'screen'> = {
   INTERNAL_ERROR: 'screen'
 }
 
-export const useErrorHandler = () => (error: AppError | string) => {
-  const { setError } = useErrorStore.getState()
-  if (typeof error === 'string') return toast.error(error)
-
+export const showError = (error: AppError) => {
   if (ERROR_DISPLAY[error.code] === 'toast')
     return toast.error(error.message ?? ERROR_DEFINITIONS[error.code].message)
 
-  setError(error)
+  useErrorStore.getState().setError(error)
 }

@@ -2,43 +2,19 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Skeleton } from '@/components/atoms'
 import { PageTemplate } from '@/components/layout'
-import {
-  AccountForm,
-  type FieldConfig
-} from '@/features/account/client/components/AccountForm'
+import { AccountForm } from '@/features/account/client/components/AccountForm'
 import { PROTECTED_ROUTES } from '@/features/auth/lib/routes'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 
 const EditAccountPage = () => {
   const { user } = Route.useRouteContext()
 
-  const updateProfileConfig = {
-    title: 'Update Profile',
-    description: 'Update your profile information',
-    submitLabel: 'Update Profile',
-    defaultValues: {
-      name: user.name,
-      image: user.imagePath
-    },
-    fields: [
-      {
-        name: 'name' as FieldConfig['name'],
-        label: 'Name',
-        description: 'Enter your name'
-      },
-      {
-        name: 'image' as FieldConfig['name'],
-        label: 'Profile Picture',
-        description: 'Upload your profile picture'
-      }
-    ]
-  }
   return (
     <PageTemplate
       back={{ to: PROTECTED_ROUTES.ACCOUNT, label: 'Back to Account' }}
     >
       <div className="flex w-full flex-col items-center justify-center">
-        <AccountForm config={updateProfileConfig} />
+        <AccountForm user={user} />
       </div>
     </PageTemplate>
   )

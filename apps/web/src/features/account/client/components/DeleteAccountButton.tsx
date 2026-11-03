@@ -1,19 +1,20 @@
 'use client'
 
-import { AuthActionButton } from '@/features/auth/client/components/AuthActionButton'
+import { ActionButton } from '@/components/organisms'
 
-import { useAccountActions } from '../hooks/useAccountActions'
+import { useDeleteAccount } from '../hooks/useAccountMutations'
 
 export const DeleteAccountButton = () => {
-  const { handleDeleteAccount } = useAccountActions()
+  const deleteAccount = useDeleteAccount()
 
   return (
-    <AuthActionButton
-      action={() => handleDeleteAccount()}
+    <ActionButton
+      action={() => deleteAccount.mutate()}
+      isPending={deleteAccount.isPending}
       requireAreYouSure
       variant="destructive"
     >
       Delete Account Permanently
-    </AuthActionButton>
+    </ActionButton>
   )
 }

@@ -1,10 +1,7 @@
 'use client'
 
-import { useTransition } from 'react'
-
 import type { Button as ButtonPrimitive } from '@base-ui/react/button'
 import type { VariantProps } from 'class-variance-authority'
-import { toast } from 'sonner'
 
 import { Button } from '../atoms/Button'
 import type { buttonVariants } from '../atoms/Button.variants'
@@ -25,14 +22,17 @@ interface ActionButtonProps
   extends
     Omit<ButtonPrimitive.Props, 'children'>,
     VariantProps<typeof buttonVariants> {
-  action: () => Promise<{ error: boolean; message?: string }>
+  // Fire-and-forget (e.g. a mutation's `mutate`); the caller owns errors.
+  action: () => void
+  isPending?: boolean
   requireAreYouSure?: boolean
   areYouSureDescription?: React.ReactNode
   children?: React.ReactNode
 }
 
-function ActionButton({
+export const ActionButton = ({
   action,
+  isPending = false,
   requireAreYouSure = false,
   areYouSureDescription = 'This action cannot be undone.',
   variant,
@@ -41,15 +41,7 @@ function ActionButton({
   onClick,
   children,
   ...props
-}: Readonly<ActionButtonProps>) {
-  const [isLoading, startTransition] = useTransition()
-
-  const performAction = () =>
-    startTransition(async () => {
-      const data = await action()
-      if (data.error) toast.error(data.message ?? 'Error')
-    })
-
+}: Readonly<ActionButtonProps>) => {
   if (requireAreYouSure)
     return (
       <AlertDialog>
@@ -73,9 +65,9 @@ function ActionButton({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={isLoading} onClick={performAction}>
-              <LoadingSwap isLoading={isLoading}>Yes</LoadingSwap>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isPending} onClick={action}>
+              <LoadingSwap isLoading={isPending}>Yes</LoadingSwap>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -84,9 +76,9 @@ function ActionButton({
 
   return (
     <Button
-      disabled={disabled ?? isLoading}
+      disabled={disabled ?? isPending}
       onClick={(e) => {
-        performAction()
+        action()
         onClick?.(e)
       }}
       size={size}
@@ -95,12 +87,10 @@ function ActionButton({
     >
       <LoadingSwap
         className="inline-flex items-center gap-2"
-        isLoading={isLoading}
+        isLoading={isPending}
       >
         {children}
       </LoadingSwap>
     </Button>
   )
 }
-
-export { ActionButton }

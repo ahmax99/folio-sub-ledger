@@ -11,10 +11,7 @@ import {
 } from '@/components/molecules'
 import { fetchProfileImage } from '@/features/account/client/api'
 
-import {
-  CommentForm,
-  type CommentFormConfig
-} from '../client/components/CommentForm'
+import { CommentForm } from '../client/components/CommentForm'
 import { DeleteCommentButton } from '../client/components/DeleteCommentButton'
 
 interface CommentSectionProps {
@@ -23,18 +20,6 @@ interface CommentSectionProps {
 }
 
 export const CommentSection = ({ postId, comments }: CommentSectionProps) => {
-  const commentFormConfig: CommentFormConfig = {
-    fields: [
-      {
-        name: 'content',
-        label: 'Comment',
-        description: 'Share your thoughts'
-      }
-    ],
-    submitLabel: 'Post Comment',
-    defaultValues: { content: '', postId }
-  }
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-2 border-b">
@@ -45,7 +30,7 @@ export const CommentSection = ({ postId, comments }: CommentSectionProps) => {
       </CardHeader>
 
       <CardContent className="space-y-8">
-        <CommentForm config={commentFormConfig} />
+        <CommentForm postId={postId} />
 
         {comments.length > 0 && <Separator />}
 
@@ -76,7 +61,7 @@ export const CommentSection = ({ postId, comments }: CommentSectionProps) => {
                   <p className="text-muted-foreground text-xs">
                     {new Date(comment.createdAt).toLocaleDateString()}
                   </p>
-                  <DeleteCommentButton commentId={comment.id} />
+                  <DeleteCommentButton commentId={comment.id} postId={postId} />
                 </div>
               </div>
             </div>

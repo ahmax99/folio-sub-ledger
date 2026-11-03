@@ -1,102 +1,61 @@
 'use client'
 
-import { zodResolver } from '@hookform/resolvers/zod'
-import { type UseFormRegister, useForm } from 'react-hook-form'
-
-import { Input, Textarea } from '@/components/atoms'
-import { FormCard, FormField } from '@/components/organisms'
+import { useAppForm } from '@/lib/form'
 
 import {
   ContactFormModel,
   type ContactFormSchema
 } from '../../schemas/contactForm.schema'
-import { useContactActions } from '../hooks/useContactActions'
+import { useSendContact } from '../hooks/useSendContact'
 
-export interface FieldConfig {
-  name: keyof ContactFormSchema
-  label: string
-  description: string
+const defaultValues: ContactFormSchema = {
+  name: '',
+  email: '',
+  subject: '',
+  message: ''
 }
 
-interface ContactFormConfig {
-  title: string
-  description: string
-  fields: FieldConfig[]
-  submitLabel: string
-  defaultValues: ContactFormSchema
-}
-
-interface ContactFormProps {
-  config: ContactFormConfig
-}
-
-const FieldInput = ({
-  field,
-  error,
-  register
-}: Readonly<{
-  field: FieldConfig
-  error: boolean
-  register: UseFormRegister<ContactFormSchema>
-}>) => {
-  if (field.name === 'message')
-    return (
-      <Textarea
-        id={field.name}
-        placeholder={field.description}
-        rows={5}
-        {...register(field.name)}
-        aria-invalid={error}
-      />
-    )
-
-  return (
-    <Input
-      id={field.name}
-      placeholder={field.description}
-      type={field.name === 'email' ? 'email' : 'text'}
-      {...register(field.name)}
-      aria-invalid={error}
-    />
-  )
-}
-
-export const ContactForm = ({ config }: Readonly<ContactFormProps>) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting }
-  } = useForm<ContactFormSchema>({
-    resolver: zodResolver(ContactFormModel.contact),
-    defaultValues: config.defaultValues
+export const ContactForm = () => {
+  const sendContact = useSendContact()
+  const form = useAppForm({
+    defaultValues,
+    validators: { onChange: ContactFormModel.contact },
+    onSubmit: async ({ value }) => {
+      await sendContact.mutateAsync(value)
+    }
   })
-  const { handleSendContact } = useContactActions()
-
-  const onSubmit = async (data: ContactFormSchema) =>
-    await handleSendContact(data)
 
   return (
-    <FormCard
-      description={config.description}
-      isSubmitting={isSubmitting}
-      onSubmit={handleSubmit(onSubmit)}
-      submitLabel={config.submitLabel}
-      title={config.title}
-    >
-      {config.fields.map((field) => (
-        <FormField
-          error={errors[field.name]}
-          key={field.name}
-          label={field.label}
-          name={field.name}
-        >
-          <FieldInput
-            error={!!errors[field.name]}
-            field={field}
-            register={register}
-          />
-        </FormField>
-      ))}
-    </FormCard>
+    <form.AppForm>
+      <form.FormCard description="Get in touch with us" title="Contact Us">
+        <form.AppField name="name">
+          {(field) => <field.Input label="Name" placeholder="Your full name" />}
+        </form.AppField>
+        <form.AppField name="email">
+          {(field) => (
+            <field.Input
+              label="Email"
+              placeholder="Your email address"
+              type="email"
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="subject">
+          {(field) => (
+            <field.Input label="Subject" placeholder="What is this about?" />
+          )}
+        </form.AppField>
+        <form.AppField name="message">
+          {(field) => (
+            <field.Textarea
+              label="Message"
+              placeholder="Your message"
+              rows={5}
+            />
+          )}
+        </form.AppField>
+        <form.SubmitButton>Send Message</form.SubmitButton>
+      </form.FormCard>
+    </form.AppForm>
   )
 }

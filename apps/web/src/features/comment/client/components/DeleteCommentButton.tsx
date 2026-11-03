@@ -1,24 +1,27 @@
 'use client'
 
-import type { CommentIdParams } from '@shared/config'
+import type { CommentIdParams, Post } from '@shared/config'
 import { Trash2 } from 'lucide-react'
 
 import { ActionButton } from '@/components/organisms'
 
-import { useCommentActions } from '../hooks/useCommentActions'
+import { useDeleteComment } from '../hooks/useCommentMutations'
 
 interface DeleteCommentButtonProps {
   commentId: CommentIdParams['id']
+  postId: Post['id']
 }
 
 export const DeleteCommentButton = ({
-  commentId
+  commentId,
+  postId
 }: DeleteCommentButtonProps) => {
-  const { handleDeleteComment } = useCommentActions()
+  const deleteComment = useDeleteComment(postId)
 
   return (
     <ActionButton
-      action={() => handleDeleteComment(commentId)}
+      action={() => deleteComment.mutate(commentId)}
+      isPending={deleteComment.isPending}
       areYouSureDescription="This will permanently delete your comment."
       requireAreYouSure
       size="icon"

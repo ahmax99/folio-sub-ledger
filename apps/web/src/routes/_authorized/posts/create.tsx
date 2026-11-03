@@ -6,45 +6,14 @@ import { ADMIN_ONLY_FORBIDDEN_MESSAGE } from '@/features/auth/constants/toastMes
 import { getUserPermissions } from '@/features/auth/lib/permission'
 import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
-import {
-  type FieldConfig,
-  PostForm
-} from '@/features/post/client/components/PostForm'
+import { PostForm } from '@/features/post/client/components/PostForm'
 
 const CreatePostPage = () => {
   const { user } = Route.useRouteContext()
 
-  const createPostConfig = {
-    title: 'Create Post',
-    description: 'Share your thoughts with the big world',
-    submitLabel: 'Create Post',
-    defaultValues: {
-      title: '',
-      content: '',
-      image: ''
-    },
-    fields: [
-      {
-        name: 'title' as FieldConfig['name'],
-        label: 'Title',
-        description: 'Enter your post title'
-      },
-      {
-        name: 'content' as FieldConfig['name'],
-        label: 'Content',
-        description: 'Enter your post content'
-      },
-      {
-        name: 'image' as FieldConfig['name'],
-        label: 'Image',
-        description: 'Enter your post image'
-      }
-    ]
-  }
-
   return (
     <PageTemplate alignment="center">
-      <PostForm config={createPostConfig} user={user} />
+      <PostForm user={user} />
     </PageTemplate>
   )
 }

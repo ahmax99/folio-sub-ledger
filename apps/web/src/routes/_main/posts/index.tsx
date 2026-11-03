@@ -1,13 +1,14 @@
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Skeleton } from '@/components/atoms'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 import { fetchPostImage } from '@/features/post/client/api'
 import { PostsList } from '@/features/post/components/PostsList'
-import { fetchPosts } from '@/features/post/server/functions'
+import { postsQueryOptions } from '@/features/post/lib/queries'
 
 const PostsListPage = () => {
-  const posts = Route.useLoaderData()
+  const { data: posts } = useSuspenseQuery(postsQueryOptions())
   const imageUrls = posts.map((post) => fetchPostImage(post.imagePath ?? ''))
 
   return (
@@ -54,7 +55,8 @@ const PostsListSkeleton = () => {
 }
 
 export const Route = createFileRoute('/_main/posts/')({
-  loader: () => fetchPosts(),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(postsQueryOptions()),
   head: () =>
     generatePageMetadata({
       title: 'Posts',
