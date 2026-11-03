@@ -30,7 +30,7 @@ interface ActionButtonProps
   children?: React.ReactNode
 }
 
-export const ActionButton = ({
+const ActionButton = ({
   action,
   isPending = false,
   requireAreYouSure = false,
@@ -94,3 +94,5 @@ export const ActionButton = ({
     </Button>
   )
 }
+
+export { ActionButton }
