@@ -98,6 +98,12 @@ Authorization mirrors the backend with CASL (`@casl/react`, `src/lib/casl.ts`, `
 
 UI is shadcn/ui + Tailwind CSS 4. Import alias is `@/*` → `src/*`.
 
+**TanStack libraries (adopted, being phased in).** New code uses the TanStack library for each job instead of a hand-rolled or third-party equivalent: Query for client-side server state (loaders still fetch first-paint data), Table + Virtual for data grids, Form for forms (new forms use it; existing `react-hook-form` forms migrate when touched), Hotkeys for keyboard shortcuts, Pacer for debounce/throttle, Devtools in dev only. Not adopted: TanStack AI (the AI pipeline is Mastra, below), DB, Store. Install only versions older than `bunfig.toml`'s `minimumReleaseAge`, pinned exactly.
+
+## AI pipeline (planned)
+
+Classification and later agent features run in the worker Lambda (consumer of the SQS classification queue) as **Mastra** workflows/agents. Models come through the **Vercel AI SDK** Bedrock provider (`@ai-sdk/amazon-bedrock`) with the Lambda's IAM role — no API keys, prompts stay in the account. The proposal is a Zod schema in `@shared/config`, passed as Mastra structured output. Model output never writes to the ledger: it lands as a proposal for human review. Any Mastra memory/storage holding client data carries `orgId` scoping like every other store.
+
 ## Shared packages
 
 - **`@shared/config`** — single source of truth for request/response shapes. Schemas live in `src/schemas/*.model.ts` and are imported by both apps for validation and types. Add new validation here, not in an app.
