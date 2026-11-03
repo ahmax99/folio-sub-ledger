@@ -33,7 +33,6 @@ export const Form = ({ className, children }: Readonly<FormProps>) => {
       noValidate
       onSubmit={(event) => {
         event.preventDefault()
-        // A rejected submit is a failed mutation, already shown by the QueryClient.
         form.handleSubmit().catch(() => undefined)
       }}
     >
