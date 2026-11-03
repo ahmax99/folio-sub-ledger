@@ -41,11 +41,6 @@ export const imageController = new Elysia({ prefix: '/images' })
 
       const result = await handleApiError(imageService.getImage(imagePath))
 
-      if (!result.body) {
-        set.status = 404
-        return { error: 'Image not found' }
-      }
-
       setImageResponseHeaders(set.headers, result)
 
       return result.body

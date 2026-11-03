@@ -1,3 +1,12 @@
+import { type AnyFormApi, useStore } from '@tanstack/react-form'
+import { useEffect } from 'react'
+
+import { ResultAsync } from 'neverthrow'
+
+import { mapToAppError } from '@/features/error/lib/mapToAppError'
+import { useFormContext } from '@/lib/formContext'
+import { cn } from '@/utils/mergeClass'
+
 import { Button } from '../atoms/Button'
 import {
   Card,
@@ -8,21 +17,55 @@ import {
 } from '../molecules/Card'
 import { LoadingSwap } from '../molecules/LoadingSwap'
 
-interface FormCardProps {
-  title: string
-  description: string
-  submitLabel: string
-  isSubmitting: boolean
-  onSubmit: React.SubmitEventHandler<HTMLFormElement>
+interface FormProps {
+  action?: string
+  className?: string
   children: React.ReactNode
 }
 
-export const FormCard = ({
+interface FormCardProps {
+  action?: string
+  title: string
+  description: string
+  children: React.ReactNode
+}
+
+const Form = ({ action, className, children }: Readonly<FormProps>) => {
+  const form = useFormContext()
+
+  useEffect(() => {
+    const anyForm: AnyFormApi = form
+    const { onServer } = anyForm.state.errorMap
+    if (!onServer) return
+
+    anyForm.setErrorMap({ onServer })
+    for (const name of Object.keys(anyForm.state.fieldMeta))
+      anyForm.setFieldMeta(name, (meta) => ({ ...meta, isTouched: true }))
+  }, [form])
+
+  return (
+    <form
+      action={action}
+      className={cn('space-y-4', className)}
+      encType={action ? 'multipart/form-data' : undefined}
+      method={action ? 'post' : undefined}
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault()
+        ResultAsync.fromPromise(form.handleSubmit(), mapToAppError).orTee(
+          ({ fields }) => fields && form.setErrorMap({ onServer: { fields } })
+        )
+      }}
+    >
+      {children}
+    </form>
+  )
+}
+
+const FormCard = ({
+  action,
   title,
   description,
-  submitLabel,
-  isSubmitting,
-  onSubmit,
   children
 }: Readonly<FormCardProps>) => (
   <Card className="w-full sm:max-w-96">
@@ -32,12 +75,22 @@ export const FormCard = ({
     </CardHeader>
 
     <CardContent>
-      <form className="space-y-4" noValidate onSubmit={onSubmit}>
-        {children}
-        <Button className="w-full" disabled={isSubmitting} type="submit">
-          <LoadingSwap isLoading={isSubmitting}>{submitLabel}</LoadingSwap>
-        </Button>
-      </form>
+      <Form action={action}>{children}</Form>
     </CardContent>
   </Card>
 )
+
+const FormSubmitButton = ({
+  children
+}: Readonly<{ children: React.ReactNode }>) => {
+  const form = useFormContext()
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+
+  return (
+    <Button className="w-full" disabled={isSubmitting} type="submit">
+      <LoadingSwap isLoading={isSubmitting}>{children}</LoadingSwap>
+    </Button>
+  )
+}
+
+export { Form, FormCard, FormSubmitButton }

@@ -63,22 +63,19 @@ export const postController = new Elysia({ prefix: '/posts' })
   )
   .post(
     '/',
-    async ({ body, user, postService, userService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        postService.create(
-          {
-            ...body,
-            slug: body.slug || generateSlug(body.title),
-            authorId: dbUser.id
-          },
-          getUserPermissions(user)
+    async ({ body, user, postService, userService }) =>
+      handleApiError(
+        userService.getMe(user.cognitoSub, user.role).andThen((dbUser) =>
+          postService.create(
+            {
+              ...body,
+              slug: body.slug || generateSlug(body.title),
+              authorId: dbUser.id
+            },
+            getUserPermissions(user)
+          )
         )
-      )
-    },
+      ),
     {
       body: PostModel.createPostBody,
       auth: true,

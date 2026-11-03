@@ -14,4 +14,3 @@ export const EmailModel = {
 }
 
 export type EmailUser = z.infer<typeof EmailModel.emailUser>
-export type SendEmail = z.infer<typeof EmailModel.sendEmail>

@@ -44,9 +44,9 @@ Always use named exports, never default exports — except where a framework ent
 
 ## Rendering and data (web)
 
-- Page data comes from a route `loader` that calls a server function (`createServerFn` in `features/<name>/server/functions.ts`), never from fetching inside a component. Validate server-function input with `.validator(<Zod schema>)` — it is an external boundary like any route.
+- Page data comes from a route `loader` that calls `context.queryClient.ensureQueryData(...)` with the feature's `queryOptions` (whose `queryFn` is a server function in `features/<name>/server/functions.ts`); the component reads it with `useSuspenseQuery`, never by fetching inside a component. Validate server-function input with `.validator(<Zod schema>)` — it is an external boundary like any route.
 - Session-dependent context (the current `user`) is resolved once in the layout route's `beforeLoad` (`_main`, `_authorized`) and read with `Route.useRouteContext()`.
-- After a mutation, refresh loader data with `router.invalidate()`; navigate with `useNavigate()` / `<Link to>` (typed routes), never `window.location` except for off-site or full-document redirects (`reloadDocument` on links to `/api/auth/*`).
+- Writes go through `useMutation`; after one, invalidate the affected query keys (`queryClient.invalidateQueries`) rather than `router.invalidate()`; navigate with `useNavigate()` / `<Link to>` (typed routes), never `window.location` except for off-site or full-document redirects (`reloadDocument` on links to `/api/auth/*`).
 - Server routes return `Response` objects; for redirects use `redirectResponse()` from `lib/redirectResponse.ts`, not `Response.redirect()` (its immutable headers drop the session's `Set-Cookie`).
 - Search params a page depends on are declared with `validateSearch` on its route.
 

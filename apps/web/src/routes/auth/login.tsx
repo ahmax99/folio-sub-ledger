@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { OAuth2Start } from '@/features/auth/client/components/OAuth2Start'
 
-export interface LoginSearch {
+interface LoginSearch {
   callbackUrl?: string
   error?: string
 }

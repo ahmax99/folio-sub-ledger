@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
+import type { QueryClient } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
-  createRootRoute,
+  createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts
@@ -22,12 +24,17 @@ const RootDocument = ({
     <body>
       {children}
       <Toaster position="bottom-right" richColors />
+      <ReactQueryDevtools buttonPosition="bottom-left" />
       <Scripts />
     </body>
   </html>
 )
 
-export const Route = createRootRoute({
+interface RouterContext {
+  queryClient: QueryClient
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => {
     const { meta } = generatePageMetadata()
 

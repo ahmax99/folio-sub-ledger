@@ -1,3 +1,5 @@
+import { formOptions } from '@tanstack/react-form'
+
 import { z } from 'zod'
 
 export const ContactFormModel = {
@@ -13,3 +15,15 @@ export const ContactFormModel = {
 }
 
 export type ContactFormSchema = z.infer<typeof ContactFormModel.contact>
+
+const defaultValues: ContactFormSchema = {
+  name: '',
+  email: '',
+  subject: '',
+  message: ''
+}
+
+export const contactFormOptions = formOptions({
+  defaultValues,
+  validators: { onChange: ContactFormModel.contact }
+})

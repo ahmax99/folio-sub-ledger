@@ -1,69 +1,51 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
 import { toast } from 'sonner'
 
 import { PROTECTED_ROUTES } from '@/features/auth/lib/routes'
 import { logout } from '@/features/auth/server/functions'
-import { useErrorHandler } from '@/features/error/client/hooks/useErrorHandler'
-import {
-  handleClientAuthError,
-  handleClientError
-} from '@/features/error/client/lib/handleError'
+import { AppError } from '@/features/error/lib/AppError'
+import { postKeys } from '@/features/post/lib/queries'
 
 import type { UpdateProfileSchema } from '../../schemas/accountForm.schema'
 import { deleteUser, updateUser, uploadProfileImage } from '../api'
 
+const uploadAvatar = async (image: File | null) => {
+  if (!image) return undefined
+
+  const { uploadResponse, key } = await uploadProfileImage(image)
+  if (!uploadResponse.ok)
+    throw new AppError('BAD_REQUEST', 'Failed to upload image')
+
+  return key
+}
+
 export const useAccountActions = () => {
   const navigate = useNavigate()
-  const handleError = useErrorHandler()
+  const queryClient = useQueryClient()
 
-  const handleUpdateProfile = async (
-    updateProfileData: UpdateProfileSchema,
-    imageFile: File | null,
-    onSuccess?: () => void
-  ) => {
-    let imageUrl = updateProfileData.imagePath ?? undefined
-
-    if (imageFile) {
-      const uploadResult = await handleClientError(
-        uploadProfileImage(imageFile),
-        handleError
-      )
-
-      if (uploadResult.error) return uploadResult
-
-      if (!uploadResult.value.uploadResponse.ok)
-        return handleError('Failed to upload image')
-
-      imageUrl = uploadResult.value.key
+  const updateProfile = useMutation({
+    mutationFn: async ({ name, image }: UpdateProfileSchema) =>
+      updateUser({ name, imagePath: await uploadAvatar(image) }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: postKeys.all })
+      toast.success('Profile updated successfully')
+      await navigate({ to: PROTECTED_ROUTES.ACCOUNT, replace: true })
     }
+  })
 
-    return handleClientAuthError(
-      updateUser({ ...updateProfileData, imagePath: imageUrl }),
-      handleError,
-      () => {
-        onSuccess?.()
-        toast.success('Profile updated successfully')
-        navigate({ to: PROTECTED_ROUTES.ACCOUNT, replace: true })
-      }
-    )
-  }
+  const deleteAccount = useMutation({
+    mutationFn: async () => {
+      await deleteUser()
+      const { logoutUrl } = await logout()
+      return logoutUrl
+    },
+    onSuccess: (logoutUrl) => {
+      toast.success('Account deleted successfully')
+      globalThis.location.assign(logoutUrl)
+    }
+  })
 
-  const handleDeleteAccount = () =>
-    handleClientAuthError(
-      deleteUser().then(async () => {
-        const { logoutUrl } = await logout()
-        return logoutUrl
-      }),
-      handleError,
-      (logoutUrl) => {
-        toast.success('Account deleted successfully')
-        globalThis.location.assign(logoutUrl)
-      }
-    )
-
-  return {
-    handleUpdateProfile,
-    handleDeleteAccount
-  }
+  return { updateProfile, deleteAccount }
 }

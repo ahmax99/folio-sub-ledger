@@ -1,5 +1,6 @@
 'use client'
 
+import { useQueryErrorResetBoundary } from '@tanstack/react-query'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
@@ -8,9 +9,15 @@ import { captureError } from '@/features/error-tracking/utils/captureError'
 import { ButtonLink } from '../atoms/ButtonLink'
 
 function RouteError({ error }: Readonly<ErrorComponentProps>) {
+  const queryErrorResetBoundary = useQueryErrorResetBoundary()
+
   useEffect(() => {
     captureError(error)
   }, [error])
+
+  useEffect(() => {
+    queryErrorResetBoundary.reset()
+  }, [queryErrorResetBoundary])
 
   return (
     <article className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 px-4 text-center">

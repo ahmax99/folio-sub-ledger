@@ -1,33 +1,82 @@
-import { useRouter } from '@tanstack/react-router'
+import {
+  type QueryClient,
+  useMutation,
+  useQueryClient
+} from '@tanstack/react-query'
+import { useRouteContext } from '@tanstack/react-router'
 
-import type { CommentIdParams } from '@shared/config'
+import type { Comment, CommentIdParams, Post } from '@shared/config'
 
-import { useErrorHandler } from '@/features/error/client/hooks/useErrorHandler'
-import { handleClientError } from '@/features/error/client/lib/handleError'
+import { postWithCommentsQueryOptions } from '@/features/post/lib/queries'
 
 import type { CreateCommentSchema } from '../../schemas/commentForm.schema'
 import { createComment, deleteComment } from '../api'
 
-export const useCommentActions = () => {
-  const router = useRouter()
-  const handleError = useErrorHandler()
+const updateComments = async (
+  queryClient: QueryClient,
+  postId: Post['id'],
+  update: (comments: Comment[]) => Comment[]
+) => {
+  const { queryKey } = postWithCommentsQueryOptions(postId)
+  await queryClient.cancelQueries({ queryKey })
+  const previous = queryClient.getQueryData(queryKey)
 
-  const handleCreateComment = async (
-    data: CreateCommentSchema,
-    onSuccess?: () => void
-  ) =>
-    handleClientError(createComment(data), handleError, () => {
-      onSuccess?.()
-      router.invalidate()
-    })
-
-  const handleDeleteComment = async (commentId: CommentIdParams['id']) =>
-    handleClientError(deleteComment(commentId), handleError, () =>
-      router.invalidate()
-    )
+  queryClient.setQueryData(
+    queryKey,
+    (data) => data && { ...data, comments: update(data.comments) }
+  )
 
   return {
-    handleCreateComment,
-    handleDeleteComment
+    rollback: () => queryClient.setQueryData(queryKey, previous),
+    refetch: () => queryClient.invalidateQueries({ queryKey })
+  }
+}
+
+const useCreateComment = (queryClient: QueryClient) => {
+  const { user } = useRouteContext({ from: '/_main' })
+
+  return useMutation({
+    mutationFn: (input: CreateCommentSchema) => createComment(input),
+    onMutate: ({ content, postId }) => {
+      const now = new Date()
+      const optimistic: Comment = {
+        id: crypto.randomUUID(),
+        content,
+        postId,
+        authorId: user?.id ?? '',
+        author: user
+          ? { name: user.name, imagePath: user.imagePath }
+          : undefined,
+        createdAt: now,
+        updatedAt: now
+      }
+
+      return updateComments(queryClient, postId, (comments) => [
+        optimistic,
+        ...comments
+      ])
+    },
+    onError: (_error, _input, cache) => cache?.rollback(),
+    onSettled: (_data, _error, _input, cache) => cache?.refetch()
+  })
+}
+
+const useDeleteComment = (queryClient: QueryClient, postId: Post['id']) =>
+  useMutation({
+    mutationFn: (commentId: CommentIdParams['id']) => deleteComment(commentId),
+    onMutate: (commentId) =>
+      updateComments(queryClient, postId, (comments) =>
+        comments.filter((comment) => comment.id !== commentId)
+      ),
+    onError: (_error, _commentId, cache) => cache?.rollback(),
+    onSettled: (_data, _error, _commentId, cache) => cache?.refetch()
+  })
+
+export const useCommentActions = (postId: Post['id']) => {
+  const queryClient = useQueryClient()
+
+  return {
+    createComment: useCreateComment(queryClient),
+    deleteComment: useDeleteComment(queryClient, postId)
   }
 }

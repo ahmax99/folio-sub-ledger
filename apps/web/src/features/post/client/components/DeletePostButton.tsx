@@ -16,13 +16,14 @@ interface DeletePostButtonProps {
 
 export const DeletePostButton = ({ post }: DeletePostButtonProps) => {
   const ability = useAbility<AppAbility>()
-  const { handleDeletePost } = usePostActions()
+  const { deletePost } = usePostActions()
 
   if (!ability.can('delete', subject('Post', post))) return null
 
   return (
     <ActionButton
-      action={() => handleDeletePost(post.id)}
+      action={() => deletePost.mutate(post.id)}
+      isPending={deletePost.isPending}
       areYouSureDescription="This will permanently delete this post."
       aria-label="Delete post"
       requireAreYouSure

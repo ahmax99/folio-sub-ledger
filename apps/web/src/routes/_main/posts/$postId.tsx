@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Skeleton } from '@/components/atoms'
@@ -6,10 +7,13 @@ import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 import { fetchPostImage } from '@/features/post/client/api'
 import { PostDetail } from '@/features/post/components/PostDetail'
-import { fetchPostWithComments } from '@/features/post/server/functions'
+import { postWithCommentsQueryOptions } from '@/features/post/lib/queries'
 
 const PostDetailPage = () => {
-  const { post, comments } = Route.useLoaderData()
+  const { postId } = Route.useParams()
+  const {
+    data: { post, comments }
+  } = useSuspenseQuery(postWithCommentsQueryOptions(postId))
   const postImage = fetchPostImage(post.imagePath ?? '')
 
   return (
@@ -42,8 +46,10 @@ const PostDetailSkeleton = () => {
 }
 
 export const Route = createFileRoute('/_main/posts/$postId')({
-  loader: ({ params }) =>
-    fetchPostWithComments({ data: { id: params.postId } }),
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(
+      postWithCommentsQueryOptions(params.postId)
+    ),
   head: ({ loaderData }) =>
     generatePageMetadata({
       title: loaderData?.post.title,

@@ -8,69 +8,47 @@ import type {
 import { prisma } from '@shared/neon'
 
 import { env } from '@/config/env.js'
-import { AppError } from '@/error/lib/AppError.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
+import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
 
+const findUser = (
+  id: UserIdParams['id'],
+  ability: AppAbility,
+  action: 'read' | 'update' | 'delete'
+) =>
+  authorizeResource(prisma.user.findUnique({ where: { id } }), {
+    notFound: 'User not found',
+    forbidden: `Cannot ${action} this user`,
+    can: (user) =>
+      ability.can(action, subject('User', user)) || ability.can('manage', 'all')
+  })
+
 export const UserService = {
   getAll: (ability: AppAbility) =>
-    catchAsyncError(
-      (async () => {
-        if (!ability.can('manage', 'all'))
-          throw new AppError('FORBIDDEN', 'Only admins can list users')
-
-        return prisma.user.findMany({
-          orderBy: { createdAt: 'desc' }
-        })
-      })()
+    authorizeResource(ability, {
+      forbidden: 'Only admins can list users',
+      can: (admin) => admin.can('manage', 'all')
+    }).andThen(() =>
+      catchAsyncError(prisma.user.findMany({ orderBy: { createdAt: 'desc' } }))
     ),
 
   getById: (id: UserIdParams['id'], ability: AppAbility) =>
-    catchAsyncError(
-      (async () => {
-        const user = await prisma.user.findUnique({
-          where: { id }
-        })
-
-        if (!user) throw new AppError('NOT_FOUND', 'User not found')
-        if (
-          !ability.can('read', subject('User', user)) &&
-          !ability.can('manage', 'all')
-        )
-          throw new AppError('FORBIDDEN', 'Cannot read this user')
-
-        return user
-      })()
-    ),
+    findUser(id, ability, 'read'),
 
   getMe: (cognitoSub: User['cognitoSub'], role: User['role']) =>
-    catchAsyncError(
-      (async () => {
-        const user = await prisma.user.findUnique({
-          where: { cognitoSub }
-        })
-
-        if (!user) throw new AppError('NOT_FOUND', 'User not found')
-
-        return { ...user, role }
-      })()
-    ),
+    authorizeResource(prisma.user.findUnique({ where: { cognitoSub } }), {
+      notFound: 'User not found'
+    }).map((user) => ({ ...user, role })),
 
   create: (input: CreateUserBody) =>
     catchAsyncError(
-      prisma.user
-        .findUnique({
-          where: { cognitoSub: input.cognitoSub }
-        })
-        .then((existingUser) => {
-          if (existingUser) return existingUser
-
-          // Create new user
-          return prisma.user.create({
-            data: input
-          })
-        })
+      prisma.user.upsert({
+        where: { cognitoSub: input.cognitoSub },
+        update: {},
+        create: input
+      })
     ),
 
   update: (
@@ -78,52 +56,21 @@ export const UserService = {
     input: UpdateUserBody,
     ability: AppAbility
   ) =>
-    catchAsyncError(
-      (async () => {
-        const user = await prisma.user.findUnique({
-          where: { id }
-        })
-
-        if (!user) throw new AppError('NOT_FOUND', 'User not found')
-        if (
-          !ability.can('update', subject('User', user)) &&
-          !ability.can('manage', 'all')
-        )
-          throw new AppError('FORBIDDEN', 'Cannot update this user')
-
-        return prisma.user.update({
-          where: { id },
-          data: input
-        })
-      })()
+    findUser(id, ability, 'update').andThen(() =>
+      catchAsyncError(prisma.user.update({ where: { id }, data: input }))
     ),
 
   delete: (id: UserIdParams['id'], ability: AppAbility) =>
-    catchAsyncError(
-      (async () => {
-        const user = await prisma.user.findUnique({
-          where: { id }
-        })
-
-        if (!user) throw new AppError('NOT_FOUND', 'User not found')
-        if (
-          !ability.can('delete', subject('User', user)) &&
-          !ability.can('manage', 'all')
+    findUser(id, ability, 'delete')
+      .andThrough(() => catchAsyncError(prisma.user.delete({ where: { id } })))
+      .andThrough((user) =>
+        catchAsyncError(
+          cognitoClient.send(
+            new AdminDeleteUserCommand({
+              UserPoolId: env.COGNITO_USERPOOL_ID,
+              Username: user.cognitoSub
+            })
+          )
         )
-          throw new AppError('FORBIDDEN', 'Cannot delete this user')
-
-        await prisma.user.delete({
-          where: { id }
-        })
-
-        await cognitoClient.send(
-          new AdminDeleteUserCommand({
-            UserPoolId: env.COGNITO_USERPOOL_ID,
-            Username: user.cognitoSub
-          })
-        )
-
-        return user
-      })()
-    )
+      )
 } as const

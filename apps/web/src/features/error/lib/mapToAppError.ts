@@ -1,5 +1,5 @@
 import { ForbiddenError } from '@casl/ability'
-import { ERROR_DEFINITIONS, type ErrorCode } from '@shared/config'
+import { ERROR_DEFINITIONS, ErrorModel, type ErrorCode } from '@shared/config'
 import { HTTPError } from 'ky'
 
 import { AppError } from './AppError'
@@ -20,6 +20,16 @@ const stringifyUnknownError = (error: unknown) => {
   }
 }
 
+const fromHttpError = (error: HTTPError) => {
+  const body = ErrorModel.errorBody.safeParse(error.data)
+
+  return new AppError(
+    STATUS_TO_CODE[error.response.status] ?? 'INTERNAL_ERROR',
+    body.data?.error.message,
+    body.data?.error.fields
+  )
+}
+
 export const mapToAppError = (error: unknown) => {
   switch (true) {
     case error instanceof AppError:
@@ -27,9 +37,7 @@ export const mapToAppError = (error: unknown) => {
     case error instanceof ForbiddenError:
       return new AppError('FORBIDDEN', error.message)
     case error instanceof HTTPError:
-      return new AppError(
-        STATUS_TO_CODE[error.response.status] ?? 'INTERNAL_ERROR'
-      )
+      return fromHttpError(error)
     case error instanceof Error:
       return new AppError('INTERNAL_ERROR', error.message)
     default:

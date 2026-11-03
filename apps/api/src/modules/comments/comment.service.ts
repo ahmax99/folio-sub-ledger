@@ -21,17 +21,13 @@ export const CommentService = {
     ),
 
   create: (input: CreateCommentBody, ability: AppAbility) =>
-    authorizeResource(
-      ability.can('create', 'Comment'),
-      'Cannot create comment',
-      () =>
-        prisma.comment.create({
-          data: {
-            content: input.content,
-            postId: input.postId,
-            authorId: input.authorId
-          }
-        })
+    authorizeResource(input, {
+      forbidden: 'Cannot create comment',
+      can: () => ability.can('create', 'Comment')
+    }).andThen(({ content, postId, authorId }) =>
+      catchAsyncError(
+        prisma.comment.create({ data: { content, postId, authorId } })
+      )
     ),
 
   delete: (id: CommentIdParams['id'], ability: AppAbility) =>
@@ -41,11 +37,13 @@ export const CommentService = {
         notFound: 'Comment not found',
         forbidden: 'Cannot delete this comment',
         can: (comment) => ability.can('delete', subject('Comment', comment))
-      },
-      () =>
+      }
+    ).andThen(() =>
+      catchAsyncError(
         prisma.comment.update({
           where: { id },
           data: { deletedAt: new Date() }
         })
+      )
     )
 } as const
