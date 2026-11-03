@@ -28,7 +28,7 @@ const useFieldInvalid = () => {
   return field.state.meta.isTouched && !field.state.meta.isValid
 }
 
-export const FormField = ({ label, children }: Readonly<FormFieldProps>) => {
+const FormField = ({ label, children }: Readonly<FormFieldProps>) => {
   const field = useFieldContext()
   const isInvalid = useFieldInvalid()
 
@@ -50,7 +50,7 @@ export const FormField = ({ label, children }: Readonly<FormFieldProps>) => {
   )
 }
 
-export const FormInput = ({
+const FormInput = ({
   label,
   ...props
 }: Readonly<ControlProps<typeof Input>>) => {
@@ -72,7 +72,7 @@ export const FormInput = ({
   )
 }
 
-export const FormTextarea = ({
+const FormTextarea = ({
   label,
   ...props
 }: Readonly<ControlProps<typeof Textarea>>) => {
@@ -94,7 +94,7 @@ export const FormTextarea = ({
   )
 }
 
-export const FormFileInput = ({
+const FormFileInput = ({
   label,
   ...props
 }: Readonly<Omit<ControlProps<typeof Input>, 'type'>>) => {
@@ -115,3 +115,5 @@ export const FormFileInput = ({
     </FormField>
   )
 }
+
+export { FormField, FormFileInput, FormInput, FormTextarea }

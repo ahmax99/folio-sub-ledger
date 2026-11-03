@@ -24,7 +24,7 @@ interface FormCardProps {
   children: React.ReactNode
 }
 
-export const Form = ({ className, children }: Readonly<FormProps>) => {
+const Form = ({ className, children }: Readonly<FormProps>) => {
   const form = useFormContext()
 
   return (
@@ -41,7 +41,7 @@ export const Form = ({ className, children }: Readonly<FormProps>) => {
   )
 }
 
-export const FormCard = ({
+const FormCard = ({
   title,
   description,
   children
@@ -58,7 +58,7 @@ export const FormCard = ({
   </Card>
 )
 
-export const FormSubmitButton = ({
+const FormSubmitButton = ({
   children
 }: Readonly<{ children: React.ReactNode }>) => {
   const form = useFormContext()
@@ -70,3 +70,5 @@ export const FormSubmitButton = ({
     </Button>
   )
 }
+
+export { Form, FormCard, FormSubmitButton }
