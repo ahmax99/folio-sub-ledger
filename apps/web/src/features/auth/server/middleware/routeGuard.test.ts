@@ -48,7 +48,7 @@ describe('routeGuardMiddleware', () => {
   })
 
   it('lets a signed-out visitor onto a public path', () => {
-    const { result, next } = runGuard('/posts', 'router')
+    const { result, next } = runGuard('/contact', 'router')
 
     expect(result).toBe('next')
     expect(next).toHaveBeenCalledOnce()
