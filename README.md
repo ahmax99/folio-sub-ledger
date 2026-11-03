@@ -106,7 +106,7 @@ RESTful API built with Elysia and Bun runtime.
 
 **Features:**
 
-- Post, comment and user management
+- User account management
 - S3 presigned URL generation for image uploads, and an image proxy
 - Cognito JWT authentication and CASL-based authorization
 - Zod validation at the route boundary (failures return 400 with per-field errors)
@@ -136,7 +136,7 @@ Shared configuration package containing Zod schemas, type definitions, and error
 
 **Exports:**
 
-- Post, Comment and User validation schemas
+- User validation schemas
 - Email validation utilities
 - The API error response shape (`ErrorModel`) and standardized error definitions (NOT_FOUND, UNAUTHORIZED, etc.)
 - Cognito group constants

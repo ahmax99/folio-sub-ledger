@@ -32,7 +32,7 @@ Your invocation prompt will include:
 - **Validation at the boundary:** all external input (`body`, `query`, `params`, headers, env) is validated with a Zod schema from `@shared/config` at the controller boundary (the Elysia route's `body` / `query` / `params` options) — never validated for the first time inside a service.
 - **Injection:** no string-interpolated raw SQL (`$queryRawUnsafe` with user input), command injection, or path traversal in S3 keys / filenames. Check `sanitizeFilename` / `generateSlug` usage on user-controlled strings.
 - **Secrets:** none hardcoded, logged, or returned in API responses. In production `DATABASE_URL` comes from AWS Secrets Manager (`loadSecrets()`), not the bundle. Env is validated in `src/config/env.ts`.
-- **S3 / presigned URLs:** least privilege — scoped key prefixes (e.g. `posts/`), bounded TTL, content-type/extension validated before signing.
+- **S3 / presigned URLs:** least privilege — scoped key prefixes (e.g. `account/`), bounded TTL, content-type/extension validated before signing.
 - **PII / data exposure:** internal fields and other users' records are not leaked; soft-deleted (`deletedAt`) rows are not returned to unauthorized callers.
 
 **Frontend (`apps/web`):**

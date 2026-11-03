@@ -32,7 +32,7 @@ If a file at that slug already exists, append `-2`, `-3`, etc., until unique (st
 Use `Grep` and `Read` to identify:
 
 - Files/modules relevant to the task
-- Established patterns in those areas (look at the nearest analogous module — e.g. `src/modules/posts/` for a new backend resource)
+- Established patterns in those areas (look at the nearest analogous module — e.g. `src/modules/users/` for a new backend resource)
 - Dependencies (services, plugins, controllers, Prisma schema, `@shared/config` models)
 
 Do not start writing the plan until you have a clear mental model of the touched area. Follow `.claude/rules/architecture.md`, `conventions.md`, and `principles.md`.

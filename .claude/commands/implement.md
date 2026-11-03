@@ -33,7 +33,7 @@ Remaining `$ARGUMENTS` tokens (after stripping `--plan=...`) are passed through 
 
 ### Follow project patterns exactly
 
-`.claude/rules/architecture.md`, `conventions.md`, and `principles.md` are the source of truth for patterns — module triads, the neverthrow `Result` flow, `.js` ESM imports, Zod-at-the-boundary, the BFF rule, CASL enforcement, named exports. They are already loaded in your context; follow them without restating them. Before writing a new module, read the nearest analogous one (e.g. `src/modules/posts/` for a backend resource) and match it. If a plan step conflicts with a rule, stop and flag it rather than improvising.
+`.claude/rules/architecture.md`, `conventions.md`, and `principles.md` are the source of truth for patterns — module triads, the neverthrow `Result` flow, `.js` ESM imports, Zod-at-the-boundary, the BFF rule, CASL enforcement, named exports. They are already loaded in your context; follow them without restating them. Before writing a new module, read the nearest analogous one (e.g. `src/modules/users/` for a backend resource) and match it. If a plan step conflicts with a rule, stop and flag it rather than improvising.
 
 ### Climb the ladder before writing code
 
