@@ -1,34 +1,26 @@
-import { err, errAsync, ok, okAsync, type ResultAsync } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 
 import { AppError } from '@/error/lib/AppError.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
 
-interface FindAuthorizedOptions<TRecord> {
-  notFound: string
-  forbidden: string
-  can: (record: TRecord) => boolean
+interface AuthorizeResourceOptions<TRecord> {
+  notFound?: string
+  forbidden?: string
+  can?: (record: TRecord) => boolean
 }
 
-const authorize = (
-  allowed: boolean,
-  forbidden: string
-): ResultAsync<void, AppError> =>
-  allowed ? okAsync(undefined) : errAsync(new AppError('FORBIDDEN', forbidden))
-
-const findOrFail = <TRecord>(
-  query: Promise<TRecord | null>,
-  notFound: string
+const authorizeResource = <TRecord>(
+  resource: TRecord | null | Promise<TRecord | null>,
+  {
+    notFound = 'Resource not found',
+    forbidden = 'Forbidden',
+    can = () => true
+  }: AuthorizeResourceOptions<TRecord>
 ) =>
-  catchAsyncError(query).andThen((record) =>
-    record ? ok(record) : err(new AppError('NOT_FOUND', notFound))
-  )
+  catchAsyncError(Promise.resolve(resource)).andThen((record) => {
+    if (record === null) return err(new AppError('NOT_FOUND', notFound))
+    if (!can(record)) return err(new AppError('FORBIDDEN', forbidden))
+    return ok(record)
+  })
 
-const findAuthorized = <TRecord>(
-  query: Promise<TRecord | null>,
-  { notFound, forbidden, can }: FindAuthorizedOptions<TRecord>
-) =>
-  findOrFail(query, notFound).andThen((record) =>
-    can(record) ? ok(record) : err(new AppError('FORBIDDEN', forbidden))
-  )
-
-export { authorize, findAuthorized, findOrFail }
+export { authorizeResource }

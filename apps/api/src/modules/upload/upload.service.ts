@@ -4,7 +4,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { env } from '@/config/env.js'
 import { SIGNED_URL_EXPIRATION } from '@/constants/index.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
-import { authorize } from '@/lib/authorizeResource.js'
+import { authorizeResource } from '@/lib/authorizeResource.js'
 import { s3Client } from '@/lib/s3.js'
 import { sanitizeFilename } from '@/utils/sanitizeFilename.js'
 
@@ -25,7 +25,10 @@ export const UploadService = {
   ) => {
     const key = `${folder}/${Date.now()}-${sanitizeFilename(filename)}`
 
-    return authorize(allowed, 'Cannot upload files')
+    return authorizeResource(key, {
+      forbidden: 'Cannot upload files',
+      can: () => allowed
+    })
       .andThen(() =>
         catchAsyncError(
           getSignedUrl(

@@ -9,11 +9,7 @@ import { prisma } from '@shared/neon'
 
 import { env } from '@/config/env.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
-import {
-  authorize,
-  findAuthorized,
-  findOrFail
-} from '@/lib/authorizeResource.js'
+import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
 
@@ -22,7 +18,7 @@ const findUser = (
   ability: AppAbility,
   action: 'read' | 'update' | 'delete'
 ) =>
-  findAuthorized(prisma.user.findUnique({ where: { id } }), {
+  authorizeResource(prisma.user.findUnique({ where: { id } }), {
     notFound: 'User not found',
     forbidden: `Cannot ${action} this user`,
     can: (user) =>
@@ -31,10 +27,10 @@ const findUser = (
 
 export const UserService = {
   getAll: (ability: AppAbility) =>
-    authorize(
-      ability.can('manage', 'all'),
-      'Only admins can list users'
-    ).andThen(() =>
+    authorizeResource(ability, {
+      forbidden: 'Only admins can list users',
+      can: (admin) => admin.can('manage', 'all')
+    }).andThen(() =>
       catchAsyncError(prisma.user.findMany({ orderBy: { createdAt: 'desc' } }))
     ),
 
@@ -42,10 +38,9 @@ export const UserService = {
     findUser(id, ability, 'read'),
 
   getMe: (cognitoSub: User['cognitoSub'], role: User['role']) =>
-    findOrFail(
-      prisma.user.findUnique({ where: { cognitoSub } }),
-      'User not found'
-    ).map((user) => ({ ...user, role })),
+    authorizeResource(prisma.user.findUnique({ where: { cognitoSub } }), {
+      notFound: 'User not found'
+    }).map((user) => ({ ...user, role })),
 
   create: (input: CreateUserBody) =>
     catchAsyncError(

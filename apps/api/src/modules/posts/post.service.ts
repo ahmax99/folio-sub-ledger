@@ -6,7 +6,7 @@ import type {
 import { prisma } from '@shared/neon'
 
 import { catchAsyncError } from '@/error/utils/catchError.js'
-import { authorize, findAuthorized } from '@/lib/authorizeResource.js'
+import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, accessibleBy, subject } from '@/lib/casl-prisma.js'
 
 const findPost = (
@@ -14,11 +14,14 @@ const findPost = (
   ability: AppAbility,
   action: 'read' | 'update' | 'delete'
 ) =>
-  findAuthorized(prisma.post.findUnique({ where: { id, deletedAt: null } }), {
-    notFound: 'Post not found',
-    forbidden: `Cannot ${action} this post`,
-    can: (post) => ability.can(action, subject('Post', post))
-  })
+  authorizeResource(
+    prisma.post.findUnique({ where: { id, deletedAt: null } }),
+    {
+      notFound: 'Post not found',
+      forbidden: `Cannot ${action} this post`,
+      can: (post) => ability.can(action, subject('Post', post))
+    }
+  )
 
 export const PostService = {
   getAll: (ability: AppAbility) =>
@@ -35,15 +38,18 @@ export const PostService = {
     findPost(id, ability, 'read'),
 
   create: (input: CreatePostBody, ability: AppAbility) =>
-    authorize(ability.can('create', 'Post'), 'Cannot create post').andThen(() =>
+    authorizeResource(input, {
+      forbidden: 'Cannot create post',
+      can: () => ability.can('create', 'Post')
+    }).andThen(({ title, content, slug, imagePath, authorId }) =>
       catchAsyncError(
         prisma.post.create({
           data: {
-            title: input.title,
-            content: input.content,
-            slug: input.slug,
-            imagePath: input.imagePath,
-            authorId: input.authorId,
+            title,
+            content,
+            slug,
+            imagePath,
+            authorId,
             createdAt: new Date()
           }
         })
