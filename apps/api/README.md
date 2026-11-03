@@ -1,6 +1,6 @@
 # api
 
-RESTful API built with Elysia and the Bun runtime. It still serves the starter posts, comments and users resources; the ledger domain will replace them.
+RESTful API built with Elysia and the Bun runtime. It serves the users resource and the image proxy; the ledger domain builds on them.
 
 ## Setup
 
@@ -59,21 +59,6 @@ The documentation provides:
 Requests that fail Zod validation return `400` with `{ error: { message, fields } }` (`ErrorModel` in `@shared/config`), so the web app can show each message on its form field.
 
 ### Available Endpoints
-
-#### Posts
-
-- `GET /api/v1/posts` - Get all posts
-- `GET /api/v1/posts/:id` - Get post by ID
-- `POST /api/v1/posts` - Create a new post (requires auth)
-- `PUT /api/v1/posts/:id` - Update a post (requires auth)
-- `DELETE /api/v1/posts/:id` - Delete a post (requires auth)
-- `GET /api/v1/posts/presigned-url` - Get S3 presigned URL for image upload (requires auth)
-
-#### Comments
-
-- `GET /api/v1/comments?postId={uuid}` - Get comments for a post
-- `POST /api/v1/comments` - Create a new comment (requires auth)
-- `DELETE /api/v1/comments/:id` - Delete a comment (requires auth)
 
 #### Users
 

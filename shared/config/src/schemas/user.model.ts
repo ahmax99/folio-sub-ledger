@@ -23,6 +23,16 @@ export const UserModel = {
   updateUserBody: z.object({
     name: z.string().optional(),
     imagePath: z.string().optional()
+  }),
+  uploadImageQuery: z.object({
+    filename: z.preprocess(
+      (val) => (Array.isArray(val) ? val.join('') : val),
+      z.string().min(1).max(255)
+    ),
+    contentType: z.preprocess(
+      (val) => (Array.isArray(val) ? val[0] : val),
+      z.string().regex(/^image\//)
+    )
   })
 }
 
@@ -30,3 +40,4 @@ export type User = z.infer<typeof UserModel.user>
 export type UserIdParams = z.infer<typeof UserModel.userIdParams>
 export type CreateUserBody = z.infer<typeof UserModel.createUserBody>
 export type UpdateUserBody = z.infer<typeof UserModel.updateUserBody>
+export type UploadImageQuery = z.infer<typeof UserModel.uploadImageQuery>
