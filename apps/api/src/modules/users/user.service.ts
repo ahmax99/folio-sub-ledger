@@ -1,10 +1,5 @@
 import { AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider'
-import type {
-  CreateUserBody,
-  UpdateUserBody,
-  User,
-  UserIdParams
-} from '@shared/config'
+import type { UpdateUserBody, User, UserIdParams } from '@shared/config'
 import { prisma } from '@shared/neon'
 
 import { env } from '@/config/env.js'
@@ -37,19 +32,14 @@ export const UserService = {
   getById: (id: UserIdParams['id'], ability: AppAbility) =>
     findUser(id, ability, 'read'),
 
-  getMe: (cognitoSub: User['cognitoSub'], role: User['role']) =>
-    authorizeResource(prisma.user.findUnique({ where: { cognitoSub } }), {
-      notFound: 'User not found'
-    }).map((user) => ({ ...user, role })),
-
-  create: (input: CreateUserBody) =>
-    catchAsyncError(
-      prisma.user.upsert({
-        where: { cognitoSub: input.cognitoSub },
-        update: {},
-        create: input
-      })
-    ),
+  getMe: (cognitoSub: User['cognitoSub'], groups: User['groups']) =>
+    authorizeResource(
+      prisma.user.findUnique({
+        where: { cognitoSub },
+        include: { organization: { select: { id: true, name: true } } }
+      }),
+      { notFound: 'User not found' }
+    ).map((user) => ({ ...user, groups })),
 
   update: (
     id: UserIdParams['id'],

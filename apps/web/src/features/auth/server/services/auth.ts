@@ -9,7 +9,6 @@ import { PUBLIC_ROUTES } from '../../lib/routes'
 import type { CallbackParams, PKCEData } from '../../schemas/auth.schema'
 import { generateNonce, generatePKCE, generateState } from '../../utils/pkce'
 import { safeRelativePath } from '../../utils/redirect'
-import { createUser } from '../api'
 
 import { assignDefaultRoleGroup } from './role'
 import {
@@ -130,22 +129,13 @@ export const handleCallback = async (
     return { redirectUrl: '/auth/login?error=invalid_token' }
   }
 
-  const { claims, idToken } = tokenData
-  const email = claims.email as string
+  const { claims } = tokenData
 
   // establish the real session before dropping the transient PKCE cookie
   await setSessionData({ refreshToken: tokens.refresh_token })
   await destroyPKCESession()
 
-  await Promise.all([
-    // idempotent - returns existing user if already created
-    createUser(
-      { cognitoSub: claims.sub, email, name: claims.name as string },
-      idToken
-    ),
-    // assign user to default "Users" group on first login
-    assignDefaultRoleGroup(claims.sub)
-  ])
+  await assignDefaultRoleGroup(claims.sub)
 
   log.info({ userId: claims.sub }, 'User authenticated successfully')
 

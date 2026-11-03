@@ -84,27 +84,6 @@ export const userController = new Elysia({ prefix: '/users' })
       }
     }
   )
-  .post(
-    '/',
-    async ({ body, user, userService }) =>
-      handleApiError(
-        userService.create({
-          ...body,
-          cognitoSub: user.cognitoSub,
-          email: user.email
-        })
-      ),
-    {
-      body: UserModel.createUserBody,
-      auth: true,
-      detail: {
-        summary: 'Register a new user',
-        description:
-          'Register a new user after first-time Cognito signup. CognitoSub and email are extracted from JWT. Idempotent - returns existing user if already registered.',
-        tags: ['Users']
-      }
-    }
-  )
   .put(
     '/:id',
     async ({ params, body, user, userService }) => {

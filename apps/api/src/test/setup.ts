@@ -14,15 +14,27 @@ vi.mock('@shared/neon', async (importOriginal) => {
   }
 })
 
+const identities: Record<string, { sub: string; email: string; name: string }> =
+  {
+    'test-token': {
+      sub: 'test-sub',
+      email: 'test@example.com',
+      name: 'Test User'
+    },
+    'other-token': {
+      sub: 'other-sub',
+      email: 'other@example.com',
+      name: 'Other User'
+    }
+  }
+
 vi.mock('@/modules/auth/jwt.js', () => ({
-  verifyToken: (token: string) =>
-    token === 'test-token'
-      ? okAsync({
-          sub: 'test-sub',
-          email: 'test@example.com',
-          'cognito:groups': []
-        })
+  verifyToken: (token: string) => {
+    const identity = identities[token]
+    return identity
+      ? okAsync({ ...identity, 'cognito:groups': [] })
       : errAsync(new AppError('UNAUTHORIZED', 'Invalid or expired token'))
+  }
 }))
 
 vi.mock('@/error/utils/captureError.js', () => ({ captureError: vi.fn() }))
