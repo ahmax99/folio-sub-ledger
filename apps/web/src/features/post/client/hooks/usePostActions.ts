@@ -24,7 +24,7 @@ const uploadPostImage = async (image: File | null) => {
   return key
 }
 
-const usePostActions = () => {
+export const usePostActions = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -60,5 +60,3 @@ const usePostActions = () => {
 
   return { createPost, deletePost }
 }
-
-export { usePostActions }

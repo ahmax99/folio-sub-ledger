@@ -8,7 +8,7 @@ import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
 import type { ContactFormSchema } from '../../schemas/contactForm.schema'
 import { sendContactEmail } from '../../server/api/sendContactEmail'
 
-const useContactActions = () => {
+export const useContactActions = () => {
   const navigate = useNavigate()
 
   const sendContact = useMutation({
@@ -21,5 +21,3 @@ const useContactActions = () => {
 
   return { sendContact }
 }
-
-export { useContactActions }

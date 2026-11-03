@@ -21,7 +21,7 @@ const uploadAvatar = async (image: File | null) => {
   return key
 }
 
-const useAccountActions = () => {
+export const useAccountActions = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -49,5 +49,3 @@ const useAccountActions = () => {
 
   return { updateProfile, deleteAccount }
 }
-
-export { useAccountActions }

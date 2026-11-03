@@ -72,7 +72,7 @@ const useDeleteComment = (queryClient: QueryClient, postId: Post['id']) =>
     onSettled: (_data, _error, _commentId, cache) => cache?.refetch()
   })
 
-const useCommentActions = (postId: Post['id']) => {
+export const useCommentActions = (postId: Post['id']) => {
   const queryClient = useQueryClient()
 
   return {
@@ -80,5 +80,3 @@ const useCommentActions = (postId: Post['id']) => {
     deleteComment: useDeleteComment(queryClient, postId)
   }
 }
-
-export { useCommentActions }
