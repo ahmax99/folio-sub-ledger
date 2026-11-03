@@ -271,4 +271,8 @@ crisp edges, instant feedback.
 
 ## Figma
 
-No file yet. The `product-designer` agent creates it on first use and records the URL here.
+File: https://www.figma.com/design/UV5Wxg0xLqZXrjZujLyg4C/Folio
+
+- `Foundations` — `Color` variables (one per colour token above), `Dimension` variables (`radius/*`, `spacing/*`) and text styles (`display` … `mono`, Geist and Geist Mono), mirroring this file.
+- `Components` — Figma components named after their code components.
+- One page per feature, added as features are designed.
