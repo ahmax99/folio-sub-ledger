@@ -29,7 +29,6 @@ export const useUpdateProfile = () => {
     mutationFn: async ({ name, image }: UpdateProfileSchema) =>
       updateUser({ name, imagePath: await uploadAvatar(image) }),
     onSuccess: async () => {
-      // Cached posts embed comment authors' names and avatars.
       await queryClient.invalidateQueries({ queryKey: postKeys.all })
       toast.success('Profile updated successfully')
       await navigate({ to: PROTECTED_ROUTES.ACCOUNT, replace: true })

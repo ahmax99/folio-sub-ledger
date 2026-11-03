@@ -16,7 +16,6 @@ export const postsQueryOptions = () =>
     queryFn: () => fetchPosts()
   })
 
-// Comments ride along with their post, so comment mutations invalidate this.
 export const postWithCommentsQueryOptions = (id: Post['id']) =>
   queryOptions({
     queryKey: postKeys.detail(id),

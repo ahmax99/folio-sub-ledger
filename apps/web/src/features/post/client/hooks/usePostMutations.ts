@@ -38,7 +38,6 @@ export const useCreatePost = () => {
         authorId
       }),
     onSuccess: async () => {
-      // Refetch even when inactive so the list page never shows a stale cache.
       await queryClient.invalidateQueries({
         queryKey: postKeys.list(),
         refetchType: 'all'
@@ -60,7 +59,6 @@ export const useDeletePost = () => {
         refetchType: 'all'
       })
       await navigate({ to: PUBLIC_ROUTES.POSTS, replace: true })
-      // Only after leaving the page, or the detail query refetches into a 404.
       queryClient.removeQueries({ queryKey: postKeys.detail(id) })
     }
   })

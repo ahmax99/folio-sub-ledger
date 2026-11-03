@@ -22,7 +22,6 @@ interface ActionButtonProps
   extends
     Omit<ButtonPrimitive.Props, 'children'>,
     VariantProps<typeof buttonVariants> {
-  // Fire-and-forget (e.g. a mutation's `mutate`); the caller owns errors.
   action: () => void
   isPending?: boolean
   requireAreYouSure?: boolean

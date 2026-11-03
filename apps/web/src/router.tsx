@@ -12,7 +12,6 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
-    // Query owns caching, so the router always hands preloads to it.
     defaultPreloadStaleTime: 0
   })
 
