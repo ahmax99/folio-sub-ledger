@@ -21,11 +21,11 @@ const uploadAvatar = async (image: File | null) => {
   return key
 }
 
-export const useUpdateProfile = () => {
+const useAccountActions = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  return useMutation({
+  const updateProfile = useMutation({
     mutationFn: async ({ name, image }: UpdateProfileSchema) =>
       updateUser({ name, imagePath: await uploadAvatar(image) }),
     onSuccess: async () => {
@@ -34,10 +34,8 @@ export const useUpdateProfile = () => {
       await navigate({ to: PROTECTED_ROUTES.ACCOUNT, replace: true })
     }
   })
-}
 
-export const useDeleteAccount = () =>
-  useMutation({
+  const deleteAccount = useMutation({
     mutationFn: async () => {
       await deleteUser()
       const { logoutUrl } = await logout()
@@ -48,3 +46,8 @@ export const useDeleteAccount = () =>
       globalThis.location.assign(logoutUrl)
     }
   })
+
+  return { updateProfile, deleteAccount }
+}
+
+export { useAccountActions }

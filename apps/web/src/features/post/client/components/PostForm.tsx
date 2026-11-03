@@ -8,12 +8,12 @@ import {
   type CreatePostSchema,
   PostFormModel
 } from '../../schemas/postForm.schema'
-import { useCreatePost } from '../hooks/usePostMutations'
+import { usePostActions } from '../hooks/usePostActions'
 
 const defaultValues: CreatePostSchema = { title: '', content: '', image: null }
 
 export const PostForm = ({ user }: Readonly<{ user: User }>) => {
-  const createPost = useCreatePost()
+  const { createPost } = usePostActions()
   const form = useAppForm({
     defaultValues,
     validators: { onChange: PostFormModel.createPost },

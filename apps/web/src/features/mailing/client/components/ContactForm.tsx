@@ -10,14 +10,14 @@ import { useAppForm } from '@/lib/form'
 
 import { contactFormOptions } from '../../schemas/contactForm.schema'
 import { submitContactForm } from '../../server/api/sendContactEmail'
-import { useSendContact } from '../hooks/useSendContact'
+import { useContactActions } from '../hooks/useContactActions'
 
 interface ContactFormProps {
   serverState: Awaited<ReturnType<typeof getFormData>>
 }
 
 export const ContactForm = ({ serverState }: Readonly<ContactFormProps>) => {
-  const sendContact = useSendContact()
+  const { sendContact } = useContactActions()
   const form = useAppForm({
     ...contactFormOptions,
     transform: useTransform(

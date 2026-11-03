@@ -8,10 +8,10 @@ import {
   AccountFormModel,
   type UpdateProfileSchema
 } from '../../schemas/accountForm.schema'
-import { useUpdateProfile } from '../hooks/useAccountMutations'
+import { useAccountActions } from '../hooks/useAccountActions'
 
 export const AccountForm = ({ user }: Readonly<{ user: User }>) => {
-  const updateProfile = useUpdateProfile()
+  const { updateProfile } = useAccountActions()
   const defaultValues: UpdateProfileSchema = { name: user.name, image: null }
   const form = useAppForm({
     defaultValues,

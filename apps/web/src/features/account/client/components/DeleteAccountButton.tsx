@@ -2,10 +2,10 @@
 
 import { ActionButton } from '@/components/organisms'
 
-import { useDeleteAccount } from '../hooks/useAccountMutations'
+import { useAccountActions } from '../hooks/useAccountActions'
 
 export const DeleteAccountButton = () => {
-  const deleteAccount = useDeleteAccount()
+  const { deleteAccount } = useAccountActions()
 
   return (
     <ActionButton

@@ -24,11 +24,11 @@ const uploadPostImage = async (image: File | null) => {
   return key
 }
 
-export const useCreatePost = () => {
+const usePostActions = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  return useMutation({
+  const createPost = useMutation({
     mutationFn: async ({ title, content, image, authorId }: CreatePostInput) =>
       createPostClient({
         title,
@@ -45,13 +45,8 @@ export const useCreatePost = () => {
       await navigate({ to: PUBLIC_ROUTES.POSTS, replace: true })
     }
   })
-}
 
-export const useDeletePost = () => {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-
-  return useMutation({
+  const deletePost = useMutation({
     mutationFn: (id: Post['id']) => deletePostClient(id),
     onSuccess: async (_, id) => {
       await queryClient.invalidateQueries({
@@ -62,4 +57,8 @@ export const useDeletePost = () => {
       queryClient.removeQueries({ queryKey: postKeys.detail(id) })
     }
   })
+
+  return { createPost, deletePost }
 }
+
+export { usePostActions }

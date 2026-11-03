@@ -8,7 +8,7 @@ import { Trash2 } from 'lucide-react'
 import { ActionButton } from '@/components/organisms'
 import type { AppAbility } from '@/lib/casl'
 
-import { useDeletePost } from '../hooks/usePostMutations'
+import { usePostActions } from '../hooks/usePostActions'
 
 interface DeletePostButtonProps {
   post: Pick<Post, 'id' | 'authorId'>
@@ -16,7 +16,7 @@ interface DeletePostButtonProps {
 
 export const DeletePostButton = ({ post }: DeletePostButtonProps) => {
   const ability = useAbility<AppAbility>()
-  const deletePost = useDeletePost()
+  const { deletePost } = usePostActions()
 
   if (!ability.can('delete', subject('Post', post))) return null
 
