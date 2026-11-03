@@ -29,18 +29,18 @@ printf 'export function limit(used: number, max: number) {\n  return used < max\
 The same text in both halves. It exercises a tool row (Read), an edit, a shell command, a table,
 a chart and a diff:
 
-```text
+````text
 Read limit.ts, change limit so it allows used == max, run `node --version`, then answer with a
 table of the three files you would test next, an xychart-beta bar chart of how often each is
 edited (make up numbers), and the change as a ```diff fence.
-```
+````
 
 ## 4. The tape
 
 Save as `/tmp/skins-demo/half.tape`. `SKIN` is `off` for the stock half and `noir` for the
 skinned one.
 
-```text
+````text
 Output half.gif
 Set Shell bash
 Set FontSize 15
@@ -61,7 +61,7 @@ Show
 Type "Read limit.ts, change limit so it allows used == max, run `node --version`, then answer with a table of the three files you would test next, an xychart-beta bar chart of how often each is edited (make up numbers), and the change as a ```diff fence."
 Enter
 Sleep 60s
-```
+````
 
 VHS does not expand `$SKIN`. Make one copy per half:
 

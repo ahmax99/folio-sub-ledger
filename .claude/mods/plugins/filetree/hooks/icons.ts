@@ -33,7 +33,7 @@ const NAMES: Record<string, number> = {
   'yarn.lock': 0xe6a8,
   '.gitignore': 0xf02a2,
   '.gitmodules': 0xf0493,
-  '.editorconfig': 0xe652,
+  '.editorconfig': 0xe652
 }
 
 const EXTS: Record<string, number> = {
@@ -100,7 +100,7 @@ const EXTS: Record<string, number> = {
   vue: 0xe6a0,
   svelte: 0xe697,
   csv: 0xe64a,
-  txt: 0xf09aa,
+  txt: 0xf09aa
 }
 
 export function fileIcon(n: FileNode, open: boolean, isRepo: boolean): string {
@@ -120,7 +120,7 @@ export const GIT_COLOR: Record<string, string> = {
   R: '#61afef',
   C: '#61afef',
   M: '#e5c07b',
-  T: '#e5c07b',
+  T: '#e5c07b'
 }
 
 const PRIORITY = ['U', 'D', 'M', 'T', 'R', 'C', 'A', '?']

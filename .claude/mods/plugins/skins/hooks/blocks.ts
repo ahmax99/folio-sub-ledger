@@ -16,7 +16,17 @@ export type Block =
   | { kind: 'tasks'; items: Task[] }
   | { kind: 'paragraph'; lines: Line[] }
 
-export type RunStyle = 'plain' | 'bold' | 'italic' | 'strike' | 'code' | 'number' | 'version' | 'path' | 'duration' | 'url'
+export type RunStyle =
+  | 'plain'
+  | 'bold'
+  | 'italic'
+  | 'strike'
+  | 'code'
+  | 'number'
+  | 'version'
+  | 'path'
+  | 'duration'
+  | 'url'
 
 export type Run = { style: RunStyle; text: string }
 
@@ -28,19 +38,27 @@ const BULLET = /^(\s*)([-*+]|\d{1,3}[.)])\s+(.*)$/
 
 // Anything here is markdown the skin does not draw: links, images, html, footnotes,
 // escapes, quotes, rules, indented code, maths.
-const FOREIGN = /<|\\|\||!\[|\]\(|\]\[|\[\^|&[a-z#\d]+;|\$\$|^\s*(>|#|[-*_]{3,}\s*$)|^ {4}|^\t/m
+const FOREIGN =
+  /<|\\|\||!\[|\]\(|\]\[|\[\^|&[a-z#\d]+;|\$\$|^\s*(>|#|[-*_]{3,}\s*$)|^ {4}|^\t/m
 const FENCE = /^\s*(```|~~~)/
 
-const INLINE = /(`+)([^`]+?)\1|\*\*(?=\S)(.+?)(?<=\S)\*\*|__(?=\S)(.+?)(?<=\S)__|~~(?=\S)(.+?)(?<=\S)~~|(?<![\w*])\*(?=\S)(.+?)(?<=\S)\*(?![\w*])|(?<![\w_])_(?=\S)(.+?)(?<=\S)_(?![\w_])/g
+const INLINE =
+  /(`+)([^`]+?)\1|\*\*(?=\S)(.+?)(?<=\S)\*\*|__(?=\S)(.+?)(?<=\S)__|~~(?=\S)(.+?)(?<=\S)~~|(?<![\w*])\*(?=\S)(.+?)(?<=\S)\*(?![\w*])|(?<![\w_])_(?=\S)(.+?)(?<=\S)_(?![\w_])/g
 
 // Ordered so a URL wins over the path inside it, and a path over its version or number. A
 // path keeps a `:line` or `:line:col` after it.
 const HIGHLIGHT: readonly (readonly [RunStyle, RegExp])[] = [
   ['url', /\bhttps?:\/\/[^\s<>()"'`]*[^\s<>()"'`.,;:!?]/],
-  ['path', /(?:(?:[A-Za-z]:[\\/]|~\/|\.{1,2}\/|(?<![\w)])\/(?=[\w.@-]+\/))[\w.@-]+(?:[\\/][\w.@-]+)*\/?|(?<![\w/.-])[\w@-]+(?:\/[\w.@-]+)*\/[\w-]+\.[A-Za-z][A-Za-z0-9]{0,5}\b)(?::\d+(?::\d+)?\b)?/],
-  ['version', /(?<![\w.-])v\d+(?:\.\d+)*(?:-[\w.]+)?\b|(?<![\w.-])\d+\.\d+\.\d+(?:-[\w.]+)?\b/],
+  [
+    'path',
+    /(?:(?:[A-Za-z]:[\\/]|~\/|\.{1,2}\/|(?<![\w)])\/(?=[\w.@-]+\/))[\w.@-]+(?:[\\/][\w.@-]+)*\/?|(?<![\w/.-])[\w@-]+(?:\/[\w.@-]+)*\/[\w-]+\.[A-Za-z][A-Za-z0-9]{0,5}\b)(?::\d+(?::\d+)?\b)?/
+  ],
+  [
+    'version',
+    /(?<![\w.-])v\d+(?:\.\d+)*(?:-[\w.]+)?\b|(?<![\w.-])\d+\.\d+\.\d+(?:-[\w.]+)?\b/
+  ],
   ['duration', /(?<![\w.-])\d+(?:\.\d+)?(?:ns|µs|us|ms|s|min|h)\b/],
-  ['number', /(?<![\w.-])\d[\d,_]*(?:\.\d+)?%?(?![\w])/],
+  ['number', /(?<![\w.-])\d[\d,_]*(?:\.\d+)?%?(?![\w])/]
 ]
 
 // Splits plain text into runs, the earliest match of any kind taking each stretch.
@@ -54,7 +72,11 @@ function highlight(text: string): Run[] {
     for (const [style, pattern] of HIGHLIGHT) {
       const match = pattern.exec(rest)
 
-      if (match !== null && match[0] !== '' && (best === null || match.index < best.index)) {
+      if (
+        match !== null &&
+        match[0] !== '' &&
+        (best === null || match.index < best.index)
+      ) {
         best = { style, index: match.index, length: match[0].length }
       }
     }
@@ -68,7 +90,10 @@ function highlight(text: string): Run[] {
       runs.push({ style: 'plain', text: rest.slice(0, best.index) })
     }
 
-    runs.push({ style: best.style, text: rest.slice(best.index, best.index + best.length) })
+    runs.push({
+      style: best.style,
+      text: rest.slice(best.index, best.index + best.length)
+    })
     rest = rest.slice(best.index + best.length)
   }
 
@@ -85,19 +110,30 @@ export function inlineRuns(text: string): Run[] {
 
     const [, , code, bold, under, strike, star, low] = match
     const inner = code ?? bold ?? under ?? strike ?? star ?? low ?? ''
-    const style: RunStyle = code !== undefined ? 'code' : bold !== undefined || under !== undefined ? 'bold' : strike !== undefined ? 'strike' : 'italic'
+    const style: RunStyle =
+      code !== undefined
+        ? 'code'
+        : bold !== undefined || under !== undefined
+          ? 'bold'
+          : strike !== undefined
+            ? 'strike'
+            : 'italic'
 
     // Emphasis inside emphasis keeps the outer style; its marks are dropped.
-    runs.push({ style, text: style === 'code' ? inner.trim() : inner.replace(/\*\*|__|~~|`/g, '') })
+    runs.push({
+      style,
+      text: style === 'code' ? inner.trim() : inner.replace(/\*\*|__|~~|`/g, '')
+    })
     last = match.index + match[0].length
   }
 
   runs.push(...highlight(text.slice(last)))
 
-  return runs.filter(run => run.text !== '')
+  return runs.filter((run) => run.text !== '')
 }
 
-const depthOf = (indent: string): number => Math.floor(indent.replace(/\t/g, '  ').length / 2)
+const depthOf = (indent: string): number =>
+  Math.floor(indent.replace(/\t/g, '  ').length / 2)
 
 // A paragraph the skin can draw, or null to leave it to Claude Code's markdown.
 function paragraphOf(text: string): Line[] | null {
@@ -122,8 +158,16 @@ function paragraphOf(text: string): Line[] | null {
     if (bullet !== null) {
       flush()
       const [, indent = '', mark = '', body = ''] = bullet
-      lines.push({ bullet: /\d/.test(mark) ? mark : '•', depth: depthOf(indent), runs: inlineRuns(body) })
-    } else if (lines.at(-1)?.bullet != null && prose.length === 0 && /^\s+\S/.test(line)) {
+      lines.push({
+        bullet: /\d/.test(mark) ? mark : '•',
+        depth: depthOf(indent),
+        runs: inlineRuns(body)
+      })
+    } else if (
+      lines.at(-1)?.bullet != null &&
+      prose.length === 0 &&
+      /^\s+\S/.test(line)
+    ) {
       // A wrapped bullet continues its item.
       const item = lines.at(-1)
       item?.runs.push({ style: 'plain', text: ' ' }, ...inlineRuns(line.trim()))
@@ -153,7 +197,10 @@ export function splitBlocks(text: string, options: BlockOptions): Block[] {
     const last = blocks.at(-1)
 
     if (last?.kind === 'markdown') {
-      blocks[blocks.length - 1] = { kind: 'markdown', text: `${last.text}\n\n${chunk}` }
+      blocks[blocks.length - 1] = {
+        kind: 'markdown',
+        text: `${last.text}\n\n${chunk}`
+      }
     } else {
       blocks.push({ kind: 'markdown', text: chunk })
     }
@@ -182,7 +229,10 @@ export function splitBlocks(text: string, options: BlockOptions): Block[] {
     // A fence, closed or still streaming, is Claude Code's to draw.
     if (FENCE.test(line)) {
       flush()
-      const close = lines.findIndex((other, j) => j > i && FENCE.test(other) && other.trim().replace(/[`~]/g, '') === '')
+      const close = lines.findIndex(
+        (other, j) =>
+          j > i && FENCE.test(other) && other.trim().replace(/[`~]/g, '') === ''
+      )
       const end = close === -1 ? lines.length - 1 : close
       markdown(lines.slice(i, end + 1).join('\n'))
       i = end
@@ -200,7 +250,11 @@ export function splitBlocks(text: string, options: BlockOptions): Block[] {
         body.push(QUOTE.exec(lines[i] ?? '')?.[1] ?? '')
       }
 
-      blocks.push({ kind: 'alert', type: (alert[1] ?? 'note').toLowerCase() as AlertType, body: body.join('\n').trim() })
+      blocks.push({
+        kind: 'alert',
+        type: (alert[1] ?? 'note').toLowerCase() as AlertType,
+        body: body.join('\n').trim()
+      })
       continue
     }
 
@@ -216,7 +270,11 @@ export function splitBlocks(text: string, options: BlockOptions): Block[] {
           break
         }
 
-        items.push({ done: task[2] !== ' ', depth: depthOf(task[1] ?? ''), text: task[3] ?? '' })
+        items.push({
+          done: task[2] !== ' ',
+          depth: depthOf(task[1] ?? ''),
+          text: task[3] ?? ''
+        })
       }
 
       blocks.push({ kind: 'tasks', items })
@@ -227,7 +285,11 @@ export function splitBlocks(text: string, options: BlockOptions): Block[] {
 
     if (heading !== null) {
       flush()
-      blocks.push({ kind: 'heading', level: heading[1]?.length ?? 1, text: (heading[2] ?? '').replace(/\*\*|__|`/g, '') })
+      blocks.push({
+        kind: 'heading',
+        level: heading[1]?.length ?? 1,
+        text: (heading[2] ?? '').replace(/\*\*|__|`/g, '')
+      })
       continue
     }
 
@@ -245,8 +307,13 @@ export function splitBlocks(text: string, options: BlockOptions): Block[] {
 }
 
 // Whether a reply holds anything the pack draws on a surface without prose drawing.
-export const hasBlocks = (text: string): boolean => /^\s*>\s*\[!(note|tip|important|warning|caution)\]|^\s*[-*+]\s+\[[ xX]\]\s/im.test(text)
+export const hasBlocks = (text: string): boolean =>
+  /^\s*>\s*\[!(note|tip|important|warning|caution)\]|^\s*[-*+]\s+\[[ xX]\]\s/im.test(
+    text
+  )
 
 // Whether the pack would draw any of `text` itself on `surface`.
 export const drawsBlocks = (text: string, surface: string): boolean =>
-  splitBlocks(text, { prose: surface === 'terminal' }).some(block => block.kind !== 'markdown')
+  splitBlocks(text, { prose: surface === 'terminal' }).some(
+    (block) => block.kind !== 'markdown'
+  )

@@ -3,7 +3,12 @@
 
 export type Align = 'left' | 'right' | 'center'
 
-export type Table = { kind: 'table'; header: string[]; align: Align[]; rows: string[][] }
+export type Table = {
+  kind: 'table'
+  header: string[]
+  align: Align[]
+  rows: string[][]
+}
 
 // `raw` is the fence as written, for the surfaces that keep Claude Code's own drawing.
 export type Code = { kind: 'code'; lang: string; code: string; raw: string }
@@ -15,19 +20,38 @@ export type Segment = { kind: 'text'; text: string } | Table | Code | Math
 
 // Fences the desktop marks runnable with a Run button of its own. A card is an image and
 // cannot carry it, so these keep Claude Code's drawing there.
-const SHELLS = new Set(['bash', 'sh', 'shell', 'zsh', 'fish', 'console', 'powershell', 'pwsh', 'ps1', 'cmd', 'bat'])
+const SHELLS = new Set([
+  'bash',
+  'sh',
+  'shell',
+  'zsh',
+  'fish',
+  'console',
+  'powershell',
+  'pwsh',
+  'ps1',
+  'cmd',
+  'bat'
+])
 
-export const isShell = (segment: Segment): boolean => segment.kind === 'code' && SHELLS.has(segment.lang)
+export const isShell = (segment: Segment): boolean =>
+  segment.kind === 'code' && SHELLS.has(segment.lang)
 
 const SEPARATOR = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/
 const FENCE = /^\s*(```|~~~)\s*([\w+#.-]*)/
 
 // Inline emphasis and code ticks read as noise in a padded cell.
 const clean = (cell: string): string =>
-  cell.replace(/\*\*|__|`/g, '').replace(/\\\|/g, '|').trim()
+  cell
+    .replace(/\*\*|__|`/g, '')
+    .replace(/\\\|/g, '|')
+    .trim()
 
 export function cellsOf(line: string): string[] {
-  const inner = line.trim().replace(/^\|/, '').replace(/(?<!\\)\|$/, '')
+  const inner = line
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/(?<!\\)\|$/, '')
 
   return inner.split(/(?<!\\)\|/).map(clean)
 }
@@ -48,11 +72,18 @@ const fit = (cells: string[], width: number): string[] =>
 // `tables` off leaves tables as text; a fence `fence` turns down stays text too, so a
 // reply can be split for its charts alone. `math` takes display formulas out as their own
 // segments: ````math`` fences, `$$…$$` and `\[…\]`.
-export type SplitOptions = { tables: boolean; fence: (lang: string, code: string) => boolean; math?: boolean }
+export type SplitOptions = {
+  tables: boolean
+  fence: (lang: string, code: string) => boolean
+  math?: boolean
+}
 
 const SPLIT_ALL: SplitOptions = { tables: true, fence: () => true }
 
-export function splitReply(markdown: string, options: SplitOptions = SPLIT_ALL): Segment[] {
+export function splitReply(
+  markdown: string,
+  options: SplitOptions = SPLIT_ALL
+): Segment[] {
   const lines = markdown.split('\n')
   const segments: Segment[] = []
   let text: string[] = []
@@ -77,7 +108,11 @@ export function splitReply(markdown: string, options: SplitOptions = SPLIT_ALL):
 
       if (formula !== null) {
         flush()
-        segments.push({ kind: 'math', tex: formula.tex, raw: lines.slice(i, formula.end + 1).join('\n') })
+        segments.push({
+          kind: 'math',
+          tex: formula.tex,
+          raw: lines.slice(i, formula.end + 1).join('\n')
+        })
         i = formula.end
         continue
       }
@@ -85,7 +120,10 @@ export function splitReply(markdown: string, options: SplitOptions = SPLIT_ALL):
 
     // A closed fence becomes a code segment; one still streaming stays text.
     if (fence !== null && !inFence) {
-      const close = lines.findIndex((other, j) => j > i && FENCE.test(other) && other.trim().replace(/[`~]/g, '') === '')
+      const close = lines.findIndex(
+        (other, j) =>
+          j > i && FENCE.test(other) && other.trim().replace(/[`~]/g, '') === ''
+      )
 
       if (close !== -1) {
         const lang = (fence[2] ?? '').toLowerCase()
@@ -98,7 +136,12 @@ export function splitReply(markdown: string, options: SplitOptions = SPLIT_ALL):
         }
 
         flush()
-        segments.push({ kind: 'code', lang, code, raw: lines.slice(i, close + 1).join('\n') })
+        segments.push({
+          kind: 'code',
+          lang,
+          code,
+          raw: lines.slice(i, close + 1).join('\n')
+        })
         i = close
         continue
       }
@@ -127,13 +170,22 @@ export function splitReply(markdown: string, options: SplitOptions = SPLIT_ALL):
     const rows: string[][] = []
     i += 2
 
-    while (i < lines.length && (lines[i] ?? '').includes('|') && (lines[i] ?? '').trim() !== '') {
+    while (
+      i < lines.length &&
+      (lines[i] ?? '').includes('|') &&
+      (lines[i] ?? '').trim() !== ''
+    ) {
       rows.push(fit(cellsOf(lines[i] ?? ''), header.length))
       i++
     }
 
     i--
-    segments.push({ kind: 'table', header, align: cellsOf(next).map(alignOf), rows })
+    segments.push({
+      kind: 'table',
+      header,
+      align: cellsOf(next).map(alignOf),
+      rows
+    })
   }
 
   flush()
@@ -145,7 +197,11 @@ const DISPLAY_OPEN = /^\s*(\$\$|\\\[)(.*)$/
 
 // A display formula starting on line `i`: where it ends and the TeX inside. One still
 // streaming (no closing delimiter yet) is not one, so it stays text until it closes.
-function displayMath(lines: readonly string[], i: number, fence: RegExpExecArray | null): { tex: string; end: number } | null {
+function displayMath(
+  lines: readonly string[],
+  i: number,
+  fence: RegExpExecArray | null
+): { tex: string; end: number } | null {
   const line = lines[i] ?? ''
 
   if (fence !== null) {
@@ -153,9 +209,14 @@ function displayMath(lines: readonly string[], i: number, fence: RegExpExecArray
       return null
     }
 
-    const close = lines.findIndex((other, j) => j > i && FENCE.test(other) && other.trim().replace(/[`~]/g, '') === '')
+    const close = lines.findIndex(
+      (other, j) =>
+        j > i && FENCE.test(other) && other.trim().replace(/[`~]/g, '') === ''
+    )
 
-    return close === -1 ? null : { tex: lines.slice(i + 1, close).join('\n'), end: close }
+    return close === -1
+      ? null
+      : { tex: lines.slice(i + 1, close).join('\n'), end: close }
   }
 
   const open = DISPLAY_OPEN.exec(line)
@@ -172,7 +233,10 @@ function displayMath(lines: readonly string[], i: number, fence: RegExpExecArray
   if (sameLine !== -1) {
     const tex = rest.slice(0, sameLine)
 
-    return rest.slice(sameLine + closer.length).trim() === '' && tex.trim() !== '' ? { tex, end: i } : null
+    return rest.slice(sameLine + closer.length).trim() === '' &&
+      tex.trim() !== ''
+      ? { tex, end: i }
+      : null
   }
 
   for (let j = i + 1; j < lines.length; j++) {
@@ -184,7 +248,9 @@ function displayMath(lines: readonly string[], i: number, fence: RegExpExecArray
         return null
       }
 
-      const tex = [rest, ...lines.slice(i + 1, j), other.slice(0, at)].join('\n')
+      const tex = [rest, ...lines.slice(i + 1, j), other.slice(0, at)].join(
+        '\n'
+      )
 
       return tex.trim() === '' ? null : { tex, end: j }
     }
@@ -218,7 +284,7 @@ const WIDE: readonly (readonly [number, number])[] = [
   [0x1f680, 0x1f6ff],
   [0x1f900, 0x1f9ff],
   [0x1fa70, 0x1faff],
-  [0x20000, 0x3fffd],
+  [0x20000, 0x3fffd]
 ]
 
 const charWidth = (char: string): number => {
@@ -231,7 +297,8 @@ const charWidth = (char: string): number => {
   return WIDE.some(([from, to]) => code >= from && code <= to) ? 2 : 1
 }
 
-export const widthOf = (text: string): number => [...text].reduce((sum, char) => sum + charWidth(char), 0)
+export const widthOf = (text: string): number =>
+  [...text].reduce((sum, char) => sum + charWidth(char), 0)
 
 // `text` cut to `width` cells, marked with an ellipsis where it lost text.
 const cutTo = (text: string, width: number): string => {
@@ -257,9 +324,13 @@ const cutTo = (text: string, width: number): string => {
 }
 
 // Natural column widths, narrowed from the widest down until the table fits.
-export function columnWidths(table: Table, maxWidth: number, gap: number): number[] {
+export function columnWidths(
+  table: Table,
+  maxWidth: number,
+  gap: number
+): number[] {
   const widths = table.header.map((cell, col) =>
-    Math.max(widthOf(cell), ...table.rows.map(row => widthOf(row[col] ?? ''))),
+    Math.max(widthOf(cell), ...table.rows.map((row) => widthOf(row[col] ?? '')))
   )
   const budget = maxWidth - gap * (widths.length - 1)
 
@@ -282,7 +353,11 @@ export function cutCell(text: string, width: number): string {
 }
 
 // Splits a word too long for its column into pieces that each fit.
-function breakWord(word: string, width: number, measure: (text: string) => number): string[] {
+function breakWord(
+  word: string,
+  width: number,
+  measure: (text: string) => number
+): string[] {
   const pieces: string[] = []
   let piece = ''
 
@@ -300,7 +375,12 @@ function breakWord(word: string, width: number, measure: (text: string) => numbe
 
 // `text` as lines that fit `width`; past `maxLines`, the last line ends in `…`. `measure`
 // is terminal cells by default; the desktop card passes its pixel measure.
-export function wrapLines(text: string, width: number, maxLines: number, measure: (text: string) => number = widthOf): string[] {
+export function wrapLines(
+  text: string,
+  width: number,
+  maxLines: number,
+  measure: (text: string) => number = widthOf
+): string[] {
   const lines: string[] = []
   let line = ''
 
@@ -316,7 +396,8 @@ export function wrapLines(text: string, width: number, maxLines: number, measure
       lines.push(line)
     }
 
-    const pieces = measure(word) <= width ? [word] : breakWord(word, width, measure)
+    const pieces =
+      measure(word) <= width ? [word] : breakWord(word, width, measure)
     lines.push(...pieces.slice(0, -1))
     line = pieces.at(-1) ?? ''
   }
@@ -356,7 +437,10 @@ export function padCell(text: string, width: number, align: Align): string {
 
 // What `/skin copy` puts on the clipboard: the whole reply, or with `code` its last code
 // block; a message instead when there is nothing to copy.
-export function copyOf(reply: string, code: boolean): { text: string } | { message: string } {
+export function copyOf(
+  reply: string,
+  code: boolean
+): { text: string } | { message: string } {
   if (reply.trim() === '') {
     return { message: 'Nothing to copy yet' }
   }
@@ -365,16 +449,30 @@ export function copyOf(reply: string, code: boolean): { text: string } | { messa
     return { text: reply }
   }
 
-  const last = splitReply(reply).findLast((segment): segment is Code => segment.kind === 'code')
+  const last = splitReply(reply).findLast(
+    (segment): segment is Code => segment.kind === 'code'
+  )
 
-  return last === undefined ? { message: 'No code block in the last reply' } : { text: last.code }
+  return last === undefined
+    ? { message: 'No code block in the last reply' }
+    : { text: last.code }
 }
 
 // A table as it is drawn, boxed in monospace, for pasting where markdown does not render.
 export function tableArt(table: Table): string {
-  const widths = table.header.map((cell, col) => Math.max(widthOf(cell), ...table.rows.map(row => widthOf(row[col] ?? ''))))
-  const rule = (left: string, mid: string, right: string) => `${left}${widths.map(width => '─'.repeat(width + 2)).join(mid)}${right}`
-  const row = (cells: readonly string[]) => `│${widths.map((width, col) => ` ${padCell(cells[col] ?? '', width, table.align[col] ?? 'left')} `).join('│')}│`
+  const widths = table.header.map((cell, col) =>
+    Math.max(widthOf(cell), ...table.rows.map((row) => widthOf(row[col] ?? '')))
+  )
+  const rule = (left: string, mid: string, right: string) =>
+    `${left}${widths.map((width) => '─'.repeat(width + 2)).join(mid)}${right}`
+  const row = (cells: readonly string[]) =>
+    `│${widths.map((width, col) => ` ${padCell(cells[col] ?? '', width, table.align[col] ?? 'left')} `).join('│')}│`
 
-  return [rule('╭', '┬', '╮'), row(table.header), rule('├', '┼', '┤'), ...table.rows.map(row), rule('╰', '┴', '╯')].join('\n')
+  return [
+    rule('╭', '┬', '╮'),
+    row(table.header),
+    rule('├', '┼', '┤'),
+    ...table.rows.map(row),
+    rule('╰', '┴', '╯')
+  ].join('\n')
 }

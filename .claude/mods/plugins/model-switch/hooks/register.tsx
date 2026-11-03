@@ -5,7 +5,10 @@ import type { Effort } from '../types'
 
 const model = atom({ plugin: 'model-switch', key: 'model' } as const, '')
 const effort = atom({ plugin: 'model-switch', key: 'effort' } as const, '')
-const isHidden = atom({ plugin: 'model-switch', key: 'isHidden' } as const, false)
+const isHidden = atom(
+  { plugin: 'model-switch', key: 'isHidden' } as const,
+  false
+)
 
 const ACCENT = '#8f8cf4'
 
@@ -14,7 +17,7 @@ const MODELS = [
   { label: 'Fable', id: 'claude-fable-5-1', match: 'fable' },
   { label: 'Opus', id: 'claude-opus-5-5', match: 'opus' },
   { label: 'Sonnet', id: 'claude-sonnet-5-5', match: 'sonnet' },
-  { label: 'Haiku', id: 'claude-haiku-5-5', match: 'haiku' },
+  { label: 'Haiku', id: 'claude-haiku-5-5', match: 'haiku' }
 ] as const
 
 const EFFORTS: readonly { label: string; level: Effort }[] = [
@@ -22,7 +25,7 @@ const EFFORTS: readonly { label: string; level: Effort }[] = [
   { label: 'med', level: 'medium' },
   { label: 'high', level: 'high' },
   { label: 'xhigh', level: 'xhigh' },
-  { label: 'max', level: 'max' },
+  { label: 'max', level: 'max' }
 ]
 
 async function sync($: EngineInterface): Promise<void> {
@@ -30,8 +33,12 @@ async function sync($: EngineInterface): Promise<void> {
   if (current) await update($, model, () => current)
 }
 
-async function run($: EngineInterface, command: 'model' | 'effort', args: string): Promise<void> {
-  const known = (await $.command.list()).some(c => c.name === command)
+async function run(
+  $: EngineInterface,
+  command: 'model' | 'effort',
+  args: string
+): Promise<void> {
+  const known = (await $.command.list()).some((c) => c.name === command)
   if (!known) {
     $.ui.toast(`model-switch: this build has no /${command} command`)
     return
@@ -39,29 +46,39 @@ async function run($: EngineInterface, command: 'model' | 'effort', args: string
   try {
     await $.command.run({ command, args })
   } catch (err) {
-    $.ui.toast(`/${command} ${args}: ${err instanceof Error ? err.message : String(err)}`)
+    $.ui.toast(
+      `/${command} ${args}: ${err instanceof Error ? err.message : String(err)}`
+    )
     return
   }
   if (command === 'effort') await update($, effort, () => args)
   await sync($)
 }
 
-export const register: Register = on => {
+export const register: Register = (on) => {
   on('session.start', async ($, e, next) => {
     const started = await next(e)
-    await $.command.register({ name: 'switchbar', description: 'Show or hide the model and effort buttons above the prompt' })
+    await $.command.register({
+      name: 'switchbar',
+      description: 'Show or hide the model and effort buttons above the prompt'
+    })
     await sync($)
     return started
   })
 
-  on('command.run', { command: 'switchbar' }, async $ => {
-    const hidden = await update($, isHidden, h => !h)
-    return { text: hidden ? 'Model and effort buttons hidden.' : 'Model and effort buttons shown.' }
+  on('command.run', { command: 'switchbar' }, async ($) => {
+    const hidden = await update($, isHidden, (h) => !h)
+    return {
+      text: hidden
+        ? 'Model and effort buttons hidden.'
+        : 'Model and effort buttons shown.'
+    }
   })
 
   // The engine says which effort each request used; keep the last one for the highlight.
   on('turn.step', async function* ($, e, next) {
-    if (typeof e.effort === 'string') await update($, effort, () => e.effort as string)
+    if (typeof e.effort === 'string')
+      await update($, effort, () => e.effort as string)
     return yield* next(e)
   })
 
@@ -80,24 +97,34 @@ export const register: Register = on => {
     return (
       <Box flexDirection="row" gap={1}>
         <Text dimColor>model</Text>
-        {MODELS.map(m =>
+        {MODELS.map((m) =>
           current.includes(m.match) ? (
             <Text key={m.id} bold color={ACCENT}>
               ●{m.label}
             </Text>
           ) : (
-            <Button key={m.id} label={m.label} plain onPress={() => run($, 'model', m.id)} />
-          ),
+            <Button
+              key={m.id}
+              label={m.label}
+              plain
+              onPress={() => run($, 'model', m.id)}
+            />
+          )
         )}
         <Text dimColor>effort</Text>
-        {EFFORTS.map(x =>
+        {EFFORTS.map((x) =>
           level === x.level ? (
             <Text key={x.level} bold color={ACCENT}>
               ●{x.label}
             </Text>
           ) : (
-            <Button key={x.level} label={x.label} plain onPress={() => run($, 'effort', x.level)} />
-          ),
+            <Button
+              key={x.level}
+              label={x.label}
+              plain
+              onPress={() => run($, 'effort', x.level)}
+            />
+          )
         )}
       </Box>
     )

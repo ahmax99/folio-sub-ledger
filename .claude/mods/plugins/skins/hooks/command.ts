@@ -20,7 +20,7 @@ export const DEFAULT_PREFS: Prefs = {
   links: true,
   copy: true,
   fold: true,
-  calm: null,
+  calm: null
 }
 
 // The on/off settings, by the word /skin and the settings pane use for each. Tables have a
@@ -40,7 +40,7 @@ export const TOGGLES = {
   hints: 'hints',
   links: 'links',
   copy: 'copy',
-  fold: 'fold',
+  fold: 'fold'
 } as const satisfies Record<string, keyof Prefs>
 
 export type ToggleWord = keyof typeof TOGGLES
@@ -55,15 +55,22 @@ export type Outcome = {
 const flagOr = (value: unknown, fallback: boolean): boolean =>
   typeof value === 'boolean' ? value : fallback
 
-export const TABLE_MODES = ['on', 'text', 'off'] as const satisfies readonly Prefs['tables'][]
+export const TABLE_MODES = [
+  'on',
+  'text',
+  'off'
+] as const satisfies readonly Prefs['tables'][]
 
 // Tables were on/off before `text`, so a stored boolean still reads.
-export function tablesOr(value: unknown, fallback: Prefs['tables']): Prefs['tables'] {
+export function tablesOr(
+  value: unknown,
+  fallback: Prefs['tables']
+): Prefs['tables'] {
   if (typeof value === 'boolean') {
     return value ? 'on' : 'off'
   }
 
-  return TABLE_MODES.find(mode => mode === value) ?? fallback
+  return TABLE_MODES.find((mode) => mode === value) ?? fallback
 }
 
 // The settings pane's tables button steps through the modes in order.
@@ -72,16 +79,25 @@ export const nextTables = (mode: Prefs['tables']): Prefs['tables'] =>
 
 // A stored calm snapshot, or null when it is not one: then calm reads as off.
 function calmOf(value: unknown): CalmSnapshot | null {
-  const saved = typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null
+  const saved =
+    typeof value === 'object' && value !== null
+      ? (value as Record<string, unknown>)
+      : null
 
-  return saved !== null && typeof saved.shimmer === 'boolean' && typeof saved.rail === 'boolean' && typeof saved.quiet === 'boolean'
+  return saved !== null &&
+    typeof saved.shimmer === 'boolean' &&
+    typeof saved.rail === 'boolean' &&
+    typeof saved.quiet === 'boolean'
     ? { shimmer: saved.shimmer, rail: saved.rail, quiet: saved.quiet }
     : null
 }
 
 // What the store hands back may be old, hand-edited or from another version.
 export function parsePrefs(raw: unknown, names: readonly string[]): Prefs {
-  const saved = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {}
+  const saved =
+    typeof raw === 'object' && raw !== null
+      ? (raw as Record<string, unknown>)
+      : {}
   const skin = saved.skin
 
   return {
@@ -107,7 +123,7 @@ export function parsePrefs(raw: unknown, names: readonly string[]): Prefs {
     links: flagOr(saved.links, DEFAULT_PREFS.links),
     copy: flagOr(saved.copy, DEFAULT_PREFS.copy),
     fold: flagOr(saved.fold, DEFAULT_PREFS.fold),
-    calm: calmOf(saved.calm),
+    calm: calmOf(saved.calm)
   }
 }
 
@@ -118,21 +134,41 @@ export function withCalm(current: Prefs, on: boolean): Prefs {
   if (on) {
     return current.calm !== null
       ? current
-      : { ...current, calm: { shimmer: current.shimmer, rail: current.rail, quiet: current.quiet }, shimmer: false, rail: false, quiet: true }
+      : {
+          ...current,
+          calm: {
+            shimmer: current.shimmer,
+            rail: current.rail,
+            quiet: current.quiet
+          },
+          shimmer: false,
+          rail: false,
+          quiet: true
+        }
   }
 
-  return current.calm === null ? current : { ...current, ...current.calm, calm: null }
+  return current.calm === null
+    ? current
+    : { ...current, ...current.calm, calm: null }
 }
 
-const changed = (prefs: Prefs, message: string): Outcome => ({ prefs, message, channel: 'toast' })
+const changed = (prefs: Prefs, message: string): Outcome => ({
+  prefs,
+  message,
+  channel: 'toast'
+})
 
-const refused = (prefs: Prefs, message: string): Outcome => ({ prefs, message, channel: 'row' })
+const refused = (prefs: Prefs, message: string): Outcome => ({
+  prefs,
+  message,
+  channel: 'row'
+})
 
 const onOff = (on: boolean): string => (on ? 'on' : 'off')
 
 export const listing = (current: Prefs, names: readonly string[]): string =>
   [
-    ...names.map(name => `${name === current.skin ? '●' : '○'} ${name}`),
+    ...names.map((name) => `${name === current.skin ? '●' : '○'} ${name}`),
     `${current.skin === 'off' ? '●' : '○'} off`,
     [
       `icons ${current.icons}`,
@@ -153,14 +189,19 @@ export const listing = (current: Prefs, names: readonly string[]): string =>
       `links ${onOff(current.links)}`,
       `copy ${onOff(current.copy)}`,
       `fold ${onOff(current.fold)}`,
-      `calm ${onOff(current.calm !== null)}`,
-    ].join(' · '),
+      `calm ${onOff(current.calm !== null)}`
+    ].join(' · ')
   ].join('\n')
 
-const isToggle = (word: string): word is ToggleWord => Object.hasOwn(TOGGLES, word)
+const isToggle = (word: string): word is ToggleWord =>
+  Object.hasOwn(TOGGLES, word)
 
 // Every argument but none: with none, /skin opens the settings pane instead.
-export function runSkinCommand(args: string, current: Prefs, names: readonly string[]): Outcome {
+export function runSkinCommand(
+  args: string,
+  current: Prefs,
+  names: readonly string[]
+): Outcome {
   const [head = '', value] = args.trim().toLowerCase().split(/\s+/)
 
   if (isToggle(head)) {
@@ -181,13 +222,24 @@ export function runSkinCommand(args: string, current: Prefs, names: readonly str
       return changed({ ...current, skin: 'off' }, 'skins off')
     case 'on':
       return current.skin === 'off'
-        ? changed({ ...current, skin: DEFAULT_PREFS.skin }, `skin: ${DEFAULT_PREFS.skin}`)
+        ? changed(
+            { ...current, skin: DEFAULT_PREFS.skin },
+            `skin: ${DEFAULT_PREFS.skin}`
+          )
         : changed(current, `skin: ${current.skin}`)
     case 'calm':
       return value === 'on' || value === undefined
-        ? changed(withCalm(current, true), current.calm === null ? 'calm on' : 'calm is already on')
+        ? changed(
+            withCalm(current, true),
+            current.calm === null ? 'calm on' : 'calm is already on'
+          )
         : value === 'off'
-          ? changed(withCalm(current, false), current.calm === null ? 'calm is already off' : 'calm off: your settings are back')
+          ? changed(
+              withCalm(current, false),
+              current.calm === null
+                ? 'calm is already off'
+                : 'calm off: your settings are back'
+            )
           : refused(current, 'usage: /skin calm [on|off]')
     case 'tables':
       return value === 'on' || value === 'text' || value === 'off'

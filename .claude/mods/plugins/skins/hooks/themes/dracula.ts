@@ -18,10 +18,17 @@ const skin: Skin = {
     zebra: '#2a2c37',
     ok: '#50fa7b',
     err: '#ff5555',
-    warn: '#f1fa8c',
+    warn: '#f1fa8c'
   },
-  spinner: ['Brooding', 'Haunting', 'Conjuring', 'Lurking', 'Scheming', 'Unliving'],
-  done: ['Risen', 'Conjured', 'Bitten', 'Vanquished'],
+  spinner: [
+    'Brooding',
+    'Haunting',
+    'Conjuring',
+    'Lurking',
+    'Scheming',
+    'Unliving'
+  ],
+  done: ['Risen', 'Conjured', 'Bitten', 'Vanquished']
 }
 
 export default skin

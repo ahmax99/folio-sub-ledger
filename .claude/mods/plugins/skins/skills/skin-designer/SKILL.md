@@ -24,7 +24,12 @@ every change shows on screen the moment the call returns.
   "action": "save",
   "name": "sunset",
   "base": "gruvbox",
-  "palette": { "user": "#ff8a5b", "run": "#ffcf70", "surface": "#3a2b2b", "zebra": "#2e2424" },
+  "palette": {
+    "user": "#ff8a5b",
+    "run": "#ffcf70",
+    "surface": "#3a2b2b",
+    "zebra": "#2e2424"
+  },
   "spinner": ["Glowing", "Fading", "Drifting"],
   "done": ["Set", "Faded"]
 }

@@ -1,3 +1,5 @@
+import type { Skin } from '../skin'
+
 import ayu from './ayu'
 import catppuccin from './catppuccin'
 import dracula from './dracula'
@@ -13,7 +15,6 @@ import oneDark from './one-dark'
 import rosePine from './rose-pine'
 import solarized from './solarized'
 import tokyoNight from './tokyo-night'
-import type { Skin } from '../skin'
 
 // A new built-in skin is one file beside these and one line here. The first is the default.
 export const SKINS: readonly Skin[] = [
@@ -31,5 +32,5 @@ export const SKINS: readonly Skin[] = [
   kanagawa,
   ayu,
   nightOwl,
-  mono,
+  mono
 ]

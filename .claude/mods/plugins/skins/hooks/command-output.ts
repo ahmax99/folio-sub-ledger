@@ -33,7 +33,12 @@ function pairTables(text: string, command: string): Segment[] {
   const flushPairs = () => {
     if (pairs.length >= 2) {
       flushProse()
-      const table: Table = { kind: 'table', header: [command, ''], align: ['left', 'left'], rows: pairs }
+      const table: Table = {
+        kind: 'table',
+        header: [command, ''],
+        align: ['left', 'left'],
+        rows: pairs
+      }
       segments.push(table)
     } else {
       prose.push(...pairs.map(([key, value]) => `${key}: ${value}`))
@@ -60,15 +65,18 @@ function pairTables(text: string, command: string): Segment[] {
   return segments
 }
 
-export function commandSegments(raw: string, command: string): Segment[] | null {
+export function commandSegments(
+  raw: string,
+  command: string
+): Segment[] | null {
   const text = raw.replace(ANSI, '')
   const split = splitReply(text)
 
-  if (split.some(segment => segment.kind !== 'text')) {
+  if (split.some((segment) => segment.kind !== 'text')) {
     return split
   }
 
   const paired = pairTables(text, command === '' ? 'output' : command)
 
-  return paired.some(segment => segment.kind === 'table') ? paired : null
+  return paired.some((segment) => segment.kind === 'table') ? paired : null
 }
