@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router'
 import type { User } from '@shared/config'
 
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
-import { getUserPermissions } from '@/features/auth/lib/permission'
 import {
   PROTECTED_ROUTES,
   PUBLIC_AUTH_ROUTES,
@@ -18,17 +17,7 @@ interface PageHeaderProps {
 }
 
 function PageHeader({ user }: Readonly<PageHeaderProps>) {
-  const permission = getUserPermissions(user ?? undefined)
-
-  const navItems = [
-    { name: 'Blog', href: PUBLIC_ROUTES.POSTS },
-    {
-      name: 'Create',
-      href: PROTECTED_ROUTES.POST_CREATE,
-      disabled: !permission.can('create', 'Post')
-    },
-    { name: 'Contact', href: PUBLIC_ROUTES.CONTACT_US }
-  ]
+  const navItems = [{ name: 'Contact', href: PUBLIC_ROUTES.CONTACT_US }]
 
   return (
     <header className="px-4 md:px-6">
@@ -40,24 +29,15 @@ function PageHeader({ user }: Readonly<PageHeaderProps>) {
             </Link>
 
             <nav aria-label="Main" className="hidden gap-6 md:flex">
-              {navItems.map((item) =>
-                item.disabled ? (
-                  <span
-                    className="text-muted-foreground cursor-not-allowed opacity-50"
-                    key={item.name}
-                  >
-                    {item.name}
-                  </span>
-                ) : (
-                  <Link
-                    className="hover:text-primary"
-                    to={item.href}
-                    key={item.name}
-                  >
-                    {item.name}
-                  </Link>
-                )
-              )}
+              {navItems.map((item) => (
+                <Link
+                  className="hover:text-primary"
+                  to={item.href}
+                  key={item.name}
+                >
+                  {item.name}
+                </Link>
+              ))}
             </nav>
           </div>
         </div>

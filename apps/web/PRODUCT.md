@@ -12,7 +12,7 @@ product
 
 Developers and small teams who clone this template to ship a full-stack app
 (TanStack Start BFF + Elysia API + Cognito auth + Neon Postgres). The demo surfaces —
-posts with comments, account management, auth flows, a marketing landing page —
+account management, auth flows, a marketing landing page —
 exist to be extended or replaced, not admired. Users of a derived app are in a
 get-something-done workflow: reading, writing, managing their own records.
 

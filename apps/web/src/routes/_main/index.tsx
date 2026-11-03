@@ -1,13 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { FeatureSection, HeroSection } from '@/components/common'
+import { HeroSection } from '@/components/common'
 import { PageTemplate } from '@/components/layout'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 
 const HomePage = () => (
   <PageTemplate maxWidth="wide">
     <HeroSection />
-    <FeatureSection />
   </PageTemplate>
 )
 

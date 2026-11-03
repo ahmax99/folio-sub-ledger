@@ -19,12 +19,11 @@ const app = new Elysia()
     })
   )
   .get('/', () => ({
-    message: 'Backend Boilerplate API',
+    message: 'Folio API',
     version: '1.0.0',
     documentation: '/api/v1/openapi',
     endpoints: {
-      posts: '/api/v1/posts',
-      comments: '/api/v1/comments'
+      users: '/api/v1/users'
     }
   }))
   .use(routes)

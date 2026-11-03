@@ -17,7 +17,7 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 
 ## Validation
 
-- Validate all external input (request `body` / `query` / `params`, headers, env) with a Zod schema at the boundary — for the backend that's the Elysia route options (e.g. `body: PostModel.createPostBody`), never inside a service.
+- Validate all external input (request `body` / `query` / `params`, headers, env) with a Zod schema at the boundary — for the backend that's the Elysia route options (e.g. `body: UserModel.updateUserBody`), never inside a service.
 - Schemas live in `@shared/config` as `*.model.ts` and are imported by both apps. Add new validation there, not in an app.
 
 ## Transactions

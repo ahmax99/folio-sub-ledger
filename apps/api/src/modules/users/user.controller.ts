@@ -1,6 +1,6 @@
 import { subject } from '@casl/ability'
 import { fromTypes, openapi } from '@elysiajs/openapi'
-import { PostModel, UserModel } from '@shared/config'
+import { UserModel } from '@shared/config'
 import { Elysia } from 'elysia'
 
 import { errorHandler } from '@/error/lib/errorHandler.js'
@@ -74,7 +74,7 @@ export const userController = new Elysia({ prefix: '/users' })
           )
       ),
     {
-      query: PostModel.uploadImageQuery,
+      query: UserModel.uploadImageQuery,
       auth: true,
       detail: {
         summary: 'Get presigned URL for profile image upload',

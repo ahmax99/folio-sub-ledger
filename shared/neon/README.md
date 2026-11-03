@@ -71,17 +71,12 @@ Import the Prisma client in your application:
 ```typescript
 import { prisma } from '@shared/neon'
 
-// Query posts
-const posts = await prisma.post.findMany()
+// Query users
+const users = await prisma.user.findMany()
 
-// Create a post
-const post = await prisma.post.create({
-  data: {
-    title: 'Hello World',
-    content: 'My first post',
-    authorId: 'user-id',
-    slug: 'hello-world'
-  }
+// Find a user by Cognito subject
+const user = await prisma.user.findUnique({
+  where: { cognitoSub: 'cognito-sub' }
 })
 ```
 

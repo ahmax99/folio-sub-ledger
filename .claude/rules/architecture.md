@@ -19,7 +19,7 @@ Elysia app composed from plugins. Entry is `src/index.ts`: load secrets → moun
 **Module layout** under `src/modules/<name>/`:
 
 - `*.plugin.ts` — an Elysia plugin that `.decorate()`s the service(s) onto the context.
-- `*.controller.ts` — defines routes, `.use()`s its plugin + `authPlugin` + `errorHandler` + `openapi`. Validates with Zod schemas from `@shared/config` (e.g. `PostModel.createPostBody`). Wraps every service call in `handleApiError(...)`.
+- `*.controller.ts` — defines routes, `.use()`s its plugin + `authPlugin` + `errorHandler` + `openapi`. Validates with Zod schemas from `@shared/config` (e.g. `UserModel.updateUserBody`). Wraps every service call in `handleApiError(...)`.
 - `*.service.ts` — pure data logic. Returns `ResultAsync<T, AppError>` (neverthrow), never throws to the caller.
 
 Routes are aggregated in `src/routes/index.ts` under prefix `/api/v1`; OpenAPI/Swagger is served there.
@@ -33,7 +33,7 @@ Routes are aggregated in `src/routes/index.ts` under prefix `/api/v1`; OpenAPI/S
 **Auth & authorization:**
 
 - `authPlugin` (`src/modules/auth/auth.plugin.ts`) exposes an `auth: true` route macro. It reads a Bearer token, **falling back to the `X-Id-Token` header** (SSR/Lambda calls put the SigV4 signature in `Authorization`). It verifies the Cognito JWT (`jose`) and resolves `user: AuthUser` (`cognitoSub`, `email`, `role` from `cognito:groups`).
-- Authorization is **CASL + Prisma**. `getUserPermissions(user?, userId?)` (`src/modules/auth/permission.ts`) builds an `AppAbility`. Services receive the ability and enforce it two ways: `accessibleBy(ability).ofType('Post')` in `where` clauses for list queries, and `ability.can('update', subject('Post', post))` for single-resource checks. Unauthenticated callers get read-only public permissions.
+- Authorization is **CASL + Prisma**. `getUserPermissions(user?, userId?)` (`src/modules/auth/permission.ts`) builds an `AppAbility`. Services receive the ability and enforce it two ways: `accessibleBy(ability).ofType('<Model>')` in `where` clauses for list queries, and `ability.can('update', subject('User', user))` for single-resource checks. Unauthenticated callers get no permissions.
 
 Secrets: in production, `loadSecrets()` pulls `DATABASE_URL` from AWS Secrets Manager (`DATABASE_URL_SECRET_NAME`); in dev it reads `.env`. Env is validated with `@t3-oss/env-core` in `src/config/env.ts`.
 
