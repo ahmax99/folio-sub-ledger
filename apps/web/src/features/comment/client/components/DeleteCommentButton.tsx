@@ -5,7 +5,7 @@ import { Trash2 } from 'lucide-react'
 
 import { ActionButton } from '@/components/organisms'
 
-import { useDeleteComment } from '../hooks/useCommentMutations'
+import { useCommentActions } from '../hooks/useCommentActions'
 
 interface DeleteCommentButtonProps {
   commentId: CommentIdParams['id']
@@ -16,7 +16,7 @@ export const DeleteCommentButton = ({
   commentId,
   postId
 }: DeleteCommentButtonProps) => {
-  const deleteComment = useDeleteComment(postId)
+  const { deleteComment } = useCommentActions(postId)
 
   return (
     <ActionButton

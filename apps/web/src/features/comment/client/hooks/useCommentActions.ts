@@ -32,8 +32,7 @@ const updateComments = async (
   }
 }
 
-export const useCreateComment = () => {
-  const queryClient = useQueryClient()
+const useCreateComment = (queryClient: QueryClient) => {
   const { user } = useRouteContext({ from: '/_main' })
 
   return useMutation({
@@ -62,10 +61,8 @@ export const useCreateComment = () => {
   })
 }
 
-export const useDeleteComment = (postId: Post['id']) => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
+const useDeleteComment = (queryClient: QueryClient, postId: Post['id']) =>
+  useMutation({
     mutationFn: (commentId: CommentIdParams['id']) => deleteComment(commentId),
     onMutate: (commentId) =>
       updateComments(queryClient, postId, (comments) =>
@@ -74,4 +71,14 @@ export const useDeleteComment = (postId: Post['id']) => {
     onError: (_error, _commentId, cache) => cache?.rollback(),
     onSettled: (_data, _error, _commentId, cache) => cache?.refetch()
   })
+
+const useCommentActions = (postId: Post['id']) => {
+  const queryClient = useQueryClient()
+
+  return {
+    createComment: useCreateComment(queryClient),
+    deleteComment: useDeleteComment(queryClient, postId)
+  }
 }
+
+export { useCommentActions }

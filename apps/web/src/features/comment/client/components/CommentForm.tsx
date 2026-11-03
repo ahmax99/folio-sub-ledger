@@ -8,10 +8,10 @@ import {
   CommentFormModel,
   type CreateCommentSchema
 } from '../../schemas/commentForm.schema'
-import { useCreateComment } from '../hooks/useCommentMutations'
+import { useCommentActions } from '../hooks/useCommentActions'
 
 export const CommentForm = ({ postId }: Readonly<{ postId: Post['id'] }>) => {
-  const createComment = useCreateComment()
+  const { createComment } = useCommentActions(postId)
   const defaultValues: CreateCommentSchema = { content: '', postId }
   const form = useAppForm({
     defaultValues,
