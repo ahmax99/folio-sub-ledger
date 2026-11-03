@@ -9,7 +9,7 @@ interface AuthorizeResourceOptions<TRecord> {
   can?: (record: TRecord) => boolean
 }
 
-const authorizeResource = <TRecord>(
+export const authorizeResource = <TRecord>(
   resource: TRecord | null | Promise<TRecord | null>,
   {
     notFound = 'Resource not found',
@@ -22,5 +22,3 @@ const authorizeResource = <TRecord>(
     if (!can(record)) return err(new AppError('FORBIDDEN', forbidden))
     return ok(record)
   })
-
-export { authorizeResource }
