@@ -16,6 +16,19 @@ The goal is not "fewer lines" — it's lower complexity: less for the next reade
 - **Complexity is incremental.** It accrues one "this is fine" at a time. Push back on small messes before they compound.
 - Prefer the design that makes the _common_ case obvious, even if it makes a rare case slightly more verbose.
 
+## The smallest complete change
+
+Before writing new code, read the code the change touches and list every place it must reach (callers, schemas, routes, config, exports). Then take the first rung that fully works:
+
+1. **Does it need to exist?** Skip options, flexibility and "for later" code nobody asked for; name what you skipped in one line.
+2. **Already in this repo?** A helper, component, service or pattern (`src/components/`, `@shared/config`, the `catchError` utils). Use it the way the surrounding code does.
+3. **The platform or standard library?** Web/Bun/Node built-ins, a native HTML element. A house component beats a native widget.
+4. **An installed dependency?** Use it. Never add a dependency for a few lines.
+5. **One line a reader gets at a glance?** One line.
+6. **Otherwise,** the minimum code that works, inside the structure the codebase already has.
+
+Lazy about the solution, never about the change: finish every caller and schema it breaks. Never cut validation at a trust boundary, CASL checks, error handling that prevents data loss, security, or accessibility. Adapted from [Ponytail](https://github.com/dietrichgebert/ponytail) (MIT).
+
 ## Deep modules
 
 A module's value is its functionality divided by its interface. Maximize the first, minimize the second.

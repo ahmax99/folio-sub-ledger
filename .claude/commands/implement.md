@@ -35,6 +35,10 @@ Remaining `$ARGUMENTS` tokens (after stripping `--plan=...`) are passed through 
 
 `.claude/rules/architecture.md`, `conventions.md`, and `principles.md` are the source of truth for patterns — module triads, the neverthrow `Result` flow, `.js` ESM imports, Zod-at-the-boundary, the BFF rule, CASL enforcement, named exports. They are already loaded in your context; follow them without restating them. Before writing a new module, read the nearest analogous one (e.g. `src/modules/posts/` for a backend resource) and match it. If a plan step conflicts with a rule, stop and flag it rather than improvising.
 
+### Climb the ladder before writing code
+
+For each step, run `principles.md`'s **smallest complete change** ladder before adding code, and take the first rung that fully works. When you tell the user a step is done, name the rung you stopped at and anything you deliberately skipped.
+
 ### Quality gates per step
 
 After implementing each step, self-check:
