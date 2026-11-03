@@ -22,8 +22,17 @@ Modern full-stack monorepo boilerplate built with Turborepo, Bun, and TypeScript
 - **[React](https://react.dev/)** - UI library
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[shadcn/ui](https://ui.shadcn.com/)** - Re-usable component library
-- **[React Hook Form](https://react-hook-form.com/)** - Form validation
+- **[TanStack Query](https://tanstack.com/query)** - Server state and data fetching _(adopted, being phased in)_
+- **[TanStack Table](https://tanstack.com/table)** + **[Virtual](https://tanstack.com/virtual)** - Headless data grids and virtualized lists _(adopted, being phased in)_
+- **[TanStack Form](https://tanstack.com/form)** - Type-safe forms, replacing React Hook Form _(adopted, being phased in)_
+- **[TanStack Hotkeys](https://tanstack.com/hotkeys)** / **[Pacer](https://tanstack.com/pacer)** / **[Devtools](https://tanstack.com/devtools)** - Keyboard shortcuts, debouncing, dev panel _(adopted, being phased in)_
+- **[React Hook Form](https://react-hook-form.com/)** - Form validation (being replaced by TanStack Form)
 - **[Zustand](https://zustand-demo.pmnd.rs/)** - State management
+
+### AI _(planned)_
+
+- **[Mastra](https://mastra.ai/)** - TypeScript framework for AI workflows, agents and evals (runs in the classification worker)
+- **[Vercel AI SDK](https://ai-sdk.dev/)** + **[Amazon Bedrock](https://aws.amazon.com/bedrock/)** - Model layer under Mastra; IAM-role credentials, prompts stay in the AWS account
 
 ### Database & Caching
 

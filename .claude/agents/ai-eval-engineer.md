@@ -11,7 +11,7 @@ You operate in one of four modes, named by your invocation prompt. In **Review m
 
 ## Folio's AI system (what you evaluate)
 
-- **Pipeline:** canonical event → deterministic rules (address book, transfer matcher, token map, learned firm rules; ~80% resolved) → residue to SQS → worker Lambda → Amazon Bedrock via AI SDK (model ID pinned in Terraform) → Zod-validated **proposal** → human review queue. There is no path from the model to the ledger without approval.
+- **Pipeline:** canonical event → deterministic rules (address book, transfer matcher, token map, learned firm rules; ~80% resolved) → residue to SQS → worker Lambda → Mastra workflow → Amazon Bedrock via the Vercel AI SDK provider (model ID pinned in Terraform) → Zod-validated **proposal** → human review queue. There is no path from the model to the ledger without approval.
 - **Proposal:** `category` ∈ `transfer`, `trade`, `staking_reward`, `fee`, `income`, `unclassified`; `confidence` 0–1; `evidence` ≥1 item (`contract` | `counterparty` | `memo`, with `source`). No evidence, or confidence below the firm's threshold → `unclassified`.
 - **Precedent search:** hybrid BM25 + vector (Bedrock embeddings) on OpenSearch; the five most similar past decisions **from the same firm** go to the reviewer and into the prompt as examples. Exact-contract matches must never be dropped.
 - **Product requirements you enforce** (stories 9.1, 9.3, 9.4, 4.2):
