@@ -4,6 +4,8 @@ import {
 } from '@tanstack/react-form-start'
 import { createServerFn } from '@tanstack/react-start'
 
+import { ResultAsync } from 'neverthrow'
+
 import { env } from '@/config/env'
 import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
 import { AppError } from '@/features/error/lib/AppError'
@@ -20,21 +22,17 @@ import { ContactNotificationEmail } from '../components/ContactNotificationEmail
 import { sendEmail } from '../utils/sendEmail'
 
 const deliverContactEmails = (data: ContactFormSchema) =>
-  Promise.all([
-    handleApiError(
-      sendEmail({
-        user: { email: data.email, name: data.name },
-        subject: `Thank you for contacting us, ${data.name}!`,
-        react: ContactConfirmationEmail(data)
-      })
-    ),
-    handleApiError(
-      sendEmail({
-        user: { email: env.CONTACT_TO_EMAIL, name: 'Site Owner' },
-        subject: `Contact: ${data.subject}`,
-        react: ContactNotificationEmail(data)
-      })
-    )
+  ResultAsync.combine([
+    sendEmail({
+      user: { email: data.email, name: data.name },
+      subject: `Thank you for contacting us, ${data.name}!`,
+      react: ContactConfirmationEmail(data)
+    }),
+    sendEmail({
+      user: { email: env.CONTACT_TO_EMAIL, name: 'Site Owner' },
+      subject: `Contact: ${data.subject}`,
+      react: ContactNotificationEmail(data)
+    })
   ])
 
 const validateContactForm = createServerValidate({
@@ -42,11 +40,16 @@ const validateContactForm = createServerValidate({
   onServerValidate: ContactFormModel.contact
 })
 
+const toFormResponse = (error: unknown) => {
+  if (error instanceof ServerValidateError) return error.response
+  throw error
+}
+
 // react-doctor-disable-next-line react-doctor/server-auth-actions -- public contact form; Zod-validated input, no privileged mutation (see .react-doctor/false-positives.md)
 export const sendContactEmail = createServerFn({ method: 'POST' })
   .validator(ContactFormModel.contact)
   .handler(async ({ data }) => {
-    await deliverContactEmails(data)
+    await handleApiError(deliverContactEmails(data))
   })
 
 // react-doctor-disable-next-line react-doctor/server-auth-actions -- public contact form; Zod-validated input, no privileged mutation (see .react-doctor/false-positives.md)
@@ -57,14 +60,8 @@ export const submitContactForm = createServerFn({ method: 'POST' })
 
     return data
   })
-  .handler(async ({ data }) => {
-    try {
-      const values = await validateContactForm(data)
-      await deliverContactEmails(ContactFormModel.contact.parse(values))
-    } catch (error) {
-      if (error instanceof ServerValidateError) return error.response
-      throw error
-    }
-
-    return redirectResponse(PUBLIC_ROUTES.HOME)
-  })
+  .handler(({ data }) =>
+    ResultAsync.fromPromise(validateContactForm(data), (error) => error)
+      .andThen(deliverContactEmails)
+      .match(() => redirectResponse(PUBLIC_ROUTES.HOME), toFormResponse)
+  )

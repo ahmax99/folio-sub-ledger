@@ -1,6 +1,8 @@
 import { type AnyFormApi, useStore } from '@tanstack/react-form'
 import { useEffect } from 'react'
 
+import { ResultAsync } from 'neverthrow'
+
 import { mapToAppError } from '@/features/error/lib/mapToAppError'
 import { useFormContext } from '@/lib/formContext'
 import { cn } from '@/utils/mergeClass'
@@ -50,10 +52,9 @@ const Form = ({ action, className, children }: Readonly<FormProps>) => {
       noValidate
       onSubmit={(event) => {
         event.preventDefault()
-        form.handleSubmit().catch((error: unknown) => {
-          const { fields } = mapToAppError(error)
-          if (fields) form.setErrorMap({ onServer: { fields } })
-        })
+        ResultAsync.fromPromise(form.handleSubmit(), mapToAppError).orTee(
+          ({ fields }) => fields && form.setErrorMap({ onServer: { fields } })
+        )
       }}
     >
       {children}
