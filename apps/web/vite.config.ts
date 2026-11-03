@@ -18,8 +18,6 @@ const SECURITY_HEADERS = {
 export default defineConfig(({ command }) => ({
   server: { port: 3000 },
   resolve: { tsconfigPaths: true },
-  // Bundle server deps so Redact also replaces their React imports. Build only:
-  // Vite's dev module runner can't inline CJS deps such as @opentelemetry/api
   ...(command === 'build' && { ssr: { noExternal: true } }),
   plugins: [
     tailwindcss(),
