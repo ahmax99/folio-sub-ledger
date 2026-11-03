@@ -5,9 +5,14 @@ description: Design workflow for building UI in this monorepo and any app derive
 
 # App Design (project glue)
 
-This repo composes three design layers, listed here in precedence order. This
+This repo composes four design layers, listed here in precedence order. This
 skill tells you which layer owns what, so guidance never conflicts:
 
+0. **Figma** (the `product-designer` agent, Figma MCP) — what the screens are.
+   New screens are designed in the project's Figma file before code, and code
+   follows those frames. Where frames exist they set how the screen looks, and
+   impeccable critiques the frames rather than restyling the code. Figma never
+   overrides the layers below on how code is written.
 1. **This repo's conventions** (`.claude/rules/architecture.md`,
    `conventions.md`) — placement and structure: atomic design layers, feature
    folders, CVA, `data-slot`, named exports, `'use client'` discipline. These
@@ -51,6 +56,9 @@ When an app derived from this boilerplate needs its design language defined:
 
 ## Scenario 2: building UI
 
+- If the screen has Figma frames, get a Handoff from `product-designer` first
+  and build from its mapping. If it has none and it is a new screen, design it
+  in Figma first (`product-designer`, Design mode).
 - Follow the shadcn skill's workflow first: check installed components, search
   registries before writing custom markup, compose rather than reinvent.
 - For anything beyond a mechanical change — a new page, section, or component
@@ -70,7 +78,8 @@ When an app derived from this boilerplate needs its design language defined:
   (spacing/rhythm), `colorize`, `animate`, `bolder` / `quieter`, `harden`
   (error/edge/i18n states), `clarify` (UX copy).
 - Review: `/design-review` (project command) runs impeccable's critique +
-  audit against the running app with Playwright and reports
+  audit against the running app with Playwright, plus a Figma critique
+  annotated on the canvas, and reports
   Blockers/High/Medium/Nitpicks. `/qa` covers code correctness; `/design-review`
   covers design quality — run both before shipping UI.
 

@@ -268,3 +268,7 @@ crisp edges, instant feedback.
   spacing would do.
 - **Don't** add decorative charts, badges, or stat tiles that don't answer a
   user question — dashboard clutter is an anti-reference.
+
+## Figma
+
+No file yet. The `product-designer` agent creates it on first use and records the URL here.
