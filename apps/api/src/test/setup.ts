@@ -3,6 +3,7 @@ import { errAsync, okAsync } from 'neverthrow'
 import { afterAll, beforeEach, vi } from 'vitest'
 
 import { AppError } from '@/error/lib/AppError.js'
+import type { Token } from '@/test/identities.js'
 
 vi.mock('@shared/neon', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@shared/neon')>()
@@ -14,33 +15,17 @@ vi.mock('@shared/neon', async (importOriginal) => {
   }
 })
 
-const identities: Record<string, { sub: string; email: string; name: string }> =
-  {
-    'test-token': {
-      sub: 'test-sub',
-      email: 'test@example.com',
-      name: 'Test User'
-    },
-    'other-token': {
-      sub: 'other-sub',
-      email: 'other@example.com',
-      name: 'Other User'
-    },
-    'analyst-token': {
-      sub: 'analyst-sub',
-      email: 'analyst@example.com',
-      name: 'Analyst User'
+vi.mock('@/modules/auth/jwt.js', async () => {
+  const { identities } = await import('@/test/identities.js')
+  return {
+    verifyToken: (token: string) => {
+      const identity = identities[token as Token]
+      return identity
+        ? okAsync(identity)
+        : errAsync(new AppError('UNAUTHORIZED', 'Invalid or expired token'))
     }
   }
-
-vi.mock('@/modules/auth/jwt.js', () => ({
-  verifyToken: (token: string) => {
-    const identity = identities[token]
-    return identity
-      ? okAsync(identity)
-      : errAsync(new AppError('UNAUTHORIZED', 'Invalid or expired token'))
-  }
-}))
+})
 
 vi.mock('@/error/utils/captureError.js', () => ({ captureError: vi.fn() }))
 vi.mock('@/lib/cognito.js', () => ({

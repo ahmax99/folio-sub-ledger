@@ -15,6 +15,10 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 - Prefer `const` arrow functions over `function` declarations: `const fn = () => {}` not `function fn() {}`. **Exception:** TypeScript function overloads require the `function` keyword (e.g., a utility with multiple call signatures); the `function` keyword is acceptable only in that case.
 - Prefer `switch-case` over `else-if` chains when 3 or more branches test the same discriminant expression. For simple value-to-value mappings, prefer a `Record<K, V>` lookup table over both (exhaustiveness is enforced by the type).
 
+## Tests
+
+- In `apps/api`, tests live in a `__tests__/` folder next to the code they cover (`src/modules/users/__tests__/user.controller.test.ts`). Seed and request through the shared helpers in `src/test/fixtures.ts` and the identities in `src/test/identities.ts` instead of redefining them per file.
+
 ## Validation
 
 - Validate all external input (request `body` / `query` / `params`, headers, env) with a Zod schema at the boundary — for the backend that's the Elysia route options (e.g. `body: UserModel.updateUserBody`), never inside a service.

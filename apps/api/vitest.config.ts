@@ -7,6 +7,12 @@ export default defineConfig({
     globalSetup: ['./src/test/globalSetup.ts'],
     setupFiles: ['./src/test/setup.ts'],
     fileParallelism: false,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**'],
+      exclude: ['src/test/**', '**/__tests__/**'],
+      reporter: ['text', 'text-summary', 'lcov']
+    },
     env: {
       AWS_REGION: 'us-east-1',
       BACKEND_PORT: '0',

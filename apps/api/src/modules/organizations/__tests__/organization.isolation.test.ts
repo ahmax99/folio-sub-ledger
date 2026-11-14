@@ -2,22 +2,7 @@ import { type Prisma, prisma } from '@shared/neon'
 import { describe, expect, it } from 'vitest'
 
 import { organizationDb } from '@/modules/organizations/organization.db.js'
-
-const seedFirm = (name: string, sub: string) =>
-  prisma.organization.create({
-    data: {
-      name,
-      users: {
-        create: {
-          cognitoSub: sub,
-          email: `${sub}@example.com`,
-          name,
-          role: 'OWNER'
-        }
-      }
-    },
-    include: { users: true }
-  })
+import { seedOwner } from '@/test/fixtures.js'
 
 const asApp = <T>(
   orgId: string | null,
@@ -32,24 +17,24 @@ const asApp = <T>(
 
 describe('row-level security', () => {
   it('returns only the current firm rows to folio_app', async () => {
-    const a = await seedFirm('Firm A', 'a-sub')
-    await seedFirm('Firm B', 'b-sub')
+    const a = await seedOwner('test-token', 'Firm A')
+    await seedOwner('other-token', 'Firm B')
 
     const rows = await asApp(
-      a.id,
+      a.orgId,
       (tx) => tx.$queryRaw<{ org_id: string }[]>`SELECT org_id FROM users`
     )
     const orgs = await asApp(
-      a.id,
+      a.orgId,
       (tx) => tx.$queryRaw<{ id: string }[]>`SELECT id FROM organizations`
     )
 
-    expect(rows).toEqual([{ org_id: a.id }])
-    expect(orgs).toEqual([{ id: a.id }])
+    expect(rows).toEqual([{ org_id: a.orgId }])
+    expect(orgs).toEqual([{ id: a.orgId }])
   })
 
   it('returns no rows to folio_app when app.org_id is unset', async () => {
-    await seedFirm('Firm A', 'a-sub')
+    await seedOwner('test-token', 'Firm A')
 
     const rows = await asApp(
       null,
@@ -60,18 +45,18 @@ describe('row-level security', () => {
   })
 
   it('rejects an insert into another firm', async () => {
-    const a = await seedFirm('Firm A', 'a-sub')
-    const b = await seedFirm('Firm B', 'b-sub')
+    const a = await seedOwner('test-token', 'Firm A')
+    const b = await seedOwner('other-token', 'Firm B')
 
     await expect(
       asApp(
-        a.id,
+        a.orgId,
         (tx) =>
           tx.$executeRaw`INSERT INTO users (id, org_id, role, cognito_sub, email, name, updated_at)
-          VALUES (gen_random_uuid(), ${b.id}, 'ANALYST', 'x-sub', 'x@example.com', 'X', now())`
+          VALUES (gen_random_uuid(), ${b.orgId}, 'ANALYST', 'x-sub', 'x@example.com', 'X', now())`
       )
     ).rejects.toThrow()
-    expect(await prisma.user.count({ where: { orgId: b.id } })).toBe(1)
+    expect(await prisma.user.count({ where: { orgId: b.orgId } })).toBe(1)
   })
 
   it('forces RLS on every table and gives folio_app no bypass', async () => {
@@ -112,42 +97,42 @@ describe('organization table ids', () => {
   })
 
   it('generates version 7 ids', async () => {
-    const { id, users } = await seedFirm('Firm A', 'a-sub')
+    const { id, orgId } = await seedOwner()
 
     expect(id[14]).toBe('7')
-    expect(users[0]?.id[14]).toBe('7')
+    expect(orgId[14]).toBe('7')
   })
 })
 
 describe('organizationDb', () => {
   it('scopes queries to the given firm', async () => {
-    const a = await seedFirm('Firm A', 'a-sub')
-    await seedFirm('Firm B', 'b-sub')
+    const a = await seedOwner('test-token', 'Firm A')
+    await seedOwner('other-token', 'Firm B')
 
-    const users = await organizationDb({ orgId: a.id }).run((tx) =>
+    const users = await organizationDb({ orgId: a.orgId }).run((tx) =>
       tx.user.findMany()
     )
 
-    expect(users._unsafeUnwrap().map(({ orgId }) => orgId)).toEqual([a.id])
+    expect(users._unsafeUnwrap().map(({ orgId }) => orgId)).toEqual([a.orgId])
   })
 
   it('finds only the caller own user by cognitoSub before the firm is known', async () => {
-    await seedFirm('Firm A', 'a-sub')
-    await seedFirm('Firm B', 'b-sub')
+    await seedOwner('test-token', 'Firm A')
+    await seedOwner('other-token', 'Firm B')
 
-    const users = await organizationDb({ cognitoSub: 'b-sub' }).run((tx) =>
+    const users = await organizationDb({ cognitoSub: 'other-sub' }).run((tx) =>
       tx.user.findMany()
     )
 
     expect(users._unsafeUnwrap().map(({ cognitoSub }) => cognitoSub)).toEqual([
-      'b-sub'
+      'other-sub'
     ])
   })
 
   it('leaves no organization setting on the connection afterwards', async () => {
-    const a = await seedFirm('Firm A', 'a-sub')
+    const a = await seedOwner('test-token', 'Firm A')
 
-    await organizationDb({ orgId: a.id }).run((tx) => tx.user.findMany())
+    await organizationDb({ orgId: a.orgId }).run((tx) => tx.user.findMany())
     const after = await prisma.$queryRaw<
       { org: string | null; role: string }[]
     >`SELECT coalesce(current_setting('app.org_id', true), '') AS org, current_user AS role`
