@@ -5,7 +5,7 @@ import {
   sentryGlobalRequestMiddleware
 } from '@sentry/tanstackstart-react'
 
-import { routeGuardMiddleware } from '@/features/auth/server/middleware/routeGuard'
+import { routeGuardMiddleware } from '@/features/auth/middleware/routeGuard'
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [sentryGlobalRequestMiddleware, routeGuardMiddleware],

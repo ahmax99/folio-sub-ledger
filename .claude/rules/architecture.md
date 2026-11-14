@@ -52,18 +52,18 @@ TanStack Start (file-based TanStack Router, SSR via Nitro). The app is a **BFF**
 
 - `_authorized.tsx` + `_authorized/` — pages requiring a session. Its `beforeLoad` calls `fetchRequiredUser` and redirects to `/auth/login` when signed out; children read `user` from route context.
 - `_main.tsx` + `_main/` — public pages with the header; `beforeLoad` resolves an optional `user`. `auth/` — the login/callback pages.
-- `api/` — server routes (`server.handlers`). These are thin: they call a feature's `server/api` function and `Response.json` the result, wrapped in `withRequestLogging`.
+- `api/` — server routes (`server.handlers`), only for endpoints that need a raw HTTP `Response`: the OAuth redirects (`api/auth/*`), `api/images` (an `<img src>` target) and `api/config`. They are thin: they call a feature's `server/*.server.ts` helper, wrapped in `withRequestLogging`. Everything else is a server function.
 - Data for pages comes from route `loader`s that prime TanStack Query (`context.queryClient.ensureQueryData(<feature>QueryOptions())`, whose `queryFn` calls a server function); the component reads it with `useSuspenseQuery` on the same options. `router.tsx` creates one `QueryClient` per request and wires SSR dehydration with `setupRouterSsrQueryIntegration`; `head()` sets per-page meta via `generatePageMetadata`, `pendingComponent` is the loading skeleton.
 - `src/start.ts` registers global request middleware (Sentry, the edge route guard); `src/server.ts` / `src/client.tsx` are the entries; `src/router.tsx` builds the router.
 
-**Feature modules** under `src/features/<name>/` are split by execution context:
+**Feature modules** under `src/features/<name>/` mark the server/client boundary with **file suffixes**, following TanStack Start's [file organization](https://tanstack.com/start/latest/docs/framework/react/guide/server-functions) and [import protection](https://tanstack.com/start/latest/docs/framework/react/guide/import-protection). All other code is isomorphic: it runs during SSR and in the browser.
 
-- `server/api/` — calls the Elysia backend via the shared `ky` clients in `src/lib/serverApiClient.ts`. Use `serverApiClient` for unauthenticated GETs and `serverAuthApiClient` for authenticated calls (it injects the Cognito ID token as `X-Id-Token` and, in production, SigV4-signs the request to the Lambda Function URL — order matters; see comments in that file).
-- `server/functions.ts` — `createServerFn` wrappers that loaders and client hooks call; the handler body (and its server-only imports) is stripped from the client bundle.
-- Server-only modules start with `import '@tanstack/react-start/server-only'`, so importing one from client code fails the build.
-- `client/` — interactive components, hooks, and client-side API callers. `components/` — presentational components rendered from loader data (isomorphic: no hooks, no server-only imports).
-- `lib/queries.ts` — the feature's query-key factory and `queryOptions`, shared by loaders and components. Mutations are `useMutation` hooks in `client/hooks/`; failures are reported once by the `MutationCache` in `src/lib/queryClient.ts`, so hooks don't handle errors themselves.
-- `schemas/` — Zod; `lib/`, `utils/`, `constants/`, `providers/`.
+- `<name>.functions.ts` — the feature's `createServerFn`s, the only way browser code reaches the BFF besides `/api/*` routes. Safe to import anywhere: the client bundle gets RPC stubs. Each validates its input with `.validator(<Zod schema>)` and delegates to `server/`.
+- `server/*.server.ts(x)` — server-only code: Elysia calls through the `ky` clients in `src/lib/serverApiClient.server.ts`, session and token handling, `env`, email rendering. The `.server.` suffix is the boundary: Start's import protection fails the build if the client graph reaches one. Use `serverApiClient` for unauthenticated GETs and `serverAuthApiClient` for authenticated calls (it injects the Cognito ID token as `X-Id-Token` and, in production, SigV4-signs the request to the Lambda Function URL — order matters; see comments in that file).
+- `components/` — the feature's components; `hooks/` — `useMutation` hooks whose `mutationFn` calls a server function (failures are reported once by the `MutationCache` in `src/lib/queryClient.ts`, so hooks don't handle errors themselves); `providers/`, `stores/`.
+- `lib/queries.ts` — the feature's query-key factory and `queryOptions`, shared by loaders and components.
+- `schemas/` — Zod; `lib/`, `utils/`, `constants/` — isomorphic helpers. Server-only code never goes here; give it the `.server` suffix instead.
+- No `client/` folder: TanStack Start has no client-only components. Wrap a genuinely browser-only piece in `<ClientOnly fallback>` or `createClientOnlyFn`.
 
 **Forms** use TanStack Form through `useAppForm` (`src/lib/form.ts`, built with `createFormHook`): fields render as `<form.AppField name>{(field) => <field.Input label />}</form.AppField>` and the layout as `form.FormCard` / `form.Form` + `form.SubmitButton` (organisms `FormField.tsx` / `FormCard.tsx`). Pass the Zod schema as `validators: { onChange: schema }`; errors show once a field is touched. `onSubmit` awaits a mutation's `mutateAsync`. Backend validation failures come back as `{ error: { message, fields } }` (`ErrorModel` in `@shared/config`) and `form.Form` puts `fields` on the matching inputs. A form that must work without JavaScript passes `action` to `form.Form` and validates with `createServerValidate` (see the contact form).
 
@@ -75,32 +75,32 @@ TanStack Start (file-based TanStack Router, SSR via Nitro). The app is a **BFF**
 - `layout/` — page structure blocks (`PageTemplate`, `PageHeader`, `RouteError`/`NotFound`).
 - `common/` — marketing/cross-page sections (`HeroSection`, `FeatureSection`).
 
-Atoms never import from molecules or organisms. Molecules import atoms only. Feature-specific UI belongs in `features/<name>/client/components/` or `features/<name>/components/`, not in `src/components/`.
+Atoms never import from molecules or organisms. Molecules import atoms only. Feature-specific UI belongs in `features/<name>/components/`, not in `src/components/`.
 
-**Auth flow** (`src/features/auth/`): OIDC with Cognito using `openid-client` + PKCE. State lives in **two** `iron-session` HttpOnly cookies — transient PKCE state in `auth_pkce`, and the completed session (holding only the refresh token) in `auth_session`. `features/auth/server/middleware/routeGuard.ts` is the request middleware (registered in `src/start.ts`) that gates `PROTECTED_ROUTES` (redirects to login if `auth_session` is absent) — it only checks cookie _presence_, not validity; real verification happens in the backend. [`docs/diagrams/auth-system-flow.html`](../../docs/diagrams/auth-system-flow.html) draws the whole lifecycle on one canvas — both cookies, all five BFF entry points, Cognito, and JWT verify → CASL. Read it before changing anything in `features/auth/`, the BFF clients, or `proxy.ts`.
+**Auth flow** (`src/features/auth/`): OIDC with Cognito using `openid-client` + PKCE. State lives in **two** `iron-session` HttpOnly cookies — transient PKCE state in `auth_pkce`, and the completed session (holding only the refresh token) in `auth_session`. `features/auth/middleware/routeGuard.ts` is the request middleware (registered in `src/start.ts`) that gates `PROTECTED_ROUTES` (redirects to login if `auth_session` is absent) — it only checks cookie _presence_, not validity; real verification happens in the backend. [`docs/diagrams/auth-system-flow.html`](../../docs/diagrams/auth-system-flow.html) draws the whole lifecycle on one canvas — both cookies, all five BFF entry points, Cognito, and JWT verify → CASL. Read it before changing anything in `features/auth/`, the BFF clients, or `proxy.ts`.
 
 Four invariants hold that design together. Each exists because the alternative broke something:
 
 - **Two cookies, not one — do not merge them back.** An earlier version kept PKCE state and the session in a single `auth_session` cookie. Because the edge guard checks only presence, merely _starting_ a login wrote the cookie and looked authenticated — soft-locking the login page and letting half-authenticated visitors past the edge guard.
 - **`auth_session` holds `refreshToken` and nothing else.** `sub` and email are always available from a freshly-minted ID token's claims or `getMe()`, so persisting them would only create a second, staleable source of truth.
 - **The edge guard stays presence-only.** The middleware never decrypts the session — it is a routing convenience, not the security boundary. The backend's JWT verification is the real gate.
-- **The ID-token hook must run before the SigV4 `signingHook`.** SigV4 claims the `Authorization` header for the AWS signature, so the Cognito ID token rides in `X-Id-Token` instead. See the comments in `lib/serverApiClient.ts`.
+- **The ID-token hook must run before the SigV4 `signingHook`.** SigV4 claims the `Authorization` header for the AWS signature, so the Cognito ID token rides in `X-Id-Token` instead. See the comments in `lib/serverApiClient.server.ts`.
 
 Where each concern lives:
 
-| Concern                           | File                                            |
-| --------------------------------- | ----------------------------------------------- |
-| Session/PKCE schemas              | `features/auth/schemas/auth.schema.ts`          |
-| Cookie & iron-session config      | `features/auth/constants/{cookie,session}.ts`   |
-| Session cookie accessors          | `features/auth/server/services/session.ts`      |
-| Login / callback / logout logic   | `features/auth/server/services/auth.ts`         |
-| Refresh-token → ID-token exchange | `features/auth/server/services/token.ts`        |
-| PKCE generators                   | `features/auth/utils/pkce.ts`                   |
-| Route handlers                    | `routes/api/auth/{login,callback,logout}.ts`    |
-| BFF → backend clients             | `lib/serverApiClient.ts`                        |
-| Edge route guard                  | `features/auth/server/middleware/routeGuard.ts` |
-| Backend JWT verification          | `apps/api/src/modules/auth/auth.plugin.ts`      |
-| CASL permissions                  | `modules/auth/permission.ts` (both apps)        |
+| Concern                           | File                                                                                |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| Session/PKCE schemas              | `features/auth/schemas/auth.schema.ts`                                              |
+| Cookie & iron-session config      | `features/auth/constants/cookie.ts`, `features/auth/server/sessionConfig.server.ts` |
+| Session cookie accessors          | `features/auth/server/session.server.ts`                                            |
+| Login / callback / logout logic   | `features/auth/server/auth.server.ts`                                               |
+| Refresh-token → ID-token exchange | `features/auth/server/token.server.ts`                                              |
+| PKCE generators                   | `features/auth/utils/pkce.ts`                                                       |
+| Route handlers                    | `routes/api/auth/{login,callback,logout}.ts`                                        |
+| BFF → backend clients             | `lib/serverApiClient.server.ts`                                                     |
+| Edge route guard                  | `features/auth/middleware/routeGuard.ts`                                            |
+| Backend JWT verification          | `apps/api/src/modules/auth/auth.plugin.ts`                                          |
+| CASL permissions                  | `modules/auth/permission.ts` (both apps)                                            |
 
 Authorization mirrors the backend with CASL (`@casl/react`, `src/lib/casl.ts`, `PermissionProvider`).
 

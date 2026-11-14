@@ -16,14 +16,11 @@ import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as MainContactRouteImport } from './routes/_main/contact'
 import { Route as ApiConfigRouteImport } from './routes/api/config'
 import { Route as ApiImagesRouteImport } from './routes/api/images'
-import { Route as ApiOrganizationsRouteImport } from './routes/api/organizations'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthorizedAccountIndexRouteImport } from './routes/_authorized/account/index'
 import { Route as AuthorizedAccountEditRouteImport } from './routes/_authorized/account/edit'
 import { Route as AuthorizedFirmIndexRouteImport } from './routes/_authorized/firm/index'
-import { Route as ApiAccountIndexRouteImport } from './routes/api/account/index'
-import { Route as ApiAccountPresignedUrlRouteImport } from './routes/api/account/presigned-url'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
@@ -61,11 +58,6 @@ const ApiImagesRoute = ApiImagesRouteImport.update({
   path: '/api/images',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiOrganizationsRoute = ApiOrganizationsRouteImport.update({
-  id: '/api/organizations',
-  path: '/api/organizations',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -91,16 +83,6 @@ const AuthorizedFirmIndexRoute = AuthorizedFirmIndexRouteImport.update({
   path: '/firm/',
   getParentRoute: () => AuthorizedRoute,
 } as any)
-const ApiAccountIndexRoute = ApiAccountIndexRouteImport.update({
-  id: '/api/account/',
-  path: '/api/account/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAccountPresignedUrlRoute = ApiAccountPresignedUrlRouteImport.update({
-  id: '/api/account/presigned-url',
-  path: '/api/account/presigned-url',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiAuthCallbackRoute = ApiAuthCallbackRouteImport.update({
   id: '/api/auth/callback',
   path: '/api/auth/callback',
@@ -123,17 +105,14 @@ export interface FileRoutesByFullPath {
   '/contact': typeof MainContactRoute
   '/api/config': typeof ApiConfigRoute
   '/api/images': typeof ApiImagesRoute
-  '/api/organizations': typeof ApiOrganizationsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
-  '/api/account/presigned-url': typeof ApiAccountPresignedUrlRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/account/': typeof AuthorizedAccountIndexRoute
   '/firm/': typeof AuthorizedFirmIndexRoute
-  '/api/account/': typeof ApiAccountIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
@@ -141,17 +120,14 @@ export interface FileRoutesByTo {
   '/contact': typeof MainContactRoute
   '/api/config': typeof ApiConfigRoute
   '/api/images': typeof ApiImagesRoute
-  '/api/organizations': typeof ApiOrganizationsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
-  '/api/account/presigned-url': typeof ApiAccountPresignedUrlRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/account': typeof AuthorizedAccountIndexRoute
   '/firm': typeof AuthorizedFirmIndexRoute
-  '/api/account': typeof ApiAccountIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,18 +137,15 @@ export interface FileRoutesById {
   '/_main/contact': typeof MainContactRoute
   '/api/config': typeof ApiConfigRoute
   '/api/images': typeof ApiImagesRoute
-  '/api/organizations': typeof ApiOrganizationsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/_main/': typeof MainIndexRoute
   '/_authorized/account/edit': typeof AuthorizedAccountEditRoute
-  '/api/account/presigned-url': typeof ApiAccountPresignedUrlRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/_authorized/account/': typeof AuthorizedAccountIndexRoute
   '/_authorized/firm/': typeof AuthorizedFirmIndexRoute
-  '/api/account/': typeof ApiAccountIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -182,17 +155,14 @@ export interface FileRouteTypes {
     | '/contact'
     | '/api/config'
     | '/api/images'
-    | '/api/organizations'
     | '/auth/callback'
     | '/auth/login'
     | '/account/edit'
-    | '/api/account/presigned-url'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/account/'
     | '/firm/'
-    | '/api/account/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -200,17 +170,14 @@ export interface FileRouteTypes {
     | '/contact'
     | '/api/config'
     | '/api/images'
-    | '/api/organizations'
     | '/auth/callback'
     | '/auth/login'
     | '/account/edit'
-    | '/api/account/presigned-url'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/account'
     | '/firm'
-    | '/api/account'
   id:
     | '__root__'
     | '/_authorized'
@@ -219,18 +186,15 @@ export interface FileRouteTypes {
     | '/_main/contact'
     | '/api/config'
     | '/api/images'
-    | '/api/organizations'
     | '/auth/callback'
     | '/auth/login'
     | '/_main/'
     | '/_authorized/account/edit'
-    | '/api/account/presigned-url'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/_authorized/account/'
     | '/_authorized/firm/'
-    | '/api/account/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -239,14 +203,11 @@ export interface RootRouteChildren {
   SetupRoute: typeof SetupRoute
   ApiConfigRoute: typeof ApiConfigRoute
   ApiImagesRoute: typeof ApiImagesRoute
-  ApiOrganizationsRoute: typeof ApiOrganizationsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
-  ApiAccountPresignedUrlRoute: typeof ApiAccountPresignedUrlRoute
   ApiAuthCallbackRoute: typeof ApiAuthCallbackRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
-  ApiAccountIndexRoute: typeof ApiAccountIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -300,13 +261,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImagesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/organizations': {
-      id: '/api/organizations'
-      path: '/api/organizations'
-      fullPath: '/api/organizations'
-      preLoaderRoute: typeof ApiOrganizationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -341,20 +295,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/firm/'
       preLoaderRoute: typeof AuthorizedFirmIndexRouteImport
       parentRoute: typeof AuthorizedRoute
-    }
-    '/api/account/': {
-      id: '/api/account/'
-      path: '/api/account'
-      fullPath: '/api/account/'
-      preLoaderRoute: typeof ApiAccountIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/account/presigned-url': {
-      id: '/api/account/presigned-url'
-      path: '/api/account/presigned-url'
-      fullPath: '/api/account/presigned-url'
-      preLoaderRoute: typeof ApiAccountPresignedUrlRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/api/auth/callback': {
       id: '/api/auth/callback'
@@ -414,14 +354,11 @@ const rootRouteChildren: RootRouteChildren = {
   SetupRoute: SetupRoute,
   ApiConfigRoute: ApiConfigRoute,
   ApiImagesRoute: ApiImagesRoute,
-  ApiOrganizationsRoute: ApiOrganizationsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
-  ApiAccountPresignedUrlRoute: ApiAccountPresignedUrlRoute,
   ApiAuthCallbackRoute: ApiAuthCallbackRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
-  ApiAccountIndexRoute: ApiAccountIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

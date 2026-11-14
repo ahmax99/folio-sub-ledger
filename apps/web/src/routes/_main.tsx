@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import { PageHeader } from '@/components/layout'
-import { AbilityProvider } from '@/features/auth/client/providers/PermissionProvider'
+import { fetchOptionalUser } from '@/features/auth/auth.functions'
 import { getUserPermissions } from '@/features/auth/lib/permission'
-import { fetchOptionalUser } from '@/features/auth/server/functions'
-import { ErrorScreenProvider } from '@/features/error/client/providers/ErrorScreenProvider'
+import { AbilityProvider } from '@/features/auth/providers/PermissionProvider'
+import { ErrorScreenProvider } from '@/features/error/providers/ErrorScreenProvider'
 
 const MainLayout = () => {
   const { user } = Route.useRouteContext()

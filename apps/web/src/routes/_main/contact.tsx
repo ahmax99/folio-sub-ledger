@@ -2,7 +2,7 @@ import { getFormData } from '@tanstack/react-form-start'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { PageTemplate } from '@/components/layout'
-import { ContactForm } from '@/features/mailing/client/components/ContactForm'
+import { ContactForm } from '@/features/mailing/components/ContactForm'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 
 const ContactPage = () => (

@@ -1,12 +1,12 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
 import { PageHeader } from '@/components/layout'
-import { AbilityProvider } from '@/features/auth/client/providers/PermissionProvider'
+import { fetchSessionState } from '@/features/auth/auth.functions'
 import { AUTHORIZED_REDIRECTS } from '@/features/auth/lib/access'
 import { getUserPermissions } from '@/features/auth/lib/permission'
 import { PUBLIC_AUTH_ROUTES } from '@/features/auth/lib/routes'
-import { fetchSessionState } from '@/features/auth/server/functions'
-import { ErrorScreenProvider } from '@/features/error/client/providers/ErrorScreenProvider'
+import { AbilityProvider } from '@/features/auth/providers/PermissionProvider'
+import { ErrorScreenProvider } from '@/features/error/providers/ErrorScreenProvider'
 
 const AuthorizedLayout = () => {
   const { user } = Route.useRouteContext()

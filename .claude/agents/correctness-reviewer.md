@@ -16,7 +16,7 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 ## Process
 
 1. `git diff --name-only $DIFF_BASE...HEAD` for the file list.
-2. For each file, read it plus its closest related files — backend: `*.service.ts` ↔ `*.controller.ts` ↔ `*.plugin.ts` and the matching `@shared/config` `*.model.ts`; frontend: `server/api` ↔ route handler ↔ `client/`.
+2. For each file, read it plus its closest related files — backend: `*.service.ts` ↔ `*.controller.ts` ↔ `*.plugin.ts` and the matching `@shared/config` `*.model.ts`; frontend: `components/` / `hooks/` ↔ `<name>.functions.ts` ↔ `server/*.server.ts`.
 3. Apply the three checklists below.
 
 ## Correctness checklist
@@ -34,9 +34,9 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 
 **Frontend (`apps/web`):**
 
-- Browser code never calls the Elysia backend directly — it goes through server functions (`createServerFn`) / `/api/*` server routes / route loaders, which call the `ky` clients in `src/lib/serverApiClient.ts` (`serverApiClient` for public GETs, `serverAuthApiClient` for authenticated calls).
-- Route handlers stay thin: call a feature's `server/api` function and `NextResponse.json` the result.
-- Server-only code (tokens, secrets, `serverAuthApiClient`) is never imported into client code — server-only modules carry `import '@tanstack/react-start/server-only'` and are reached from the client only through a server function or server route.
+- Browser code never calls the Elysia backend directly — it goes through server functions (`createServerFn`) / `/api/*` server routes / route loaders, which call the `ky` clients in `src/lib/serverApiClient.server.ts` (`serverApiClient` for public GETs, `serverAuthApiClient` for authenticated calls).
+- Route handlers stay thin: call a feature's `server/*.server.ts` helper and return a `Response`. New browser-to-BFF calls are server functions, not new `/api/*` routes, unless a raw `Response` is required.
+- Server-only code (tokens, secrets, `serverAuthApiClient`) is never imported into client code — server-only modules are named `*.server.ts` (Start's import protection fails the build otherwise) and are reached from the client only through a server function or server route.
 
 ## Architecture checklist
 
@@ -45,7 +45,7 @@ Same as `security-reviewer`: `DIFF_BASE`, optional `SCOPE`, optional `PLAN_PATH`
 - Each backend module is a full triad: `*.plugin.ts` (decorates the service onto context) + `*.controller.ts` (routes) + `*.service.ts` (logic).
 - Backend imports use explicit `.js` extensions (ESM) even from `.ts` sources.
 - Shared request/response schemas live in `@shared/config` (`*.model.ts`), not inside an app.
-- Frontend features are split by execution context (`server/`, `client/`, `schemas/`); atomic-design component folders are respected.
+- Frontend features mark the boundary by suffix: `<name>.functions.ts` (server functions, `.validator(...)` on every input), `server/*.server.ts` (server-only), everything else isomorphic; no `client/` folder; atomic-design component folders are respected.
 - Named exports only, no default exports (except framework entries that require one, e.g. `src/server.ts`; routes export a named `Route`).
 
 ## Code-quality checklist

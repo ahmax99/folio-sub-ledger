@@ -15,7 +15,7 @@ Entries that say _"verify"_ require an actual Read/grep of the current code befo
 
 ## `react-doctor/server-auth-actions`
 
-- **Where:** `src/features/mailing/server/api/sendContactEmail.ts` → `sendContactEmail`
+- **Where:** `src/features/mailing/mailing.functions.ts` → `sendContactEmail`, `submitContactForm`
 - **Why:** Public **contact form** submission. The rule's own validation prompt lists contact forms as a key false positive ("genuinely public actions — contact form, newsletter, public search"). It is _meant_ to run for anonymous callers, so an auth gate would be wrong.
 - **Verify before suppressing:** the action still only sends email from
   Zod-validated (`ContactFormModel.contact`) input and performs no privileged data mutation. If it ever writes to the DB or touches user state, re-triage.

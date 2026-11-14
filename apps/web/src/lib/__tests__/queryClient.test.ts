@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { showError } from '@/features/error/client/lib/showError'
 import { AppError } from '@/features/error/lib/AppError'
+import { showError } from '@/features/error/lib/showError'
 import { captureError } from '@/features/error/utils/captureError'
 
 import { createQueryClient } from '../queryClient'
@@ -9,7 +9,7 @@ import { createQueryClient } from '../queryClient'
 vi.mock('@/features/error/utils/captureError', () => ({
   captureError: vi.fn()
 }))
-vi.mock('@/features/error/client/lib/showError', () => ({
+vi.mock('@/features/error/lib/showError', () => ({
   showError: vi.fn()
 }))
 
