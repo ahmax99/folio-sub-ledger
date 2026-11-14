@@ -4,6 +4,7 @@ import type { JWTPayload } from 'jose'
 
 import { errorHandler } from '@/error/lib/errorHandler.js'
 import { handleApiError } from '@/error/utils/handleApiError.js'
+import { tenantDb } from '@/lib/tenantDb.js'
 import { verifyToken } from '@/modules/auth/jwt.js'
 import { getUserPermissions } from '@/modules/auth/permission.js'
 import { UserService } from '@/modules/users/user.service.js'
@@ -47,7 +48,14 @@ export const authPlugin = new Elysia({ name: 'auth' })
           UserService.findMember(user.cognitoSub)
         )
 
-        return { user, member, ability: getUserPermissions(member) }
+        return {
+          user,
+          member,
+          ability: getUserPermissions(member),
+          db: tenantDb(
+            member ? { orgId: member.orgId } : { cognitoSub: user.cognitoSub }
+          )
+        }
       }
     }
   })

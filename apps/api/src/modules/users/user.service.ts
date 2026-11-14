@@ -9,121 +9,97 @@ import { catchAsyncError } from '@/error/utils/catchError.js'
 import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
-import { withTenant } from '@/lib/withTenant.js'
+import { type TenantDb, tenantDb } from '@/lib/tenantDb.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
-import type { Member } from '@/modules/auth/permission.js'
 
 export const UserService = {
-  requireMember: (member: Member | null) =>
-    authorizeResource(member, { notFound: 'User not found' }),
-
   findMember: (cognitoSub: AuthUser['cognitoSub']) =>
-    catchAsyncError(
-      withTenant({ cognitoSub }, (tx) =>
-        tx.user.findUnique({
-          where: { cognitoSub },
-          select: { id: true, orgId: true, role: true }
-        })
-      )
+    tenantDb({ cognitoSub }).run((tx) =>
+      tx.user.findUnique({
+        where: { cognitoSub },
+        select: { id: true, orgId: true, role: true }
+      })
     ),
 
   findUser: (
     id: UserIdParams['id'],
-    member: Member | null,
+    db: TenantDb,
     ability: AppAbility,
     action: 'read' | 'update' | 'delete'
   ) =>
-    UserService.requireMember(member).andThen(({ orgId }) =>
-      authorizeResource(
-        withTenant({ orgId }, (tx) =>
-          tx.user.findFirst({
-            where: { AND: [accessibleBy(ability).ofType('User'), { id }] }
-          })
-        ),
-        {
-          notFound: 'User not found',
-          forbidden: `Cannot ${action} this user`,
-          can: (user) => ability.can(action, subject('User', user))
-        }
+    authorizeResource(
+      db.run((tx) =>
+        tx.user.findFirst({
+          where: { AND: [accessibleBy(ability).ofType('User'), { id }] }
+        })
+      ),
+      {
+        notFound: 'User not found',
+        forbidden: `Cannot ${action} this user`,
+        can: (user) => ability.can(action, subject('User', user))
+      }
+    ),
+
+  getAll: (db: TenantDb, ability: AppAbility) =>
+    authorizeResource(ability, {
+      forbidden: 'Cannot list users',
+      can: (granted) => granted.can('read', 'User')
+    }).andThen(() =>
+      db.run((tx) =>
+        tx.user.findMany({
+          where: accessibleBy(ability).ofType('User'),
+          orderBy: { createdAt: 'desc' }
+        })
       )
     ),
 
-  getAll: (member: Member | null, ability: AppAbility) =>
-    UserService.requireMember(member).andThen(({ orgId }) =>
-      catchAsyncError(
-        withTenant({ orgId }, (tx) =>
-          tx.user.findMany({
-            where: accessibleBy(ability).ofType('User'),
-            orderBy: { createdAt: 'desc' }
-          })
-        )
-      )
-    ),
+  getById: (id: UserIdParams['id'], db: TenantDb, ability: AppAbility) =>
+    UserService.findUser(id, db, ability, 'read'),
 
-  getById: (
-    id: UserIdParams['id'],
-    member: Member | null,
-    ability: AppAbility
-  ) => UserService.findUser(id, member, ability, 'read'),
-
-  getMe: (member: Member | null) =>
-    UserService.requireMember(member).andThen(({ id, orgId }) =>
-      authorizeResource(
-        withTenant({ orgId }, (tx) =>
-          tx.user.findUnique({
-            where: { id },
-            include: { organization: { select: { id: true, name: true } } }
-          })
-        ),
-        { notFound: 'User not found' }
-      )
+  getMe: (cognitoSub: AuthUser['cognitoSub'], db: TenantDb) =>
+    authorizeResource(
+      db.run((tx) =>
+        tx.user.findUnique({
+          where: { cognitoSub },
+          include: { organization: { select: { id: true, name: true } } }
+        })
+      ),
+      { notFound: 'User not found' }
     ),
 
   update: (
     id: UserIdParams['id'],
     input: UpdateUserBody,
-    member: Member | null,
+    db: TenantDb,
     ability: AppAbility
   ) =>
-    UserService.findUser(id, member, ability, 'update').andThen(({ orgId }) =>
-      catchAsyncError(
-        withTenant({ orgId }, (tx) =>
-          tx.user.update({ where: { id }, data: input })
-        )
-      )
+    UserService.findUser(id, db, ability, 'update').andThen(() =>
+      db.run((tx) => tx.user.update({ where: { id }, data: input }))
     ),
 
-  delete: (
-    id: UserIdParams['id'],
-    member: Member | null,
-    ability: AppAbility
-  ) =>
-    UserService.findUser(id, member, ability, 'delete')
+  delete: (id: UserIdParams['id'], db: TenantDb, ability: AppAbility) =>
+    UserService.findUser(id, db, ability, 'delete')
       .andThrough((user) =>
         user.role === 'OWNER'
-          ? catchAsyncError(
-              withTenant({ orgId: user.orgId }, (tx) =>
-                tx.user.count({ where: { orgId: user.orgId } })
-              )
-            ).andThen((count) =>
-              count > 1
-                ? errAsync(
-                    new AppError(
-                      'BAD_REQUEST',
-                      'Remove the other members before deleting the firm Owner'
+          ? db
+              .run((tx) => tx.user.count({ where: { orgId: user.orgId } }))
+              .andThen((count) =>
+                count > 1
+                  ? errAsync(
+                      new AppError(
+                        'BAD_REQUEST',
+                        'Remove the other members before deleting the firm Owner'
+                      )
                     )
-                  )
-                : okAsync(count)
-            )
+                  : okAsync(count)
+              )
           : okAsync(user)
       )
       .andThrough((user) =>
-        catchAsyncError(
-          withTenant({ orgId: user.orgId }, (tx) =>
-            user.role === 'OWNER'
-              ? tx.organization.delete({ where: { id: user.orgId } })
-              : tx.user.delete({ where: { id } })
-          )
+        db.run((tx) =>
+          user.role === 'OWNER'
+            ? tx.organization.delete({ where: { id: user.orgId } })
+            : tx.user.delete({ where: { id } })
         )
       )
       .andThrough((user) =>

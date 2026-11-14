@@ -1,7 +1,7 @@
 import { type Prisma, prisma } from '@shared/neon'
 import { describe, expect, it } from 'vitest'
 
-import { withTenant } from '@/lib/withTenant.js'
+import { tenantDb } from '@/lib/tenantDb.js'
 
 const seedFirm = (name: string, sub: string) =>
   prisma.organization.create({
@@ -98,31 +98,35 @@ describe('row-level security', () => {
   })
 })
 
-describe('withTenant', () => {
+describe('tenantDb', () => {
   it('scopes queries to the given firm', async () => {
     const a = await seedFirm('Firm A', 'a-sub')
     await seedFirm('Firm B', 'b-sub')
 
-    const users = await withTenant({ orgId: a.id }, (tx) => tx.user.findMany())
+    const users = await tenantDb({ orgId: a.id }).run((tx) =>
+      tx.user.findMany()
+    )
 
-    expect(users.map(({ orgId }) => orgId)).toEqual([a.id])
+    expect(users._unsafeUnwrap().map(({ orgId }) => orgId)).toEqual([a.id])
   })
 
   it('finds only the caller own user by cognitoSub before the firm is known', async () => {
     await seedFirm('Firm A', 'a-sub')
     await seedFirm('Firm B', 'b-sub')
 
-    const users = await withTenant({ cognitoSub: 'b-sub' }, (tx) =>
+    const users = await tenantDb({ cognitoSub: 'b-sub' }).run((tx) =>
       tx.user.findMany()
     )
 
-    expect(users.map(({ cognitoSub }) => cognitoSub)).toEqual(['b-sub'])
+    expect(users._unsafeUnwrap().map(({ cognitoSub }) => cognitoSub)).toEqual([
+      'b-sub'
+    ])
   })
 
   it('leaves no tenant setting on the connection afterwards', async () => {
     const a = await seedFirm('Firm A', 'a-sub')
 
-    await withTenant({ orgId: a.id }, (tx) => tx.user.findMany())
+    await tenantDb({ orgId: a.id }).run((tx) => tx.user.findMany())
     const after = await prisma.$queryRaw<
       { org: string | null; role: string }[]
     >`SELECT coalesce(current_setting('app.org_id', true), '') AS org, current_user AS role`
