@@ -9,7 +9,6 @@ export interface AuthUser {
   cognitoSub: string
   email: string
   name: string
-  role: string[]
   payload: JWTPayload
 }
 
@@ -35,14 +34,12 @@ export const authPlugin = new Elysia({ name: 'auth' })
           return status(401, { error: { message: 'Invalid or expired token' } })
 
         const payload = result.value
-
         return {
           user: {
             cognitoSub: payload.sub,
             email: payload.email,
             name:
               typeof payload.name === 'string' ? payload.name : payload.email,
-            role: payload['cognito:groups'],
             payload
           } as AuthUser
         }

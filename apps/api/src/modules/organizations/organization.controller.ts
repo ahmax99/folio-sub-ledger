@@ -4,21 +4,19 @@ import { Elysia } from 'elysia'
 
 import { errorHandler } from '@/error/lib/errorHandler.js'
 import { handleApiError } from '@/error/utils/handleApiError.js'
-import { authPlugin } from '@/modules/auth/auth.plugin.js'
 import { organizationPlugin } from '@/modules/organizations/organization.plugin.js'
 
 export const organizationController = new Elysia({ prefix: '/organizations' })
   .use(organizationPlugin)
-  .use(authPlugin)
   .use(errorHandler)
   .use(openapi({ references: fromTypes() }))
   .post(
     '/',
-    async ({ body, user, organizationService }) =>
-      handleApiError(organizationService.setupFirm(user, body)),
+    async ({ body, user, member, organizationService }) =>
+      handleApiError(organizationService.setupFirm(user, member, body)),
     {
       body: OrganizationModel.setupFirmBody,
-      auth: true,
+      organization: true,
       detail: {
         summary: "Set up the caller's firm",
         description:

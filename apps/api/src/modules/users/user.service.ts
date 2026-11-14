@@ -1,6 +1,6 @@
 import { AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider'
-import type { UpdateUserBody, User, UserIdParams } from '@shared/config'
-import { prisma } from '@shared/neon'
+import { accessibleBy } from '@casl/prisma'
+import type { UpdateUserBody, UserIdParams } from '@shared/config'
 import { errAsync, okAsync } from 'neverthrow'
 
 import { env } from '@/config/env.js'
@@ -9,73 +9,89 @@ import { catchAsyncError } from '@/error/utils/catchError.js'
 import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
+import type { AuthUser } from '@/modules/auth/auth.plugin.js'
+import type { OrganizationDb } from '@/modules/organizations/organization.db.js'
 
 export const UserService = {
   findUser: (
     id: UserIdParams['id'],
+    db: OrganizationDb,
     ability: AppAbility,
     action: 'read' | 'update' | 'delete'
   ) =>
-    authorizeResource(prisma.user.findUnique({ where: { id } }), {
-      notFound: 'User not found',
-      forbidden: `Cannot ${action} this user`,
-      can: (user) =>
-        ability.can(action, subject('User', user)) ||
-        ability.can('manage', 'all')
-    }),
-
-  getAll: (ability: AppAbility) =>
-    authorizeResource(ability, {
-      forbidden: 'Only admins can list users',
-      can: (admin) => admin.can('manage', 'all')
-    }).andThen(() =>
-      catchAsyncError(prisma.user.findMany({ orderBy: { createdAt: 'desc' } }))
+    authorizeResource(
+      db.run((tx) =>
+        tx.user.findFirst({
+          where: { AND: [accessibleBy(ability).ofType('User'), { id }] }
+        })
+      ),
+      {
+        notFound: 'User not found',
+        forbidden: `Cannot ${action} this user`,
+        can: (user) => ability.can(action, subject('User', user))
+      }
     ),
 
-  getById: (id: UserIdParams['id'], ability: AppAbility) =>
-    UserService.findUser(id, ability, 'read'),
+  getAll: (db: OrganizationDb, ability: AppAbility) =>
+    authorizeResource(ability, {
+      forbidden: 'Cannot list users',
+      can: (granted) => granted.can('read', 'User')
+    }).andThen(() =>
+      db.run((tx) =>
+        tx.user.findMany({
+          where: accessibleBy(ability).ofType('User'),
+          orderBy: { createdAt: 'desc' }
+        })
+      )
+    ),
 
-  getMe: (cognitoSub: User['cognitoSub'], groups: User['groups']) =>
+  getById: (id: UserIdParams['id'], db: OrganizationDb, ability: AppAbility) =>
+    UserService.findUser(id, db, ability, 'read'),
+
+  getMe: (cognitoSub: AuthUser['cognitoSub'], db: OrganizationDb) =>
     authorizeResource(
-      prisma.user.findUnique({
-        where: { cognitoSub },
-        include: { organization: { select: { id: true, name: true } } }
-      }),
+      db.run((tx) =>
+        tx.user.findUnique({
+          where: { cognitoSub },
+          include: { organization: { select: { id: true, name: true } } }
+        })
+      ),
       { notFound: 'User not found' }
-    ).map((user) => ({ ...user, groups })),
+    ),
 
   update: (
     id: UserIdParams['id'],
     input: UpdateUserBody,
+    db: OrganizationDb,
     ability: AppAbility
   ) =>
-    UserService.findUser(id, ability, 'update').andThen(() =>
-      catchAsyncError(prisma.user.update({ where: { id }, data: input }))
+    UserService.findUser(id, db, ability, 'update').andThen(() =>
+      db.run((tx) => tx.user.update({ where: { id }, data: input }))
     ),
 
-  delete: (id: UserIdParams['id'], ability: AppAbility) =>
-    UserService.findUser(id, ability, 'delete')
+  delete: (id: UserIdParams['id'], db: OrganizationDb, ability: AppAbility) =>
+    UserService.findUser(id, db, ability, 'delete')
       .andThrough((user) =>
         user.role === 'OWNER'
-          ? catchAsyncError(
-              prisma.user.count({ where: { orgId: user.orgId } })
-            ).andThen((count) =>
-              count > 1
-                ? errAsync(
-                    new AppError(
-                      'BAD_REQUEST',
-                      'Remove the other members before deleting the firm Owner'
+          ? db
+              .run((tx) => tx.user.count({ where: { orgId: user.orgId } }))
+              .andThen((count) =>
+                count > 1
+                  ? errAsync(
+                      new AppError(
+                        'BAD_REQUEST',
+                        'Remove the other members before deleting the firm Owner'
+                      )
                     )
-                  )
-                : okAsync(count)
-            )
+                  : okAsync(count)
+              )
           : okAsync(user)
       )
       .andThrough((user) =>
-        catchAsyncError(
+        db.run((tx) =>
           user.role === 'OWNER'
-            ? prisma.organization.delete({ where: { id: user.orgId } })
-            : prisma.user.delete({ where: { id } })
+            ? tx.organization.delete({ where: { id: user.orgId } })
+            : tx.user.delete({ where: { id } })
         )
       )
       .andThrough((user) =>

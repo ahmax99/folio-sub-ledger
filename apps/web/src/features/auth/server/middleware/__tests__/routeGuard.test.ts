@@ -2,7 +2,7 @@ import { getCookie } from '@tanstack/react-start/server'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { routeGuardMiddleware } from './routeGuard'
+import { routeGuardMiddleware } from '../routeGuard'
 
 vi.mock('@tanstack/react-start/server', () => ({ getCookie: vi.fn() }))
 

@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getTokens } from '@/features/auth/server/services/token'
 
-import { serverAuthApiClient } from './serverApiClient'
-import { signingHook } from './sig4'
+import { serverAuthApiClient } from '../serverApiClient'
+import { signingHook } from '../sig4'
 
 vi.mock('@tanstack/react-start/server-only', () => ({}))
 vi.mock('@/config/env', () => ({
@@ -17,7 +17,7 @@ vi.mock('@/lib/requestLogging', () => ({
 vi.mock('@/features/auth/server/services/token', () => ({
   getTokens: vi.fn()
 }))
-vi.mock('./sig4', () => ({ signingHook: vi.fn() }))
+vi.mock('../sig4', () => ({ signingHook: vi.fn() }))
 
 describe('serverAuthApiClient', () => {
   let idTokenSeenBySigner: string | null | undefined

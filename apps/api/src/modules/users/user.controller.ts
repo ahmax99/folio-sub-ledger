@@ -5,21 +5,20 @@ import { Elysia } from 'elysia'
 
 import { errorHandler } from '@/error/lib/errorHandler.js'
 import { handleApiError } from '@/error/utils/handleApiError.js'
-import { authPlugin } from '@/modules/auth/auth.plugin.js'
-import { getUserPermissions } from '@/modules/auth/permission.js'
+import { organizationPlugin } from '@/modules/organizations/organization.plugin.js'
 import { userPlugin } from '@/modules/users/user.plugin.js'
 
 export const userController = new Elysia({ prefix: '/users' })
+  .use(organizationPlugin)
   .use(userPlugin)
-  .use(authPlugin)
   .use(errorHandler)
   .use(openapi({ references: fromTypes() }))
   .get(
     '/',
-    async ({ user, userService }) =>
-      handleApiError(userService.getAll(getUserPermissions(user))),
+    async ({ db, ability, userService }) =>
+      handleApiError(userService.getAll(db, ability)),
     {
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get all users',
         description: 'Retrieve a list of all users',
@@ -29,11 +28,11 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/:id',
-    async ({ params, user, userService }) =>
-      handleApiError(userService.getById(params.id, getUserPermissions(user))),
+    async ({ params, db, ability, userService }) =>
+      handleApiError(userService.getById(params.id, db, ability)),
     {
       params: UserModel.userIdParams,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get user by ID',
         description: 'Retrieve a specific user by their unique identifier',
@@ -43,10 +42,10 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/me',
-    async ({ user, userService }) =>
-      handleApiError(userService.getMe(user.cognitoSub, user.role)),
+    async ({ user, db, userService }) =>
+      handleApiError(userService.getMe(user.cognitoSub, db)),
     {
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get current user',
         description: 'Retrieve the authenticated user profile',
@@ -56,26 +55,23 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/presigned-url',
-    async ({ request, query, user, userService, uploadService }) =>
+    async ({ request, query, user, db, ability, userService, uploadService }) =>
       handleApiError(
         userService
-          .getMe(user.cognitoSub, user.role)
-          .andThen((dbUser) =>
+          .getMe(user.cognitoSub, db)
+          .andThen((self) =>
             uploadService.getPresignedUrl(
               'account',
               request,
               query.filename,
               query.contentType,
-              getUserPermissions(user, dbUser.id).can(
-                'update',
-                subject('User', dbUser)
-              )
+              ability.can('update', subject('User', self))
             )
           )
       ),
     {
       query: UserModel.uploadImageQuery,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get presigned URL for profile image upload',
         description:
@@ -86,19 +82,12 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .put(
     '/:id',
-    async ({ params, body, user, userService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        userService.update(params.id, body, getUserPermissions(user, dbUser.id))
-      )
-    },
+    async ({ params, body, db, ability, userService }) =>
+      handleApiError(userService.update(params.id, body, db, ability)),
     {
       params: UserModel.userIdParams,
       body: UserModel.updateUserBody,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Update a user',
         description: 'Update an existing user by ID',
@@ -108,18 +97,11 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .delete(
     '/:id',
-    async ({ params, user, userService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        userService.delete(params.id, getUserPermissions(user, dbUser.id))
-      )
-    },
+    async ({ params, db, ability, userService }) =>
+      handleApiError(userService.delete(params.id, db, ability)),
     {
       params: UserModel.userIdParams,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Delete a user',
         description: 'Permanently delete a user by ID',

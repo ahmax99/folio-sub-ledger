@@ -32,8 +32,15 @@ Routes are aggregated in `src/routes/index.ts` under prefix `/api/v1`; OpenAPI/S
 
 **Auth & authorization:**
 
-- `authPlugin` (`src/modules/auth/auth.plugin.ts`) exposes an `auth: true` route macro. It reads a Bearer token, **falling back to the `X-Id-Token` header** (SSR/Lambda calls put the SigV4 signature in `Authorization`). It verifies the Cognito JWT (`jose`) and resolves `user: AuthUser` (`cognitoSub`, `email`, `role` from `cognito:groups`).
-- Authorization is **CASL + Prisma**. `getUserPermissions(user?, userId?)` (`src/modules/auth/permission.ts`) builds an `AppAbility`. Services receive the ability and enforce it two ways: `accessibleBy(ability).ofType('<Model>')` in `where` clauses for list queries, and `ability.can('update', subject('User', user))` for single-resource checks. Unauthenticated callers get no permissions.
+- `authPlugin` (`src/modules/auth/auth.plugin.ts`) exposes an `auth: true` route macro. It reads a Bearer token, **falling back to the `X-Id-Token` header** (SSR/Lambda calls put the SigV4 signature in `Authorization`). It verifies the Cognito JWT (`jose`) and resolves `user: AuthUser` (`cognitoSub`, `email`, `name`). Cognito groups play no part in authorization.
+- `organizationPlugin` (`src/modules/organizations/organization.plugin.ts`) exposes the `organization: true` macro, which implies `auth: true` and also resolves the caller's `member` record (`id`, `orgId`, `role`, or `null` before firm setup), its `ability`, and `db`, a database handle bound to the caller's organization. Routes that touch organization data use it instead of `auth: true`.
+- Authorization is **CASL + Prisma**. `getUserPermissions(member)` (`src/modules/auth/permission.ts`) builds an `AppAbility` from the member's `orgId` and `role`. Services receive the ability and enforce it two ways: `accessibleBy(ability).ofType('<Model>')` in `where` clauses for list queries, and `ability.can('update', subject('User', user))` for single-resource checks. Unauthenticated callers get no permissions.
+
+**Organization isolation** (one shared schema; each firm is an organization). CASL is the primary gate and Postgres RLS is the safety net:
+
+- Services query only through the `db` the `organization` macro resolves (built by `organizationDb` in `src/modules/organizations/organization.db.ts`). `db.run((tx) => …)` returns a `ResultAsync` and runs one transaction that switches to the non-owner `folio_app` role and sets `app.org_id` transaction-locally, so nothing leaks through Neon's pooler. Before firm setup, `db` is bound to the caller's `cognitoSub` and can read only their own `users` row. Never query the `prisma` singleton in a service: the runtime database user bypasses RLS.
+- Every organization-scoped table has `id String @id @default(uuid(7)) @db.Uuid`, an `org_id` of type `@db.Uuid`, `@@unique([orgId, id])`, indexes that lead with `org_id`, and composite foreign keys `(orgId, parentId)` → `(orgId, id)` to other organization-scoped tables. Its migration enables **and forces** RLS with a policy on `NULLIF(current_setting('app.org_id', true), '')::uuid`, so an unset setting matches nothing. `organization.isolation.test.ts` fails for any table without forced RLS.
+- Another firm's resource returns 404, the same as one that doesn't exist.
 
 Secrets: in production, `loadSecrets()` pulls `DATABASE_URL` from AWS Secrets Manager (`DATABASE_URL_SECRET_NAME`); in dev it reads `.env`. Env is validated with `@t3-oss/env-core` in `src/config/env.ts`.
 

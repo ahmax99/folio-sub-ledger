@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { AUTHORIZED_REDIRECTS, SETUP_REDIRECTS } from './access'
-import { PROTECTED_ROUTES, PUBLIC_AUTH_ROUTES } from './routes'
+import { AUTHORIZED_REDIRECTS, SETUP_REDIRECTS } from '../access'
+import { PROTECTED_ROUTES, PUBLIC_AUTH_ROUTES } from '../routes'
 
 describe('session redirects', () => {
   it('sends a signed-out visitor to login from authorized and setup pages', () => {

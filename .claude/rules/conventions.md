@@ -15,6 +15,12 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 - Prefer `const` arrow functions over `function` declarations: `const fn = () => {}` not `function fn() {}`. **Exception:** TypeScript function overloads require the `function` keyword (e.g., a utility with multiple call signatures); the `function` keyword is acceptable only in that case.
 - Prefer `switch-case` over `else-if` chains when 3 or more branches test the same discriminant expression. For simple value-to-value mappings, prefer a `Record<K, V>` lookup table over both (exhaustiveness is enforced by the type).
 
+## Tests
+
+- In both apps, tests live in a `__tests__/` folder next to the code they cover (`apps/api/src/modules/users/__tests__/user.controller.test.ts`, `apps/web/src/features/auth/utils/__tests__/pkce.test.ts`).
+- In `apps/api`, seed and request through the shared helpers in `src/test/fixtures.ts` and the identities in `src/test/identities.ts` instead of redefining them per file.
+- In `apps/web`, `*.test.ts` runs in Node and `*.test.tsx` in jsdom. Render components with `renderWithProviders` (`src/test/render.tsx`, a real memory router + QueryClient) and fake the backend with `src/test/http.ts`.
+
 ## Validation
 
 - Validate all external input (request `body` / `query` / `params`, headers, env) with a Zod schema at the boundary — for the backend that's the Elysia route options (e.g. `body: UserModel.updateUserBody`), never inside a service.
@@ -22,12 +28,12 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 
 ## Transactions
 
-- Use `prisma.$transaction([...])` for any multi-step write that must be atomic.
-- Services call `prisma` directly (there is no separate model layer). When a transaction spans helpers, thread the `tx` client (`Prisma.TransactionClient`) into each Prisma call rather than reaching for the singleton `prisma`.
+- Services query through `db.run((tx) => …)` (there is no separate model layer). Each `run` is one transaction, so put a multi-step write that must be atomic inside a single `run`.
+- When a transaction spans helpers, thread the `tx` client (`Prisma.TransactionClient`) into each Prisma call rather than reaching for the singleton `prisma`.
 
 ## Auth Context
 
-The auth/authorization mechanics (Cognito JWT via `authPlugin`, `getUserPermissions`, the BFF clients) are described in `architecture.md` — the rules here are just: gate protected routes with the `auth: true` macro, and enforce the resolved ability on **every** query (`accessibleBy(ability).ofType('<Model>')` in list `where` clauses, `ability.can('<action>', subject('<Model>', record))` on single resources). Authenticating without consulting the ability is broken authorization.
+The auth/authorization mechanics (Cognito JWT via `authPlugin`, `getUserPermissions`, the BFF clients) are described in `architecture.md` — the rules here are just: gate protected routes with the `auth: true` macro (`organization: true` for routes that touch organization data, which also resolves `member`, `ability` and `db`), and enforce the resolved ability on **every** query (`accessibleBy(ability).ofType('<Model>')` in list `where` clauses, `ability.can('<action>', subject('<Model>', record))` on single resources). Authenticating without consulting the ability is broken authorization.
 
 ## Exports
 

@@ -55,6 +55,10 @@ bun run test
 
 The run applies the Prisma migrations to `TEST_DATABASE_URL` first and truncates every table before each test. Without the variable, or when the database name doesn't end in `_test`, it aborts before running anything. Environments that block port 5432 can rely on the `PR Checks` CI run instead.
 
+`bun run test:coverage` runs the same suite with V8 coverage and writes `coverage/lcov.info`; `PR Checks` runs it on every PR.
+
+Tests live in a `__tests__/` folder next to the code they cover (e.g. `src/modules/users/__tests__/`). Shared test identities and seed helpers are in `src/test/`.
+
 ## API Documentation
 
 Interactive API documentation is available via Swagger UI:

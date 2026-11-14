@@ -12,7 +12,6 @@ export const UserModel = {
     name: z.string(),
     imagePath: z.string().optional(),
     role: OrganizationModel.role,
-    groups: z.array(z.string()),
     createdAt: z.date(),
     updatedAt: z.date()
   }),

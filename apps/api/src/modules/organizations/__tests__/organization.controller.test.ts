@@ -3,28 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { logger } from '@/config/logger.js'
 import { organizationController } from '@/modules/organizations/organization.controller.js'
+import { send } from '@/test/fixtures.js'
+import type { Token } from '@/test/identities.js'
 
-const authHeaders = {
-  authorization: 'Bearer test-token',
-  'content-type': 'application/json'
-}
-const otherHeaders = { ...authHeaders, authorization: 'Bearer other-token' }
-
-const setupFirm = (
-  body: unknown,
-  headers: Record<string, string> = authHeaders
-) =>
-  organizationController.handle(
-    new Request('http://localhost/organizations', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body)
-    })
-  )
+const setupFirm = (body: unknown, token: Token = 'test-token') =>
+  send(organizationController, 'POST', '/organizations', { token, body })
 
 describe('organization controller', () => {
   afterEach(async () => {
-    vi.restoreAllMocks()
     await prisma.$executeRawUnsafe(
       'DROP TRIGGER IF EXISTS fail_user_insert ON users'
     )
@@ -112,7 +98,7 @@ describe('organization controller', () => {
   it('gives two identities two organizations even with the same firm name', async () => {
     const a = await (await setupFirm({ firmName: 'Acme CPA' })).json()
     const b = await (
-      await setupFirm({ firmName: 'Acme CPA' }, otherHeaders)
+      await setupFirm({ firmName: 'Acme CPA' }, 'other-token')
     ).json()
 
     expect(a.id).not.toBe(b.id)
@@ -121,10 +107,9 @@ describe('organization controller', () => {
   })
 
   it('returns 401 without a token', async () => {
-    const res = await setupFirm(
-      { firmName: 'Acme CPA' },
-      { 'content-type': 'application/json' }
-    )
+    const res = await send(organizationController, 'POST', '/organizations', {
+      body: { firmName: 'Acme CPA' }
+    })
 
     expect(res.status).toBe(401)
     expect(await prisma.organization.count()).toBe(0)
