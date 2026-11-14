@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Skeleton } from '@/components/atoms'
 import { PageTemplate } from '@/components/layout'
-import { AccountForm } from '@/features/account/client/components/AccountForm'
+import { AccountForm } from '@/features/account/components/AccountForm'
 import { PROTECTED_ROUTES } from '@/features/auth/lib/routes'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 

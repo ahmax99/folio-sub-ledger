@@ -3,7 +3,7 @@ import { User as UserIcon } from 'lucide-react'
 
 import { Avatar, AvatarImage } from '@/components/molecules'
 
-import { fetchProfileImage } from '../client/api'
+import { fetchProfileImage } from '../lib/profileImage'
 
 interface UserInfoProps {
   user: User

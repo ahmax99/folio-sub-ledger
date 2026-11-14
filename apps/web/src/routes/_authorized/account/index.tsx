@@ -5,7 +5,7 @@ import { PageTemplate } from '@/components/layout'
 import {
   AccountManagement,
   type AccountTab
-} from '@/features/account/client/components/AccountManagement'
+} from '@/features/account/components/AccountManagement'
 import { UserInfo } from '@/features/account/components/UserInfo'
 import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'

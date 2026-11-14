@@ -66,7 +66,7 @@ When an app derived from this boilerplate needs its design language defined:
   `/impeccable shape` (plan UX before code).
 - Place files per repo rules: shared cross-feature UI in `src/components/`
   (atoms → molecules → organisms → layout → common), feature-specific UI in
-  `features/<name>/client|server/components/`. Variants via CVA; root element
+  `features/<name>/components/`. Variants via CVA; root element
   gets `data-slot`.
 - In the spec → plan → implement → review flow, design work belongs in
   `/implement`; a plan step that says "build the settings page" implies this

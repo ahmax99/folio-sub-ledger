@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { env } from '@/config/env'
 import type { CallbackParams } from '@/features/auth/schemas/auth.schema'
-import { handleCallback } from '@/features/auth/server/services/auth'
+import { handleCallback } from '@/features/auth/server/auth.server'
 import { redirectResponse } from '@/lib/redirectResponse'
 import { withRequestLogging } from '@/lib/requestLogging'
 
