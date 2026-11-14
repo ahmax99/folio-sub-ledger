@@ -1,11 +1,11 @@
 import type { Organization, SetupFirmBody } from '@shared/config'
 import { type Prisma, prisma } from '@shared/neon'
 import { errAsync, okAsync, type ResultAsync } from 'neverthrow'
+import { v7 as uuidv7 } from 'uuid'
 
 import { logger } from '@/config/logger.js'
 import { AppError } from '@/error/lib/AppError.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
-import { uuidv7 } from '@/lib/uuidv7.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
 import type { Member } from '@/modules/auth/permission.js'
 
