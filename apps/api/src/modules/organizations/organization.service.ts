@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 import type { Organization, SetupFirmBody } from '@shared/config'
 import { Prisma } from '@shared/neon'
 import { errAsync, okAsync, ResultAsync } from 'neverthrow'
@@ -31,7 +29,7 @@ export const OrganizationService = {
     { cognitoSub, email, name }: Identity,
     { firmName }: SetupFirmBody
   ): ResultAsync<Organization, AppError> => {
-    const orgId = randomUUID()
+    const orgId = crypto.randomUUID()
 
     return ResultAsync.fromPromise(
       withTenant({ orgId }, (tx) =>
