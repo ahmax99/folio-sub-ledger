@@ -14,7 +14,7 @@ import {
   AlertDialogTitle
 } from '@/components/molecules'
 import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
-import { captureError } from '@/features/error-tracking/utils/captureError'
+import { captureError } from '@/features/error/utils/captureError'
 
 import { useErrorStore } from '../stores/useErrorStore'
 

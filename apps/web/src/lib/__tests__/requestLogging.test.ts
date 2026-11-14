@@ -8,7 +8,7 @@ import {
   withRequestLogging
 } from '../requestLogging'
 
-vi.mock('@/features/error-tracking/utils/captureError', () => ({
+vi.mock('@/features/error/utils/captureError', () => ({
   captureError: vi.fn()
 }))
 

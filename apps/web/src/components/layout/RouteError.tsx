@@ -4,7 +4,7 @@ import { useQueryErrorResetBoundary } from '@tanstack/react-query'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
-import { captureError } from '@/features/error-tracking/utils/captureError'
+import { captureError } from '@/features/error/utils/captureError'
 
 import { ButtonLink } from '../atoms/ButtonLink'
 
