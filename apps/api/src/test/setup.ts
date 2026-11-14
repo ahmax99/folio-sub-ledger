@@ -14,33 +14,30 @@ vi.mock('@shared/neon', async (importOriginal) => {
   }
 })
 
-const identities: Record<
-  string,
-  { sub: string; email: string; name: string; groups?: string[] }
-> = {
-  'test-token': {
-    sub: 'test-sub',
-    email: 'test@example.com',
-    name: 'Test User'
-  },
-  'other-token': {
-    sub: 'other-sub',
-    email: 'other@example.com',
-    name: 'Other User'
-  },
-  'member-token': {
-    sub: 'test-sub',
-    email: 'test@example.com',
-    name: 'Test User',
-    groups: ['Users']
+const identities: Record<string, { sub: string; email: string; name: string }> =
+  {
+    'test-token': {
+      sub: 'test-sub',
+      email: 'test@example.com',
+      name: 'Test User'
+    },
+    'other-token': {
+      sub: 'other-sub',
+      email: 'other@example.com',
+      name: 'Other User'
+    },
+    'analyst-token': {
+      sub: 'analyst-sub',
+      email: 'analyst@example.com',
+      name: 'Analyst User'
+    }
   }
-}
 
 vi.mock('@/modules/auth/jwt.js', () => ({
   verifyToken: (token: string) => {
     const identity = identities[token]
     return identity
-      ? okAsync({ ...identity, 'cognito:groups': identity.groups ?? [] })
+      ? okAsync(identity)
       : errAsync(new AppError('UNAUTHORIZED', 'Invalid or expired token'))
   }
 }))

@@ -32,8 +32,14 @@ Routes are aggregated in `src/routes/index.ts` under prefix `/api/v1`; OpenAPI/S
 
 **Auth & authorization:**
 
-- `authPlugin` (`src/modules/auth/auth.plugin.ts`) exposes an `auth: true` route macro. It reads a Bearer token, **falling back to the `X-Id-Token` header** (SSR/Lambda calls put the SigV4 signature in `Authorization`). It verifies the Cognito JWT (`jose`) and resolves `user: AuthUser` (`cognitoSub`, `email`, `role` from `cognito:groups`).
-- Authorization is **CASL + Prisma**. `getUserPermissions(user?, userId?)` (`src/modules/auth/permission.ts`) builds an `AppAbility`. Services receive the ability and enforce it two ways: `accessibleBy(ability).ofType('<Model>')` in `where` clauses for list queries, and `ability.can('update', subject('User', user))` for single-resource checks. Unauthenticated callers get no permissions.
+- `authPlugin` (`src/modules/auth/auth.plugin.ts`) exposes an `auth: true` route macro. It reads a Bearer token, **falling back to the `X-Id-Token` header** (SSR/Lambda calls put the SigV4 signature in `Authorization`). It verifies the Cognito JWT (`jose`) and resolves `user: AuthUser` (`cognitoSub`, `email`, `name`), the caller's `member` record (`id`, `orgId`, `role`, or `null` before firm setup) and its `ability`. Cognito groups play no part in authorization.
+- Authorization is **CASL + Prisma**. `getUserPermissions(member)` (`src/modules/auth/permission.ts`) builds an `AppAbility` from the member's `orgId` and `role`. Services receive the ability and enforce it two ways: `accessibleBy(ability).ofType('<Model>')` in `where` clauses for list queries, and `ability.can('update', subject('User', user))` for single-resource checks. Unauthenticated callers get no permissions.
+
+**Tenant isolation** (one shared schema, firms are tenants). CASL is the primary gate and Postgres RLS is the safety net:
+
+- Every tenant query runs through `withTenant({ orgId }, (tx) => …)` (`src/lib/withTenant.ts`): one transaction that switches to the non-owner `folio_app` role and sets `app.org_id` transaction-locally, so nothing leaks through Neon's pooler. `withTenant({ cognitoSub }, …)` can read only the caller's own `users` row, for resolving the member before the firm is known. Never query the `prisma` singleton directly in a service: the runtime database user bypasses RLS.
+- Every tenant table has `org_id`, `@@unique([orgId, id])`, indexes that lead with `org_id`, and composite foreign keys `(orgId, parentId)` → `(orgId, id)` to other tenant tables. Its migration enables **and forces** RLS with a policy on `NULLIF(current_setting('app.org_id', true), '')`, so an unset setting matches nothing. `src/lib/withTenant.test.ts` fails for any table without forced RLS.
+- Another firm's resource returns 404, the same as one that doesn't exist.
 
 Secrets: in production, `loadSecrets()` pulls `DATABASE_URL` from AWS Secrets Manager (`DATABASE_URL_SECRET_NAME`); in dev it reads `.env`. Env is validated with `@t3-oss/env-core` in `src/config/env.ts`.
 

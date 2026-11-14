@@ -11,7 +11,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.1157.0",
     "@base-ui/react": "^1.9.0",
     "@casl/ability": "^7.0.2",
     "@casl/react": "^7.0.1",

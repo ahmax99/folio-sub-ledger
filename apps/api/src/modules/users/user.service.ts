@@ -1,6 +1,6 @@
 import { AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider'
-import type { UpdateUserBody, User, UserIdParams } from '@shared/config'
-import { prisma } from '@shared/neon'
+import { accessibleBy } from '@casl/prisma'
+import type { UpdateUserBody, UserIdParams } from '@shared/config'
 import { errAsync, okAsync } from 'neverthrow'
 
 import { env } from '@/config/env.js'
@@ -9,56 +9,102 @@ import { catchAsyncError } from '@/error/utils/catchError.js'
 import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
+import { withTenant } from '@/lib/withTenant.js'
+import type { AuthUser } from '@/modules/auth/auth.plugin.js'
+import type { Member } from '@/modules/auth/permission.js'
 
 export const UserService = {
+  requireMember: (member: Member | null) =>
+    authorizeResource(member, { notFound: 'User not found' }),
+
+  findMember: (cognitoSub: AuthUser['cognitoSub']) =>
+    catchAsyncError(
+      withTenant({ cognitoSub }, (tx) =>
+        tx.user.findUnique({
+          where: { cognitoSub },
+          select: { id: true, orgId: true, role: true }
+        })
+      )
+    ),
+
   findUser: (
     id: UserIdParams['id'],
+    member: Member | null,
     ability: AppAbility,
     action: 'read' | 'update' | 'delete'
   ) =>
-    authorizeResource(prisma.user.findUnique({ where: { id } }), {
-      notFound: 'User not found',
-      forbidden: `Cannot ${action} this user`,
-      can: (user) =>
-        ability.can(action, subject('User', user)) ||
-        ability.can('manage', 'all')
-    }),
-
-  getAll: (ability: AppAbility) =>
-    authorizeResource(ability, {
-      forbidden: 'Only admins can list users',
-      can: (admin) => admin.can('manage', 'all')
-    }).andThen(() =>
-      catchAsyncError(prisma.user.findMany({ orderBy: { createdAt: 'desc' } }))
+    UserService.requireMember(member).andThen(({ orgId }) =>
+      authorizeResource(
+        withTenant({ orgId }, (tx) =>
+          tx.user.findFirst({
+            where: { AND: [accessibleBy(ability).ofType('User'), { id }] }
+          })
+        ),
+        {
+          notFound: 'User not found',
+          forbidden: `Cannot ${action} this user`,
+          can: (user) => ability.can(action, subject('User', user))
+        }
+      )
     ),
 
-  getById: (id: UserIdParams['id'], ability: AppAbility) =>
-    UserService.findUser(id, ability, 'read'),
+  getAll: (member: Member | null, ability: AppAbility) =>
+    UserService.requireMember(member).andThen(({ orgId }) =>
+      catchAsyncError(
+        withTenant({ orgId }, (tx) =>
+          tx.user.findMany({
+            where: accessibleBy(ability).ofType('User'),
+            orderBy: { createdAt: 'desc' }
+          })
+        )
+      )
+    ),
 
-  getMe: (cognitoSub: User['cognitoSub'], groups: User['groups']) =>
-    authorizeResource(
-      prisma.user.findUnique({
-        where: { cognitoSub },
-        include: { organization: { select: { id: true, name: true } } }
-      }),
-      { notFound: 'User not found' }
-    ).map((user) => ({ ...user, groups })),
+  getById: (
+    id: UserIdParams['id'],
+    member: Member | null,
+    ability: AppAbility
+  ) => UserService.findUser(id, member, ability, 'read'),
+
+  getMe: (member: Member | null) =>
+    UserService.requireMember(member).andThen(({ id, orgId }) =>
+      authorizeResource(
+        withTenant({ orgId }, (tx) =>
+          tx.user.findUnique({
+            where: { id },
+            include: { organization: { select: { id: true, name: true } } }
+          })
+        ),
+        { notFound: 'User not found' }
+      )
+    ),
 
   update: (
     id: UserIdParams['id'],
     input: UpdateUserBody,
+    member: Member | null,
     ability: AppAbility
   ) =>
-    UserService.findUser(id, ability, 'update').andThen(() =>
-      catchAsyncError(prisma.user.update({ where: { id }, data: input }))
+    UserService.findUser(id, member, ability, 'update').andThen(({ orgId }) =>
+      catchAsyncError(
+        withTenant({ orgId }, (tx) =>
+          tx.user.update({ where: { id }, data: input })
+        )
+      )
     ),
 
-  delete: (id: UserIdParams['id'], ability: AppAbility) =>
-    UserService.findUser(id, ability, 'delete')
+  delete: (
+    id: UserIdParams['id'],
+    member: Member | null,
+    ability: AppAbility
+  ) =>
+    UserService.findUser(id, member, ability, 'delete')
       .andThrough((user) =>
         user.role === 'OWNER'
           ? catchAsyncError(
-              prisma.user.count({ where: { orgId: user.orgId } })
+              withTenant({ orgId: user.orgId }, (tx) =>
+                tx.user.count({ where: { orgId: user.orgId } })
+              )
             ).andThen((count) =>
               count > 1
                 ? errAsync(
@@ -73,9 +119,11 @@ export const UserService = {
       )
       .andThrough((user) =>
         catchAsyncError(
-          user.role === 'OWNER'
-            ? prisma.organization.delete({ where: { id: user.orgId } })
-            : prisma.user.delete({ where: { id } })
+          withTenant({ orgId: user.orgId }, (tx) =>
+            user.role === 'OWNER'
+              ? tx.organization.delete({ where: { id: user.orgId } })
+              : tx.user.delete({ where: { id } })
+          )
         )
       )
       .andThrough((user) =>

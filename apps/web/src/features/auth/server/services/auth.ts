@@ -11,7 +11,6 @@ import { generateNonce, generatePKCE, generateState } from '../../utils/pkce'
 import { safeRelativePath } from '../../utils/redirect'
 import { findMeWithIdToken } from '../api'
 
-import { assignDefaultRoleGroup } from './role'
 import {
   destroyPKCESession,
   destroySession,
@@ -136,7 +135,6 @@ export const handleCallback = async (
   await setSessionData({ refreshToken: tokens.refresh_token })
   await destroyPKCESession()
 
-  await assignDefaultRoleGroup(claims.sub)
   const user = await findMeWithIdToken(idToken)
 
   log.info({ userId: claims.sub }, 'User authenticated successfully')

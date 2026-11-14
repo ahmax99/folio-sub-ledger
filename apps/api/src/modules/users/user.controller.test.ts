@@ -11,6 +11,7 @@ const authHeaders = {
 }
 
 const otherHeaders = { ...authHeaders, authorization: 'Bearer other-token' }
+const analystHeaders = { ...authHeaders, authorization: 'Bearer analyst-token' }
 
 const seedOwner = (
   sub = 'test-sub',
@@ -25,6 +26,31 @@ const seedOwner = (
       }
     }
   })
+
+const addAnalyst = (orgId: string) =>
+  prisma.user.create({
+    data: {
+      cognitoSub: 'analyst-sub',
+      email: 'analyst@example.com',
+      name: 'Analyst User',
+      role: 'ANALYST',
+      orgId
+    }
+  })
+
+const call = (
+  method: string,
+  path: string,
+  headers: Record<string, string>,
+  body?: unknown
+) =>
+  userController.handle(
+    new Request(`http://localhost${path}`, {
+      method,
+      headers,
+      ...(body !== undefined && { body: JSON.stringify(body) })
+    })
+  )
 
 const getMe = (headers: Record<string, string>) =>
   userController.handle(new Request('http://localhost/users/me', { headers }))
@@ -54,7 +80,6 @@ describe('user controller', () => {
     expect(await res.json()).toMatchObject({
       orgId: org.id,
       role: 'OWNER',
-      groups: [],
       organization: { id: org.id, name: 'Test Firm' }
     })
   })
@@ -113,7 +138,7 @@ describe('user controller', () => {
     const res = await userController.handle(
       new Request(`http://localhost/users/${user.id}`, {
         method: 'DELETE',
-        headers: { ...authHeaders, authorization: 'Bearer member-token' }
+        headers: authHeaders
       })
     )
 
@@ -140,13 +165,93 @@ describe('user controller', () => {
     const res = await userController.handle(
       new Request(`http://localhost/users/${owner.id}`, {
         method: 'DELETE',
-        headers: { ...authHeaders, authorization: 'Bearer member-token' }
+        headers: authHeaders
       })
     )
 
     expect(res.status).toBe(400)
     expect(await prisma.user.count()).toBe(2)
     expect(await prisma.organization.count()).toBe(1)
+  })
+
+  describe('across two firms', () => {
+    it.each([
+      ['GET', undefined],
+      ['PUT', { name: 'Hijacked' }],
+      ['DELETE', undefined]
+    ])(
+      "returns 404 for %s on another firm's user and leaves it unchanged",
+      async (method, body) => {
+        await seedOwner()
+        const other = await seedOwner(
+          'other-sub',
+          'other@example.com',
+          'Other Firm'
+        )
+        const victim = await prisma.user.findFirstOrThrow({
+          where: { orgId: other.id }
+        })
+
+        const res = await call(method, `/users/${victim.id}`, authHeaders, body)
+
+        expect(res.status).toBe(404)
+        expect(
+          await prisma.user.findUnique({ where: { id: victim.id } })
+        ).toEqual(victim)
+      }
+    )
+
+    it("GET /users lists only the caller's own firm", async () => {
+      const mine = await seedOwner()
+      await addAnalyst(mine.id)
+      await seedOwner('other-sub', 'other@example.com', 'Other Firm')
+
+      const res = await call('GET', '/users', authHeaders)
+
+      expect(res.status).toBe(200)
+      const users = await res.json()
+      expect(users).toHaveLength(2)
+      expect(
+        users.every(({ orgId }: { orgId: string }) => orgId === mine.id)
+      ).toBe(true)
+    })
+  })
+
+  it('PUT /users/:id by an Analyst on a colleague returns 403', async () => {
+    const org = await seedOwner()
+    await addAnalyst(org.id)
+    const owner = await prisma.user.findFirstOrThrow({
+      where: { orgId: org.id, role: 'OWNER' }
+    })
+
+    const res = await call('PUT', `/users/${owner.id}`, analystHeaders, {
+      name: 'Renamed'
+    })
+
+    expect(res.status).toBe(403)
+  })
+
+  it('PUT /users/:id by an Owner on a member of their firm succeeds', async () => {
+    const org = await seedOwner()
+    const analyst = await addAnalyst(org.id)
+
+    const res = await call('PUT', `/users/${analyst.id}`, authHeaders, {
+      name: 'Renamed'
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ name: 'Renamed' })
+  })
+
+  it('PUT /users/:id by an Analyst on themselves succeeds', async () => {
+    const org = await seedOwner()
+    const analyst = await addAnalyst(org.id)
+
+    const res = await call('PUT', `/users/${analyst.id}`, analystHeaders, {
+      name: 'Renamed'
+    })
+
+    expect(res.status).toBe(200)
   })
 
   it('GET /users/me without a token returns 401 and creates nothing', async () => {

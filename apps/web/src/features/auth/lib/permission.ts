@@ -1,18 +1,19 @@
 import { AbilityBuilder, createMongoAbility } from '@casl/ability'
-import { COGNITO_GROUPS } from '@shared/config'
+import type { User } from '@shared/config'
 
 import type { AppAbility } from '@/lib/casl'
 
-export const getUserPermissions = (user?: {
-  id: string
-  groups: string[]
-}): AppAbility => {
+export const getUserPermissions = (
+  user?: Pick<User, 'id' | 'orgId' | 'role'>
+): AppAbility => {
   const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility)
 
   if (!user) return build()
 
-  // Admins (Admins group)
-  if (user.groups.includes(COGNITO_GROUPS.ADMINS)) can('manage', 'all')
+  can('read', 'User', { orgId: user.orgId })
+  can(['update', 'delete'], 'User', { id: user.id })
+
+  if (user.role === 'OWNER') can('manage', 'User', { orgId: user.orgId })
 
   return build()
 }

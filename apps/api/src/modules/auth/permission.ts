@@ -1,22 +1,23 @@
 import { AbilityBuilder } from '@casl/ability'
-import { COGNITO_GROUPS } from '@shared/config'
+import type { User } from '@shared/neon'
 
 import { type AppAbility, createPrismaAbility } from '@/lib/casl-prisma.js'
-import type { AuthUser } from '@/modules/auth/auth.plugin.js'
 
-export const getUserPermissions = (user?: AuthUser, userId?: string) => {
+export type Member = Pick<User, 'id' | 'orgId' | 'role'>
+
+export const getUserPermissions = (member?: Member | null) => {
   const { can, build } = new AbilityBuilder<AppAbility>(createPrismaAbility)
 
-  if (!user) return build()
+  if (!member) return build()
 
-  // Authenticated users (Users group)
-  if (user.role?.includes(COGNITO_GROUPS.USERS) && userId) {
-    can('update', 'User', { id: userId })
-    can('delete', 'User', { id: userId })
+  can('read', 'Organization', { id: member.orgId })
+  can('read', 'User', { orgId: member.orgId })
+  can(['update', 'delete'], 'User', { id: member.id })
+
+  if (member.role === 'OWNER') {
+    can('update', 'Organization', { id: member.orgId })
+    can('manage', 'User', { orgId: member.orgId })
   }
-
-  // Admins (Admins group)
-  if (user.role?.includes(COGNITO_GROUPS.ADMINS)) can('manage', 'all')
 
   return build()
 }

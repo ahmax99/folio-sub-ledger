@@ -6,7 +6,6 @@ import { Elysia } from 'elysia'
 import { errorHandler } from '@/error/lib/errorHandler.js'
 import { handleApiError } from '@/error/utils/handleApiError.js'
 import { authPlugin } from '@/modules/auth/auth.plugin.js'
-import { getUserPermissions } from '@/modules/auth/permission.js'
 import { userPlugin } from '@/modules/users/user.plugin.js'
 
 export const userController = new Elysia({ prefix: '/users' })
@@ -16,8 +15,8 @@ export const userController = new Elysia({ prefix: '/users' })
   .use(openapi({ references: fromTypes() }))
   .get(
     '/',
-    async ({ user, userService }) =>
-      handleApiError(userService.getAll(getUserPermissions(user))),
+    async ({ member, ability, userService }) =>
+      handleApiError(userService.getAll(member, ability)),
     {
       auth: true,
       detail: {
@@ -29,8 +28,8 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/:id',
-    async ({ params, user, userService }) =>
-      handleApiError(userService.getById(params.id, getUserPermissions(user))),
+    async ({ params, member, ability, userService }) =>
+      handleApiError(userService.getById(params.id, member, ability)),
     {
       params: UserModel.userIdParams,
       auth: true,
@@ -43,8 +42,8 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/me',
-    async ({ user, userService }) =>
-      handleApiError(userService.getMe(user.cognitoSub, user.role)),
+    async ({ member, userService }) =>
+      handleApiError(userService.getMe(member)),
     {
       auth: true,
       detail: {
@@ -56,20 +55,20 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .get(
     '/presigned-url',
-    async ({ request, query, user, userService, uploadService }) =>
+    async ({ request, query, member, ability, userService, uploadService }) =>
       handleApiError(
         userService
-          .getMe(user.cognitoSub, user.role)
-          .andThen((dbUser) =>
+          .requireMember(member)
+          .andThen(({ id }) =>
+            userService.findUser(id, member, ability, 'read')
+          )
+          .andThen((self) =>
             uploadService.getPresignedUrl(
               'account',
               request,
               query.filename,
               query.contentType,
-              getUserPermissions(user, dbUser.id).can(
-                'update',
-                subject('User', dbUser)
-              )
+              ability.can('update', subject('User', self))
             )
           )
       ),
@@ -86,15 +85,8 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .put(
     '/:id',
-    async ({ params, body, user, userService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        userService.update(params.id, body, getUserPermissions(user, dbUser.id))
-      )
-    },
+    async ({ params, body, member, ability, userService }) =>
+      handleApiError(userService.update(params.id, body, member, ability)),
     {
       params: UserModel.userIdParams,
       body: UserModel.updateUserBody,
@@ -108,15 +100,8 @@ export const userController = new Elysia({ prefix: '/users' })
   )
   .delete(
     '/:id',
-    async ({ params, user, userService }) => {
-      const dbUser = await handleApiError(
-        userService.getMe(user.cognitoSub, user.role)
-      )
-
-      return handleApiError(
-        userService.delete(params.id, getUserPermissions(user, dbUser.id))
-      )
-    },
+    async ({ params, member, ability, userService }) =>
+      handleApiError(userService.delete(params.id, member, ability)),
     {
       params: UserModel.userIdParams,
       auth: true,
