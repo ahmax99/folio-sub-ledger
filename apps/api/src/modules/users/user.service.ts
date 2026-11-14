@@ -9,21 +9,13 @@ import { catchAsyncError } from '@/error/utils/catchError.js'
 import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
-import { type TenantDb, tenantDb } from '@/lib/tenantDb.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
+import type { OrganizationDb } from '@/modules/organizations/organization.service.js'
 
 export const UserService = {
-  findMember: (cognitoSub: AuthUser['cognitoSub']) =>
-    tenantDb({ cognitoSub }).run((tx) =>
-      tx.user.findUnique({
-        where: { cognitoSub },
-        select: { id: true, orgId: true, role: true }
-      })
-    ),
-
   findUser: (
     id: UserIdParams['id'],
-    db: TenantDb,
+    db: OrganizationDb,
     ability: AppAbility,
     action: 'read' | 'update' | 'delete'
   ) =>
@@ -40,7 +32,7 @@ export const UserService = {
       }
     ),
 
-  getAll: (db: TenantDb, ability: AppAbility) =>
+  getAll: (db: OrganizationDb, ability: AppAbility) =>
     authorizeResource(ability, {
       forbidden: 'Cannot list users',
       can: (granted) => granted.can('read', 'User')
@@ -53,10 +45,10 @@ export const UserService = {
       )
     ),
 
-  getById: (id: UserIdParams['id'], db: TenantDb, ability: AppAbility) =>
+  getById: (id: UserIdParams['id'], db: OrganizationDb, ability: AppAbility) =>
     UserService.findUser(id, db, ability, 'read'),
 
-  getMe: (cognitoSub: AuthUser['cognitoSub'], db: TenantDb) =>
+  getMe: (cognitoSub: AuthUser['cognitoSub'], db: OrganizationDb) =>
     authorizeResource(
       db.run((tx) =>
         tx.user.findUnique({
@@ -70,14 +62,14 @@ export const UserService = {
   update: (
     id: UserIdParams['id'],
     input: UpdateUserBody,
-    db: TenantDb,
+    db: OrganizationDb,
     ability: AppAbility
   ) =>
     UserService.findUser(id, db, ability, 'update').andThen(() =>
       db.run((tx) => tx.user.update({ where: { id }, data: input }))
     ),
 
-  delete: (id: UserIdParams['id'], db: TenantDb, ability: AppAbility) =>
+  delete: (id: UserIdParams['id'], db: OrganizationDb, ability: AppAbility) =>
     UserService.findUser(id, db, ability, 'delete')
       .andThrough((user) =>
         user.role === 'OWNER'

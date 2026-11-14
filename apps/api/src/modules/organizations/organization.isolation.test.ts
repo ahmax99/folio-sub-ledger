@@ -1,7 +1,7 @@
 import { type Prisma, prisma } from '@shared/neon'
 import { describe, expect, it } from 'vitest'
 
-import { tenantDb } from '@/lib/tenantDb.js'
+import { OrganizationService } from '@/modules/organizations/organization.service.js'
 
 const seedFirm = (name: string, sub: string) =>
   prisma.organization.create({
@@ -98,7 +98,7 @@ describe('row-level security', () => {
   })
 })
 
-describe('tenant table ids', () => {
+describe('organization table ids', () => {
   it('stores ids and org ids as native uuid', async () => {
     const columns = await prisma.$queryRaw<
       { table_name: string; column_name: string; data_type: string }[]
@@ -119,12 +119,12 @@ describe('tenant table ids', () => {
   })
 })
 
-describe('tenantDb', () => {
+describe('OrganizationService.db', () => {
   it('scopes queries to the given firm', async () => {
     const a = await seedFirm('Firm A', 'a-sub')
     await seedFirm('Firm B', 'b-sub')
 
-    const users = await tenantDb({ orgId: a.id }).run((tx) =>
+    const users = await OrganizationService.db({ orgId: a.id }).run((tx) =>
       tx.user.findMany()
     )
 
@@ -135,8 +135,8 @@ describe('tenantDb', () => {
     await seedFirm('Firm A', 'a-sub')
     await seedFirm('Firm B', 'b-sub')
 
-    const users = await tenantDb({ cognitoSub: 'b-sub' }).run((tx) =>
-      tx.user.findMany()
+    const users = await OrganizationService.db({ cognitoSub: 'b-sub' }).run(
+      (tx) => tx.user.findMany()
     )
 
     expect(users._unsafeUnwrap().map(({ cognitoSub }) => cognitoSub)).toEqual([
@@ -144,10 +144,12 @@ describe('tenantDb', () => {
     ])
   })
 
-  it('leaves no tenant setting on the connection afterwards', async () => {
+  it('leaves no organization setting on the connection afterwards', async () => {
     const a = await seedFirm('Firm A', 'a-sub')
 
-    await tenantDb({ orgId: a.id }).run((tx) => tx.user.findMany())
+    await OrganizationService.db({ orgId: a.id }).run((tx) =>
+      tx.user.findMany()
+    )
     const after = await prisma.$queryRaw<
       { org: string | null; role: string }[]
     >`SELECT coalesce(current_setting('app.org_id', true), '') AS org, current_user AS role`
