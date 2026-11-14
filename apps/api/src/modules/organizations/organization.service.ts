@@ -6,10 +6,7 @@ import { logger } from '@/config/logger.js'
 import { AppError } from '@/error/lib/AppError.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
 import type { Member } from '@/modules/auth/permission.js'
-import {
-  type OrganizationDb,
-  organizationDb
-} from '@/modules/organizations/organization.db.js'
+import { organizationDb } from '@/modules/organizations/organization.db.js'
 
 type Identity = Pick<AuthUser, 'cognitoSub' | 'email' | 'name'>
 
@@ -24,11 +21,10 @@ export const OrganizationService = {
       })
     ),
 
-  findOrganization: (
-    { orgId }: Member,
-    db: OrganizationDb
-  ): ResultAsync<Organization | null, AppError> =>
-    db.run((tx) =>
+  findOrganization: ({
+    orgId
+  }: Member): ResultAsync<Organization | null, AppError> =>
+    organizationDb({ orgId }).run((tx) =>
       tx.organization.findUnique({ where: { id: orgId }, select })
     ),
 
@@ -67,10 +63,7 @@ export const OrganizationService = {
           : OrganizationService.findMember(cognitoSub)
               .andThen((member) =>
                 member
-                  ? OrganizationService.findOrganization(
-                      member,
-                      organizationDb({ orgId: member.orgId })
-                    )
+                  ? OrganizationService.findOrganization(member)
                   : okAsync(null)
               )
               .andThen((existing) =>
@@ -86,11 +79,10 @@ export const OrganizationService = {
   setupFirm: (
     identity: Identity,
     member: Member | null,
-    db: OrganizationDb,
     input: SetupFirmBody
   ): ResultAsync<Organization, AppError> =>
     (member
-      ? OrganizationService.findOrganization(member, db)
+      ? OrganizationService.findOrganization(member)
       : okAsync(null)
     ).andThen((existing) =>
       existing
