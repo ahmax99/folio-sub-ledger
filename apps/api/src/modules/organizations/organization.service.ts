@@ -1,47 +1,23 @@
 import type { Organization, SetupFirmBody } from '@shared/config'
-import { type Prisma, prisma } from '@shared/neon'
 import { errAsync, okAsync, type ResultAsync } from 'neverthrow'
 import { v7 as uuidv7 } from 'uuid'
 
 import { logger } from '@/config/logger.js'
 import { AppError } from '@/error/lib/AppError.js'
-import { catchAsyncError } from '@/error/utils/catchError.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
 import type { Member } from '@/modules/auth/permission.js'
+import {
+  type OrganizationDb,
+  organizationDb
+} from '@/modules/organizations/organization.db.js'
 
 type Identity = Pick<AuthUser, 'cognitoSub' | 'email' | 'name'>
-
-type OrganizationScope =
-  | { orgId: Organization['id'] }
-  | { cognitoSub: Identity['cognitoSub'] }
-
-export interface OrganizationDb {
-  run: <T>(
-    query: (tx: Prisma.TransactionClient) => Promise<T>
-  ) => ResultAsync<T, AppError>
-}
 
 const select = { id: true, name: true }
 
 export const OrganizationService = {
-  db: (scope: OrganizationScope): OrganizationDb => ({
-    run: <T>(query: (tx: Prisma.TransactionClient) => Promise<T>) =>
-      catchAsyncError(
-        prisma.$transaction(
-          async (tx) => {
-            await tx.$executeRaw`SELECT
-              set_config('role', 'folio_app', true),
-              set_config('app.org_id', ${'orgId' in scope ? scope.orgId : ''}, true),
-              set_config('app.cognito_sub', ${'cognitoSub' in scope ? scope.cognitoSub : ''}, true)`
-            return query(tx)
-          },
-          { maxWait: 10_000 }
-        )
-      )
-  }),
-
   findMember: (cognitoSub: Identity['cognitoSub']) =>
-    OrganizationService.db({ cognitoSub }).run((tx) =>
+    organizationDb({ cognitoSub }).run((tx) =>
       tx.user.findUnique({
         where: { cognitoSub },
         select: { id: true, orgId: true, role: true }
@@ -62,7 +38,7 @@ export const OrganizationService = {
   ): ResultAsync<Organization, AppError> => {
     const orgId = uuidv7()
 
-    return OrganizationService.db({ orgId })
+    return organizationDb({ orgId })
       .run(async (tx) => {
         const organization = await tx.organization.create({
           data: { id: orgId, name: firmName },
@@ -93,7 +69,7 @@ export const OrganizationService = {
                 member
                   ? OrganizationService.findOrganization(
                       member,
-                      OrganizationService.db({ orgId: member.orgId })
+                      organizationDb({ orgId: member.orgId })
                     )
                   : okAsync(null)
               )

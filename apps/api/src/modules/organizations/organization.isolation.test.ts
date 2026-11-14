@@ -1,7 +1,7 @@
 import { type Prisma, prisma } from '@shared/neon'
 import { describe, expect, it } from 'vitest'
 
-import { OrganizationService } from '@/modules/organizations/organization.service.js'
+import { organizationDb } from '@/modules/organizations/organization.db.js'
 
 const seedFirm = (name: string, sub: string) =>
   prisma.organization.create({
@@ -119,12 +119,12 @@ describe('organization table ids', () => {
   })
 })
 
-describe('OrganizationService.db', () => {
+describe('organizationDb', () => {
   it('scopes queries to the given firm', async () => {
     const a = await seedFirm('Firm A', 'a-sub')
     await seedFirm('Firm B', 'b-sub')
 
-    const users = await OrganizationService.db({ orgId: a.id }).run((tx) =>
+    const users = await organizationDb({ orgId: a.id }).run((tx) =>
       tx.user.findMany()
     )
 
@@ -135,8 +135,8 @@ describe('OrganizationService.db', () => {
     await seedFirm('Firm A', 'a-sub')
     await seedFirm('Firm B', 'b-sub')
 
-    const users = await OrganizationService.db({ cognitoSub: 'b-sub' }).run(
-      (tx) => tx.user.findMany()
+    const users = await organizationDb({ cognitoSub: 'b-sub' }).run((tx) =>
+      tx.user.findMany()
     )
 
     expect(users._unsafeUnwrap().map(({ cognitoSub }) => cognitoSub)).toEqual([
@@ -147,9 +147,7 @@ describe('OrganizationService.db', () => {
   it('leaves no organization setting on the connection afterwards', async () => {
     const a = await seedFirm('Firm A', 'a-sub')
 
-    await OrganizationService.db({ orgId: a.id }).run((tx) =>
-      tx.user.findMany()
-    )
+    await organizationDb({ orgId: a.id }).run((tx) => tx.user.findMany())
     const after = await prisma.$queryRaw<
       { org: string | null; role: string }[]
     >`SELECT coalesce(current_setting('app.org_id', true), '') AS org, current_user AS role`

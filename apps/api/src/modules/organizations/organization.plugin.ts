@@ -3,6 +3,7 @@ import { Elysia } from 'elysia'
 import { handleApiError } from '@/error/utils/handleApiError.js'
 import { authPlugin } from '@/modules/auth/auth.plugin.js'
 import { getUserPermissions } from '@/modules/auth/permission.js'
+import { organizationDb } from '@/modules/organizations/organization.db.js'
 import { OrganizationService } from '@/modules/organizations/organization.service.js'
 
 export const organizationPlugin = new Elysia({ name: 'organization-plugin' })
@@ -18,7 +19,7 @@ export const organizationPlugin = new Elysia({ name: 'organization-plugin' })
       return {
         member,
         ability: getUserPermissions(member),
-        db: OrganizationService.db(
+        db: organizationDb(
           member ? { orgId: member.orgId } : { cognitoSub: user.cognitoSub }
         )
       }

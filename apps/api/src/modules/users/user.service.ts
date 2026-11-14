@@ -10,7 +10,7 @@ import { authorizeResource } from '@/lib/authorizeResource.js'
 import { type AppAbility, subject } from '@/lib/casl-prisma.js'
 import { cognitoClient } from '@/lib/cognito.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
-import type { OrganizationDb } from '@/modules/organizations/organization.service.js'
+import type { OrganizationDb } from '@/modules/organizations/organization.db.js'
 
 export const UserService = {
   findUser: (
