@@ -5,12 +5,12 @@ import { Elysia } from 'elysia'
 
 import { errorHandler } from '@/error/lib/errorHandler.js'
 import { handleApiError } from '@/error/utils/handleApiError.js'
-import { authPlugin } from '@/modules/auth/auth.plugin.js'
+import { organizationPlugin } from '@/modules/organizations/organization.plugin.js'
 import { userPlugin } from '@/modules/users/user.plugin.js'
 
 export const userController = new Elysia({ prefix: '/users' })
+  .use(organizationPlugin)
   .use(userPlugin)
-  .use(authPlugin)
   .use(errorHandler)
   .use(openapi({ references: fromTypes() }))
   .get(
@@ -18,7 +18,7 @@ export const userController = new Elysia({ prefix: '/users' })
     async ({ db, ability, userService }) =>
       handleApiError(userService.getAll(db, ability)),
     {
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get all users',
         description: 'Retrieve a list of all users',
@@ -32,7 +32,7 @@ export const userController = new Elysia({ prefix: '/users' })
       handleApiError(userService.getById(params.id, db, ability)),
     {
       params: UserModel.userIdParams,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get user by ID',
         description: 'Retrieve a specific user by their unique identifier',
@@ -45,7 +45,7 @@ export const userController = new Elysia({ prefix: '/users' })
     async ({ user, db, userService }) =>
       handleApiError(userService.getMe(user.cognitoSub, db)),
     {
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get current user',
         description: 'Retrieve the authenticated user profile',
@@ -71,7 +71,7 @@ export const userController = new Elysia({ prefix: '/users' })
       ),
     {
       query: UserModel.uploadImageQuery,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Get presigned URL for profile image upload',
         description:
@@ -87,7 +87,7 @@ export const userController = new Elysia({ prefix: '/users' })
     {
       params: UserModel.userIdParams,
       body: UserModel.updateUserBody,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Update a user',
         description: 'Update an existing user by ID',
@@ -101,7 +101,7 @@ export const userController = new Elysia({ prefix: '/users' })
       handleApiError(userService.delete(params.id, db, ability)),
     {
       params: UserModel.userIdParams,
-      auth: true,
+      organization: true,
       detail: {
         summary: 'Delete a user',
         description: 'Permanently delete a user by ID',

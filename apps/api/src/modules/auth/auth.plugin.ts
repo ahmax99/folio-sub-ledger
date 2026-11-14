@@ -3,10 +3,7 @@ import { Elysia, status } from 'elysia'
 import type { JWTPayload } from 'jose'
 
 import { errorHandler } from '@/error/lib/errorHandler.js'
-import { handleApiError } from '@/error/utils/handleApiError.js'
 import { verifyToken } from '@/modules/auth/jwt.js'
-import { getUserPermissions } from '@/modules/auth/permission.js'
-import { OrganizationService } from '@/modules/organizations/organization.service.js'
 
 export interface AuthUser {
   cognitoSub: string
@@ -37,23 +34,14 @@ export const authPlugin = new Elysia({ name: 'auth' })
           return status(401, { error: { message: 'Invalid or expired token' } })
 
         const payload = result.value
-        const user = {
-          cognitoSub: payload.sub,
-          email: payload.email,
-          name: typeof payload.name === 'string' ? payload.name : payload.email,
-          payload
-        } as AuthUser
-        const member = await handleApiError(
-          OrganizationService.findMember(user.cognitoSub)
-        )
-
         return {
-          user,
-          member,
-          ability: getUserPermissions(member),
-          db: OrganizationService.db(
-            member ? { orgId: member.orgId } : { cognitoSub: user.cognitoSub }
-          )
+          user: {
+            cognitoSub: payload.sub,
+            email: payload.email,
+            name:
+              typeof payload.name === 'string' ? payload.name : payload.email,
+            payload
+          } as AuthUser
         }
       }
     }

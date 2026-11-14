@@ -27,7 +27,7 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 
 ## Auth Context
 
-The auth/authorization mechanics (Cognito JWT via `authPlugin`, `getUserPermissions`, the BFF clients) are described in `architecture.md` — the rules here are just: gate protected routes with the `auth: true` macro, and enforce the resolved ability on **every** query (`accessibleBy(ability).ofType('<Model>')` in list `where` clauses, `ability.can('<action>', subject('<Model>', record))` on single resources). Authenticating without consulting the ability is broken authorization.
+The auth/authorization mechanics (Cognito JWT via `authPlugin`, `getUserPermissions`, the BFF clients) are described in `architecture.md` — the rules here are just: gate protected routes with the `auth: true` macro (`organization: true` for routes that touch organization data, which also resolves `member`, `ability` and `db`), and enforce the resolved ability on **every** query (`accessibleBy(ability).ofType('<Model>')` in list `where` clauses, `ability.can('<action>', subject('<Model>', record))` on single resources). Authenticating without consulting the ability is broken authorization.
 
 ## Exports
 
