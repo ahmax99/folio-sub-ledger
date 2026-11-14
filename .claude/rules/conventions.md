@@ -22,8 +22,8 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 
 ## Transactions
 
-- Use `prisma.$transaction([...])` for any multi-step write that must be atomic.
-- Services call `prisma` directly (there is no separate model layer). When a transaction spans helpers, thread the `tx` client (`Prisma.TransactionClient`) into each Prisma call rather than reaching for the singleton `prisma`.
+- Services query through `db.run((tx) => …)` (there is no separate model layer). Each `run` is one transaction, so put a multi-step write that must be atomic inside a single `run`.
+- When a transaction spans helpers, thread the `tx` client (`Prisma.TransactionClient`) into each Prisma call rather than reaching for the singleton `prisma`.
 
 ## Auth Context
 
