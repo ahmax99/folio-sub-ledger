@@ -1,14 +1,14 @@
 import { act, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { captureError } from '@/features/error-tracking/utils/captureError'
 import { AppError } from '@/features/error/lib/AppError'
+import { captureError } from '@/features/error/utils/captureError'
 import { renderWithProviders } from '@/test/render'
 
 import { useErrorStore } from '../../stores/useErrorStore'
 import { ErrorScreenProvider } from '../ErrorScreenProvider'
 
-vi.mock('@/features/error-tracking/utils/captureError', () => ({
+vi.mock('@/features/error/utils/captureError', () => ({
   captureError: vi.fn()
 }))
 

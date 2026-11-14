@@ -1,8 +1,8 @@
 import { Result, ResultAsync } from 'neverthrow'
 
-import { captureError } from '@/features/error-tracking/utils/captureError'
-
 import { mapToAppError } from '../lib/mapToAppError'
+
+import { captureError } from './captureError'
 
 export const catchSyncError = <T>(fn: () => T) =>
   Result.fromThrowable(fn, mapToAppError)()

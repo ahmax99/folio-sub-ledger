@@ -1,12 +1,12 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { captureError } from '@/features/error-tracking/utils/captureError'
+import { captureError } from '@/features/error/utils/captureError'
 import { renderWithProviders } from '@/test/render'
 
 import { NotFound, RouteError } from '../RouteError'
 
-vi.mock('@/features/error-tracking/utils/captureError', () => ({
+vi.mock('@/features/error/utils/captureError', () => ({
   captureError: vi.fn()
 }))
 

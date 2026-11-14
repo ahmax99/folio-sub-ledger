@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { captureError } from '@/features/error-tracking/utils/captureError'
+import { captureError } from '@/features/error/utils/captureError'
 
 import { catchAsyncError, catchSyncError } from '../catchError'
 
-vi.mock('@/features/error-tracking/utils/captureError', () => ({
+vi.mock('@/features/error/utils/captureError', () => ({
   captureError: vi.fn()
 }))
 
