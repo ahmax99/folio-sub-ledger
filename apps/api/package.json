@@ -12,23 +12,23 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.1157.0",
-    "@aws-sdk/client-s3": "^3.1157.0",
-    "@aws-sdk/client-secrets-manager": "^3.1157.0",
-    "@aws-sdk/s3-request-presigner": "^3.1157.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1164.0",
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@aws-sdk/client-secrets-manager": "^3.1164.0",
+    "@aws-sdk/s3-request-presigner": "^3.1164.0",
     "@bogeychan/elysia-logger": "^0.1.10",
-    "@casl/ability": "^7.0.2",
-    "@casl/prisma": "^2.0.2",
+    "@casl/ability": "^7.1.1",
+    "@casl/prisma": "^2.2.0",
     "@elysia/bearer": "^1.4.4",
-    "@elysiajs/cors": "^1.4.2",
-    "@elysiajs/openapi": "^1.4.16",
-    "@sentry/bun": "^11.9.0",
+    "@elysiajs/cors": "^1.4.3",
+    "@elysiajs/openapi": "^1.4.17",
+    "@sentry/bun": "^11.11.0",
     "@shared/config": "workspace:*",
     "@shared/neon": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "elysia": "^1.4.30",
+    "elysia": "^1.4.31",
     "elysia-helmet": "^3.1.0",
-    "jose": "^6.2.13",
+    "jose": "^6.2.15",
     "neverthrow": "^8.2.0",
     "pino": "^10.4.0",
     "uuid": "14.0.3",
@@ -37,10 +37,10 @@
   "devDependencies": {
     "@prisma/adapter-pg": "7.10.1",
     "@shared/typescript-config": "workspace:*",
-    "@types/node": "^26.6.5",
-    "@vitest/coverage-v8": "5.0.5",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "5.1.0",
     "pino-pretty": "^13.2.0",
     "typescript": "^7.0.2",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   }
 }

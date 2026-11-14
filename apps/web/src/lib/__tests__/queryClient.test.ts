@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { captureError } from '@/features/error-tracking/utils/captureError'
 import { showError } from '@/features/error/client/lib/showError'
 import { AppError } from '@/features/error/lib/AppError'
+import { captureError } from '@/features/error/utils/captureError'
 
 import { createQueryClient } from '../queryClient'
 
-vi.mock('@/features/error-tracking/utils/captureError', () => ({
+vi.mock('@/features/error/utils/captureError', () => ({
   captureError: vi.fn()
 }))
 vi.mock('@/features/error/client/lib/showError', () => ({
