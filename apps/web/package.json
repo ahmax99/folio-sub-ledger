@@ -51,7 +51,7 @@
     "@shared/typescript-config": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query-devtools": "5.105.0",
-    "@tanstack/redact": "0.2.0",
+    "@tanstack/redact": "0.3.1",
     "@types/node": "^26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
