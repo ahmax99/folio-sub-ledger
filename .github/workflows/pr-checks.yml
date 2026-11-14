@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
+  api:
     name: Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -46,8 +46,29 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Test web
-        run: bunx turbo run test --filter=web
-
       - name: Test API with coverage
         run: bunx turbo run test:coverage --filter=api
+
+  web:
+    name: Test web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ !startsWith(github.head_ref, 'release-please--branches--') }}
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/folio_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test web
+        run: bunx turbo run test --filter=web
