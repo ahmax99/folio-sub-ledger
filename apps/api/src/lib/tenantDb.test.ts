@@ -98,6 +98,27 @@ describe('row-level security', () => {
   })
 })
 
+describe('tenant table ids', () => {
+  it('stores ids and org ids as native uuid', async () => {
+    const columns = await prisma.$queryRaw<
+      { table_name: string; column_name: string; data_type: string }[]
+    >`SELECT table_name, column_name, data_type FROM information_schema.columns
+      WHERE table_schema = 'public' AND column_name IN ('id', 'org_id')
+        AND table_name <> '_prisma_migrations'
+      ORDER BY table_name, column_name`
+
+    expect(columns.length).toBeGreaterThan(0)
+    for (const column of columns) expect(column.data_type).toBe('uuid')
+  })
+
+  it('generates version 7 ids', async () => {
+    const { id, users } = await seedFirm('Firm A', 'a-sub')
+
+    expect(id[14]).toBe('7')
+    expect(users[0]?.id[14]).toBe('7')
+  })
+})
+
 describe('tenantDb', () => {
   it('scopes queries to the given firm', async () => {
     const a = await seedFirm('Firm A', 'a-sub')

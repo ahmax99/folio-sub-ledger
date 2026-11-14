@@ -4,6 +4,7 @@ import { errAsync, okAsync, type ResultAsync } from 'neverthrow'
 import { logger } from '@/config/logger.js'
 import { AppError } from '@/error/lib/AppError.js'
 import { type TenantDb, tenantDb } from '@/lib/tenantDb.js'
+import { uuidv7 } from '@/lib/uuidv7.js'
 import type { AuthUser } from '@/modules/auth/auth.plugin.js'
 import type { Member } from '@/modules/auth/permission.js'
 import { UserService } from '@/modules/users/user.service.js'
@@ -25,7 +26,7 @@ export const OrganizationService = {
     { cognitoSub, email, name }: Identity,
     { firmName }: SetupFirmBody
   ): ResultAsync<Organization, AppError> => {
-    const orgId = crypto.randomUUID()
+    const orgId = uuidv7()
 
     return tenantDb({ orgId })
       .run(async (tx) => {

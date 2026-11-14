@@ -14,7 +14,7 @@ enum Role {
 }
 
 model Organization {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid(7)) @db.Uuid
   name      String
   users     User[]
   createdAt DateTime @default(now()) @map("created_at")
@@ -24,8 +24,8 @@ model Organization {
 }
 
 model User {
-  id           String       @id @default(uuid())
-  orgId        String       @map("org_id")
+  id           String       @id @default(uuid(7)) @db.Uuid
+  orgId        String       @map("org_id") @db.Uuid
   organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   role         Role
   cognitoSub   String       @unique @map("cognito_sub")
