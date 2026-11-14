@@ -17,7 +17,9 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 
 ## Tests
 
-- In `apps/api`, tests live in a `__tests__/` folder next to the code they cover (`src/modules/users/__tests__/user.controller.test.ts`). Seed and request through the shared helpers in `src/test/fixtures.ts` and the identities in `src/test/identities.ts` instead of redefining them per file.
+- In both apps, tests live in a `__tests__/` folder next to the code they cover (`apps/api/src/modules/users/__tests__/user.controller.test.ts`, `apps/web/src/features/auth/utils/__tests__/pkce.test.ts`).
+- In `apps/api`, seed and request through the shared helpers in `src/test/fixtures.ts` and the identities in `src/test/identities.ts` instead of redefining them per file.
+- In `apps/web`, `*.test.ts` runs in Node and `*.test.tsx` in jsdom. Render components with `renderWithProviders` (`src/test/render.tsx`, a real memory router + QueryClient) and fake the backend with `src/test/http.ts`.
 
 ## Validation
 
