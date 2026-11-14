@@ -53,8 +53,8 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Test API with coverage
-        run: bunx turbo run test:coverage --filter=api
+      - name: Test with coverage
+        run: bunx turbo run test:coverage --filter=api --filter=web
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0

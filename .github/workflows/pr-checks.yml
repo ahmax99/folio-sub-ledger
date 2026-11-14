@@ -50,8 +50,8 @@ jobs:
         run: bunx turbo run build --filter='@shared/*'
 
       - parallel:
-          - name: Test web
-            run: bunx turbo run test --filter=web
+          - name: Test web with coverage
+            run: bunx turbo run test:coverage --filter=web
 
           - name: Test API with coverage
             run: bunx turbo run test:coverage --filter=api

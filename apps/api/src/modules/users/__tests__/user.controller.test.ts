@@ -1,10 +1,14 @@
 import { prisma } from '@shared/neon'
 import { v7 as uuidv7 } from 'uuid'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { userController } from '@/modules/users/user.controller.js'
 import { addAnalyst, seedOwner, send } from '@/test/fixtures.js'
 import type { Token } from '@/test/identities.js'
+
+vi.mock('@aws-sdk/s3-request-presigner', () => ({
+  getSignedUrl: vi.fn().mockResolvedValue('https://s3.example.com/signed')
+}))
 
 const call = (method: string, path: string, token?: Token, body?: unknown) =>
   send(userController, method, path, { token, body })
@@ -167,5 +171,21 @@ describe('user controller', () => {
       const users: { orgId: string }[] = await res.json()
       expect(users.map((user) => user.orgId)).toEqual([orgId, orgId])
     })
+  })
+
+  it('GET /users/presigned-url returns an upload URL under the account folder', async () => {
+    await seedOwner()
+
+    const res = await call(
+      'GET',
+      '/users/presigned-url?filename=my photo.png&contentType=image/png',
+      'test-token'
+    )
+
+    expect(res.status).toBe(200)
+    const { presignedUrl, publicUrl, key } = await res.json()
+    expect(presignedUrl).toBe('https://s3.example.com/signed')
+    expect(key).toMatch(/^account\/\d+-my_photo\.png$/)
+    expect(publicUrl).toMatch(new RegExp(`/api/v1/images/${key}$`))
   })
 })

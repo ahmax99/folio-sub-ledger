@@ -11,7 +11,6 @@ const setupFirm = (body: unknown, token: Token = 'test-token') =>
 
 describe('organization controller', () => {
   afterEach(async () => {
-    vi.restoreAllMocks()
     await prisma.$executeRawUnsafe(
       'DROP TRIGGER IF EXISTS fail_user_insert ON users'
     )

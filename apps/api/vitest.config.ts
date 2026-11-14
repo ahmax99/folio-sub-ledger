@@ -7,10 +7,19 @@ export default defineConfig({
     globalSetup: ['./src/test/globalSetup.ts'],
     setupFiles: ['./src/test/setup.ts'],
     fileParallelism: false,
+    clearMocks: true,
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     coverage: {
       provider: 'v8',
       include: ['src/**'],
-      exclude: ['src/test/**', '**/__tests__/**'],
+      exclude: [
+        'src/test/**',
+        '**/__tests__/**',
+        'src/index.ts',
+        'src/config/secrets.ts'
+      ],
       reporter: ['text', 'text-summary', 'lcov']
     },
     env: {
