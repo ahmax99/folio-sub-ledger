@@ -17,7 +17,7 @@
     "@aws-sdk/client-secrets-manager": "^3.1157.0",
     "@aws-sdk/s3-request-presigner": "^3.1157.0",
     "@bogeychan/elysia-logger": "^0.1.10",
-    "@casl/ability": "^7.0.2",
+    "@casl/ability": "^7.1.1",
     "@casl/prisma": "^2.0.2",
     "@elysia/bearer": "^1.4.4",
     "@elysiajs/cors": "^1.4.2",
