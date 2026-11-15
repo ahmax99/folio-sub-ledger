@@ -1,4 +1,5 @@
 import { type AnyFormApi, useStore } from '@tanstack/react-form'
+import { useHydrated } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
 import { ResultAsync } from 'neverthrow'
@@ -32,6 +33,7 @@ interface FormCardProps {
 
 const Form = ({ action, className, children }: Readonly<FormProps>) => {
   const form = useFormContext()
+  const isHydrated = useHydrated()
 
   useEffect(() => {
     const anyForm: AnyFormApi = form
@@ -57,7 +59,10 @@ const Form = ({ action, className, children }: Readonly<FormProps>) => {
         )
       }}
     >
-      {children}
+      {/* No action: a pre-hydration submit would GET the values into the URL. */}
+      <fieldset className="contents" disabled={!action && !isHydrated}>
+        {children}
+      </fieldset>
     </form>
   )
 }
