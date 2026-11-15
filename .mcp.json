@@ -11,10 +11,6 @@
     "terraform": {
       "command": "docker",
       "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
-    },
-    "tanstack": {
-      "type": "http",
-      "url": "https://tanstack.com/api/mcp"
     }
   }
 }
