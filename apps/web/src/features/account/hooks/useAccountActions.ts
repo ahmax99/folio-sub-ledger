@@ -7,16 +7,21 @@ import { logout } from '@/features/auth/auth.functions'
 import { PROTECTED_ROUTES } from '@/features/auth/lib/routes'
 import { AppError } from '@/features/error/lib/AppError'
 
-import { deleteUser, updateUser } from '../account.functions'
-import { uploadProfileImage } from '../lib/uploadProfileImage'
+import { deleteUser, fetchPresignedUrl, updateUser } from '../account.functions'
 import type { UpdateProfileSchema } from '../schemas/accountForm.schema'
 
 const uploadAvatar = async (image: File | null) => {
   if (!image) return undefined
 
-  const { uploadResponse, key } = await uploadProfileImage(image)
-  if (!uploadResponse.ok)
-    throw new AppError('BAD_REQUEST', 'Failed to upload image')
+  const { presignedUrl, key } = await fetchPresignedUrl({
+    data: { filename: image.name, contentType: image.type }
+  })
+  const response = await fetch(presignedUrl, {
+    method: 'PUT',
+    body: image,
+    headers: { 'Content-Type': image.type }
+  })
+  if (!response.ok) throw new AppError('BAD_REQUEST', 'Failed to upload image')
 
   return key
 }

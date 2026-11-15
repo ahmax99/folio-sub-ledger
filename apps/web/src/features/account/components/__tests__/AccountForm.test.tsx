@@ -4,8 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { testUser } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 
-import { updateUser } from '../../account.functions'
-import { uploadProfileImage } from '../../lib/uploadProfileImage'
+import { fetchPresignedUrl, updateUser } from '../../account.functions'
 import { AccountForm } from '../AccountForm'
 
 vi.mock('../../account.functions', () => ({
@@ -13,10 +12,20 @@ vi.mock('../../account.functions', () => ({
   deleteUser: vi.fn(),
   fetchPresignedUrl: vi.fn()
 }))
-vi.mock('../../lib/uploadProfileImage', () => ({ uploadProfileImage: vi.fn() }))
 vi.mock('@/features/auth/auth.functions', () => ({ logout: vi.fn() }))
 
 const avatar = new File(['png'], 'avatar.png', { type: 'image/png' })
+
+const stubS3Upload = (status: number) => {
+  vi.mocked(fetchPresignedUrl).mockResolvedValue({
+    presignedUrl: 'https://s3.test/upload',
+    publicUrl: 'https://cdn.test/avatar.png',
+    key: 'users/u1/avatar.png'
+  })
+  const s3Upload = vi.fn().mockResolvedValue(new Response(null, { status }))
+  vi.stubGlobal('fetch', s3Upload)
+  return s3Upload
+}
 
 const renderForm = () =>
   renderWithProviders(<AccountForm user={testUser} />, {
@@ -36,15 +45,11 @@ describe('AccountForm', () => {
     expect(updateUser).toHaveBeenCalledWith({
       data: { name: 'Janet', imagePath: undefined }
     })
-    expect(uploadProfileImage).not.toHaveBeenCalled()
+    expect(fetchPresignedUrl).not.toHaveBeenCalled()
   })
 
   it('uploads a new profile picture and saves its key', async () => {
-    vi.mocked(uploadProfileImage).mockResolvedValue({
-      uploadResponse: new Response(null, { status: 200 }),
-      publicUrl: 'https://cdn.test/avatar.png',
-      key: 'users/u1/avatar.png'
-    })
+    const s3Upload = stubS3Upload(200)
     vi.mocked(updateUser).mockResolvedValue(undefined)
     const { user: actor } = await renderForm()
 
@@ -56,21 +61,24 @@ describe('AccountForm', () => {
         data: { name: 'Jane', imagePath: 'users/u1/avatar.png' }
       })
     )
-    expect(uploadProfileImage).toHaveBeenCalledWith(avatar)
+    expect(fetchPresignedUrl).toHaveBeenCalledWith({
+      data: { filename: 'avatar.png', contentType: 'image/png' }
+    })
+    expect(s3Upload).toHaveBeenCalledWith('https://s3.test/upload', {
+      method: 'PUT',
+      body: avatar,
+      headers: { 'Content-Type': 'image/png' }
+    })
   })
 
   it('does not save the profile when the upload fails', async () => {
-    vi.mocked(uploadProfileImage).mockResolvedValue({
-      uploadResponse: new Response(null, { status: 403 }),
-      publicUrl: '',
-      key: ''
-    })
+    const s3Upload = stubS3Upload(403)
     const { user: actor, router } = await renderForm()
 
     await actor.upload(screen.getByLabelText('Profile Picture'), avatar)
     await actor.click(screen.getByRole('button', { name: /update profile/i }))
 
-    await waitFor(() => expect(uploadProfileImage).toHaveBeenCalled())
+    await waitFor(() => expect(s3Upload).toHaveBeenCalled())
     expect(updateUser).not.toHaveBeenCalled()
     expect(router.state.location.pathname).toBe('/account/edit')
   })

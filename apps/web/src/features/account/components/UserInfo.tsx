@@ -2,15 +2,14 @@ import type { User } from '@shared/config'
 import { User as UserIcon } from 'lucide-react'
 
 import { Avatar, AvatarImage } from '@/components/molecules'
-
-import { fetchProfileImage } from '../lib/profileImage'
+import { imageUrl as toImageUrl } from '@/features/media/utils/imageUrl'
 
 interface UserInfoProps {
   user: User
 }
 
 export function UserInfo({ user }: Readonly<UserInfoProps>) {
-  const imageUrl = fetchProfileImage(user.imagePath ?? '')
+  const imageUrl = user.imagePath ? toImageUrl(user.imagePath) : undefined
 
   return (
     <div className="flex items-center space-x-4">
