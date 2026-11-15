@@ -6,7 +6,7 @@ import { logger } from '@/config/logger.server'
 import { AppError } from '@/features/error/lib/AppError'
 
 import { getOIDCClient } from './cognito.server'
-import { getSession } from './session.server'
+import { destroySession, getSession, setSessionData } from './session.server'
 
 const log = logger.child({ module: 'token' })
 
@@ -14,6 +14,12 @@ interface Tokens {
   idToken?: string
   accessToken: string
 }
+
+const isInvalidGrant = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'error' in error &&
+  error.error === 'invalid_grant'
 
 const refreshTokens = async (): Promise<Tokens> => {
   const [session, config] = await Promise.all([getSession(), getOIDCClient()])
@@ -23,7 +29,18 @@ const refreshTokens = async (): Promise<Tokens> => {
     throw new AppError('UNAUTHORIZED')
   }
 
-  const tokens = await refreshTokenGrant(config, session.refreshToken)
+  const tokens = await refreshTokenGrant(config, session.refreshToken).catch(
+    async (error: unknown) => {
+      if (!isInvalidGrant(error)) throw error
+      // Revoked, expired or rotated away: the cookie can never work again.
+      log.warn('Token refresh failed: refresh token rejected')
+      await destroySession()
+      throw new AppError('UNAUTHORIZED')
+    }
+  )
+  // With rotation on, Cognito invalidates the old refresh token.
+  if (tokens.refresh_token && tokens.refresh_token !== session.refreshToken)
+    await setSessionData({ refreshToken: tokens.refresh_token })
 
   return {
     idToken: tokens.id_token,

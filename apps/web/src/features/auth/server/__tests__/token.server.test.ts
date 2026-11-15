@@ -3,7 +3,7 @@ import { getRequest } from '@tanstack/react-start/server'
 import { refreshTokenGrant } from 'openid-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getSession } from '../session.server'
+import { destroySession, getSession, setSessionData } from '../session.server'
 import { getTokens } from '../token.server'
 
 vi.mock('@tanstack/react-start/server', () => ({ getRequest: vi.fn() }))
@@ -11,7 +11,11 @@ vi.mock('openid-client', () => ({ refreshTokenGrant: vi.fn() }))
 vi.mock('../cognito.server', () => ({
   getOIDCClient: vi.fn().mockResolvedValue({})
 }))
-vi.mock('../session.server', () => ({ getSession: vi.fn() }))
+vi.mock('../session.server', () => ({
+  destroySession: vi.fn(),
+  getSession: vi.fn(),
+  setSessionData: vi.fn()
+}))
 
 const withSession = (refreshToken?: string) =>
   vi.mocked(getSession).mockResolvedValue({ refreshToken } as never)
@@ -33,6 +37,36 @@ describe('getTokens', () => {
       accessToken: 'access-1'
     })
     expect(refreshTokenGrant).toHaveBeenCalledWith({}, 'refresh-1')
+    expect(setSessionData).not.toHaveBeenCalled()
+  })
+
+  it('signs out when Cognito rejects the refresh token', async () => {
+    withSession('revoked')
+    vi.mocked(refreshTokenGrant).mockRejectedValue({ error: 'invalid_grant' })
+
+    await expect(getTokens()).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
+    expect(destroySession).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the session when the refresh fails for another reason', async () => {
+    withSession('refresh-1')
+    vi.mocked(refreshTokenGrant).mockRejectedValue(new Error('network'))
+
+    await expect(getTokens()).rejects.toThrow('network')
+    expect(destroySession).not.toHaveBeenCalled()
+  })
+
+  it('stores a rotated refresh token', async () => {
+    withSession('refresh-1')
+    vi.mocked(refreshTokenGrant).mockResolvedValue({
+      id_token: 'id-1',
+      access_token: 'access-1',
+      refresh_token: 'refresh-2'
+    } as never)
+
+    await getTokens()
+
+    expect(setSessionData).toHaveBeenCalledWith({ refreshToken: 'refresh-2' })
   })
 
   it('fails as unauthorized without a refresh token', async () => {

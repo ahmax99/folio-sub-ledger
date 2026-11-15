@@ -25,9 +25,10 @@ const { verifyToken } = await vi.importActual<
 const sign = ({
   issuer = COGNITO_ISSUER,
   audience = COGNITO_AUDIENCE,
-  expiresIn = '5m'
+  expiresIn = '5m',
+  tokenUse = 'id'
 } = {}) =>
-  new SignJWT({ email: 'test@example.com' })
+  new SignJWT({ email: 'test@example.com', token_use: tokenUse })
     .setProtectedHeader({ alg: 'RS256' })
     .setSubject('test-sub')
     .setIssuer(issuer)
@@ -49,7 +50,8 @@ describe('verifyToken', () => {
   it.each([
     ['another issuer', { issuer: 'https://evil.example.com' }],
     ['another audience', { audience: 'other-client' }],
-    ['an expired token', { expiresIn: '-1m' }]
+    ['an expired token', { expiresIn: '-1m' }],
+    ['an access token', { tokenUse: 'access' }]
   ])('rejects %s as unauthorized', async (_, claims) => {
     const result = await verifyToken(await sign(claims))
 

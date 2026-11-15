@@ -1,4 +1,8 @@
-import { authorizationCodeGrant, buildAuthorizationUrl } from 'openid-client'
+import {
+  authorizationCodeGrant,
+  buildAuthorizationUrl,
+  tokenRevocation
+} from 'openid-client'
 
 import { env } from '@/config/env.server'
 import { logger } from '@/config/logger.server'
@@ -14,6 +18,7 @@ import {
   destroyPKCESession,
   destroySession,
   getPKCEData,
+  getSessionData,
   setPKCEData,
   setSessionData
 } from './session.server'
@@ -93,7 +98,9 @@ export const handleCallback = async (
 ) => {
   if ('error' in params) {
     log.warn({ error: params.error }, 'OAuth callback returned error')
-    return { redirectUrl: `/auth/login?error=${params.error}` }
+    return {
+      redirectUrl: `/auth/login?error=${encodeURIComponent(params.error)}`
+    }
   }
 
   const [pkce, config] = await Promise.all([getPKCEData(), getOIDCClient()])
@@ -138,6 +145,15 @@ export const handleCallback = async (
 }
 
 export const handleLogout = async () => {
+  const { refreshToken } = await getSessionData()
+  // Revoke first so a copied cookie stops working; logout proceeds on failure.
+  if (refreshToken) {
+    const config = await getOIDCClient()
+    await catchAsyncError(tokenRevocation(config, refreshToken)).orTee(() =>
+      log.warn('Refresh token revocation failed')
+    )
+  }
+
   await Promise.all([destroySession(), destroyPKCESession()])
 
   log.info('User logged out')

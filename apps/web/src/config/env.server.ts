@@ -14,7 +14,7 @@ export const env = createEnv({
     NODE_ENV: z.enum(['development', 'production']).default('production'),
     RESEND_API_KEY: z.string().min(1).default('dummy-key'),
     SENTRY_DSN: z.url().optional(),
-    SESSION_SECRET: z.string().min(1).default('dummy-secret')
+    SESSION_SECRET: z.string().min(32)
   },
   runtimeEnv: process.env,
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

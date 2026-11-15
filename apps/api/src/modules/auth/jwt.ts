@@ -1,5 +1,5 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose'
-import { ResultAsync } from 'neverthrow'
+import { err, ok, ResultAsync } from 'neverthrow'
 
 import {
   COGNITO_AUDIENCE,
@@ -17,4 +17,9 @@ export const verifyToken = (token: string) =>
       audience: COGNITO_AUDIENCE
     }),
     () => new AppError('UNAUTHORIZED', 'Invalid or expired token')
-  ).map(({ payload }) => payload)
+  ).andThen(({ payload }) =>
+    // Only ID tokens carry the profile claims the API reads.
+    payload.token_use === 'id'
+      ? ok(payload)
+      : err(new AppError('UNAUTHORIZED', 'Invalid or expired token'))
+  )
