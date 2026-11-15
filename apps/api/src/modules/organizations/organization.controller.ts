@@ -13,9 +13,9 @@ export const organizationController = new Elysia({ prefix: '/organizations' })
   .post(
     '/',
     async ({ body, user, member, organizationService }) =>
-      handleApiError(organizationService.setupFirm(user, member, body)),
+      handleApiError(organizationService.setupOrganization(user, member, body)),
     {
-      body: OrganizationModel.setupFirmBody,
+      body: OrganizationModel.setupOrganizationBody,
       organization: true,
       detail: {
         summary: "Set up the caller's firm",

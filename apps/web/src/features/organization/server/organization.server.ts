@@ -1,6 +1,6 @@
-import type { Organization, SetupFirmBody } from '@shared/config'
+import type { Organization, SetupOrganizationBody } from '@shared/config'
 
 import { serverAuthApiClient } from '@/lib/serverApiClient.server'
 
-export const setupFirm = async (data: SetupFirmBody) =>
+export const setupOrganization = async (data: SetupOrganizationBody) =>
   serverAuthApiClient.post('organizations', { json: data }).json<Organization>()

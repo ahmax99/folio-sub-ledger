@@ -1,6 +1,6 @@
 import { type Configuration, discovery } from 'openid-client'
 
-import { env } from '@/config/env'
+import { env } from '@/config/env.server'
 
 let cachedConfig: Configuration | null = null
 

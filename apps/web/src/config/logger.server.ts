@@ -1,7 +1,7 @@
 import pino from 'pino'
 import pretty from 'pino-pretty'
 
-import { env } from '@/config/env'
+import { env } from '@/config/env.server'
 
 const isDevelopment = env.NODE_ENV === 'development'
 

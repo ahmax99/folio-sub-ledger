@@ -6,7 +6,7 @@ import { organizationController } from '@/modules/organizations/organization.con
 import { send } from '@/test/fixtures.js'
 import type { Token } from '@/test/identities.js'
 
-const setupFirm = (body: unknown, token: Token = 'test-token') =>
+const setupOrganization = (body: unknown, token: Token = 'test-token') =>
   send(organizationController, 'POST', '/organizations', { token, body })
 
 describe('organization controller', () => {
@@ -18,7 +18,7 @@ describe('organization controller', () => {
   })
 
   it('creates one organization and one OWNER user with that orgId', async () => {
-    const res = await setupFirm({ firmName: 'Acme CPA' })
+    const res = await setupOrganization({ name: 'Acme CPA' })
 
     expect(res.status).toBe(200)
     const org = await res.json()
@@ -44,7 +44,7 @@ describe('organization controller', () => {
       CREATE TRIGGER fail_user_insert BEFORE INSERT ON users
       FOR EACH ROW EXECUTE FUNCTION fail_user_insert()`)
 
-    const res = await setupFirm({ firmName: 'Acme CPA' })
+    const res = await setupOrganization({ name: 'Acme CPA' })
 
     expect(res.status).toBeGreaterThanOrEqual(500)
     expect(await prisma.organization.count()).toBe(0)
@@ -52,9 +52,9 @@ describe('organization controller', () => {
   })
 
   it('returns the same organization on a second call and creates no rows', async () => {
-    const first = await (await setupFirm({ firmName: 'Acme CPA' })).json()
+    const first = await (await setupOrganization({ name: 'Acme CPA' })).json()
 
-    const res = await setupFirm({ firmName: 'Another Name' })
+    const res = await setupOrganization({ name: 'Another Name' })
 
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual(first)
@@ -64,8 +64,8 @@ describe('organization controller', () => {
 
   it('produces exactly one organization for two parallel calls', async () => {
     const [a, b] = await Promise.all([
-      setupFirm({ firmName: 'Acme CPA' }),
-      setupFirm({ firmName: 'Acme CPA' })
+      setupOrganization({ name: 'Acme CPA' }),
+      setupOrganization({ name: 'Acme CPA' })
     ])
 
     expect(a.status).toBe(200)
@@ -80,8 +80,8 @@ describe('organization controller', () => {
       data: { name: 'Victim Firm' }
     })
 
-    const res = await setupFirm({
-      firmName: 'Acme CPA',
+    const res = await setupOrganization({
+      name: 'Acme CPA',
       role: 'ANALYST',
       orgId: existing.id,
       userId: existing.id,
@@ -96,9 +96,9 @@ describe('organization controller', () => {
   })
 
   it('gives two identities two organizations even with the same firm name', async () => {
-    const a = await (await setupFirm({ firmName: 'Acme CPA' })).json()
+    const a = await (await setupOrganization({ name: 'Acme CPA' })).json()
     const b = await (
-      await setupFirm({ firmName: 'Acme CPA' }, 'other-token')
+      await setupOrganization({ name: 'Acme CPA' }, 'other-token')
     ).json()
 
     expect(a.id).not.toBe(b.id)
@@ -108,7 +108,7 @@ describe('organization controller', () => {
 
   it('returns 401 without a token', async () => {
     const res = await send(organizationController, 'POST', '/organizations', {
-      body: { firmName: 'Acme CPA' }
+      body: { name: 'Acme CPA' }
     })
 
     expect(res.status).toBe(401)
@@ -119,22 +119,19 @@ describe('organization controller', () => {
     ['empty', ''],
     ['whitespace-only', '   '],
     ['101 characters', 'a'.repeat(101)]
-  ])(
-    'returns 400 with a firmName field error for a %s name',
-    async (_, firmName) => {
-      const res = await setupFirm({ firmName })
+  ])('returns 400 with a name field error for a %s name', async (_, name) => {
+    const res = await setupOrganization({ name })
 
-      expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.error.fields).toHaveProperty('firmName')
-      expect(await prisma.organization.count()).toBe(0)
-    }
-  )
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.fields).toHaveProperty('name')
+    expect(await prisma.organization.count()).toBe(0)
+  })
 
   it('logs one access-provisioning line without the email or firm name', async () => {
     const info = vi.spyOn(logger, 'info')
 
-    await setupFirm({ firmName: 'Acme CPA' })
+    await setupOrganization({ name: 'Acme CPA' })
 
     const org = await prisma.organization.findFirstOrThrow()
     const lines = info.mock.calls.filter(([entry]) =>

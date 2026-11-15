@@ -1,6 +1,6 @@
 import { AwsClient } from 'aws4fetch'
 
-import { env } from '@/config/env'
+import { env } from '@/config/env.server'
 
 export const signingHook = async ({ request }: { request: Request }) => {
   if (env.NODE_ENV !== 'production') return

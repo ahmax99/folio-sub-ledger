@@ -6,10 +6,10 @@ import { createServerFn } from '@tanstack/react-start'
 
 import { ResultAsync } from 'neverthrow'
 
-import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
 import { AppError } from '@/features/error/lib/AppError'
 import { handleApiError } from '@/features/error/lib/handleApiError'
 import { redirectResponse } from '@/lib/redirectResponse'
+import { PUBLIC_ROUTES } from '@/lib/routes'
 
 import {
   contactFormOptions,

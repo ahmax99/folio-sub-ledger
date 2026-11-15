@@ -8,7 +8,7 @@ import { captureError } from '@/features/error/utils/captureError'
 
 import { ButtonLink } from '../atoms/ButtonLink'
 
-function RouteError({ error }: Readonly<ErrorComponentProps>) {
+export const RouteError = ({ error }: Readonly<ErrorComponentProps>) => {
   const queryErrorResetBoundary = useQueryErrorResetBoundary()
 
   useEffect(() => {
@@ -32,13 +32,9 @@ function RouteError({ error }: Readonly<ErrorComponentProps>) {
   )
 }
 
-function NotFound() {
-  return (
-    <article className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 px-4 text-center">
-      <h1 className="text-2xl font-semibold">Page not found</h1>
-      <ButtonLink to="/">Go home</ButtonLink>
-    </article>
-  )
-}
-
-export { NotFound, RouteError }
+export const NotFound = () => (
+  <article className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 px-4 text-center">
+    <h1 className="text-2xl font-semibold">Page not found</h1>
+    <ButtonLink to="/">Go home</ButtonLink>
+  </article>
+)

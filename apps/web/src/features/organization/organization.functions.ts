@@ -7,8 +7,8 @@ import { catchAsyncError } from '@/features/error/utils/catchError'
 
 import * as organizationApi from './server/organization.server'
 
-export const setupFirm = createServerFn({ method: 'POST' })
-  .validator(OrganizationModel.setupFirmBody)
+export const setupOrganization = createServerFn({ method: 'POST' })
+  .validator(OrganizationModel.setupOrganizationBody)
   .handler(async ({ data }) =>
-    handleApiError(catchAsyncError(organizationApi.setupFirm(data)))
+    handleApiError(catchAsyncError(organizationApi.setupOrganization(data)))
   )

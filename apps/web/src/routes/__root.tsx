@@ -1,12 +1,14 @@
+import { TanStackDevtools } from '@tanstack/react-devtools'
 /// <reference types="vite/client" />
 import type { QueryClient } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import {
   createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts
 } from '@tanstack/react-router'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 import { Toaster } from 'sonner'
 
@@ -24,7 +26,12 @@ const RootDocument = ({
     <body>
       {children}
       <Toaster position="bottom-right" richColors />
-      <ReactQueryDevtools buttonPosition="bottom-left" />
+      <TanStackDevtools
+        plugins={[
+          { name: 'TanStack Query', render: <ReactQueryDevtoolsPanel /> },
+          { name: 'TanStack Router', render: <TanStackRouterDevtoolsPanel /> }
+        ]}
+      />
       <Scripts />
     </body>
   </html>

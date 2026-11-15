@@ -6,8 +6,8 @@ export const OrganizationModel = {
     id: z.uuid(),
     name: z.string()
   }),
-  setupFirmBody: z.object({
-    firmName: z
+  setupOrganizationBody: z.object({
+    name: z
       .string()
       .trim()
       .min(1, 'Firm name is required')
@@ -17,4 +17,6 @@ export const OrganizationModel = {
 
 export type Role = z.infer<typeof OrganizationModel.role>
 export type Organization = z.infer<typeof OrganizationModel.organization>
-export type SetupFirmBody = z.infer<typeof OrganizationModel.setupFirmBody>
+export type SetupOrganizationBody = z.infer<
+  typeof OrganizationModel.setupOrganizationBody
+>

@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { PageTemplate } from '@/components/layout'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 
-const FirmHomePage = () => {
+const OrganizationHomePage = () => {
   const { user } = Route.useRouteContext()
 
   return (
@@ -21,11 +21,11 @@ const FirmHomePage = () => {
   )
 }
 
-export const Route = createFileRoute('/_authorized/firm/')({
+export const Route = createFileRoute('/_authorized/organization/')({
   head: () =>
     generatePageMetadata({
       title: 'Firm',
       description: 'Your firm home'
     }),
-  component: FirmHomePage
+  component: OrganizationHomePage
 })

@@ -6,7 +6,7 @@ import {
   logAfterResponse,
   logBeforeRequest,
   withRequestLogging
-} from '../requestLogging'
+} from '../requestLogging.server'
 
 vi.mock('@/features/error/utils/captureError', () => ({
   captureError: vi.fn()

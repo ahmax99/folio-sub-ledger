@@ -1,23 +1,42 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
-import { OAuth2Start } from '@/features/auth/components/OAuth2Start'
+import { LoginError } from '@/features/auth/components/LoginError'
+import { AuthModel } from '@/features/auth/schemas/auth.schema'
+import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 
-interface LoginSearch {
-  callbackUrl?: string
-  error?: string
-}
+const LoginErrorPage = () => {
+  const { callbackUrl, error } = Route.useSearch()
 
-const LoginPage = () => {
-  const { callbackUrl } = Route.useSearch()
-
-  return <OAuth2Start callbackUrl={callbackUrl} />
+  return (
+    <LoginError
+      error={error ?? ''}
+      retryHref={
+        callbackUrl
+          ? `/api/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+          : '/api/auth/login'
+      }
+    />
+  )
 }
 
 export const Route = createFileRoute('/auth/login')({
-  validateSearch: (search): LoginSearch => ({
-    callbackUrl:
-      typeof search.callbackUrl === 'string' ? search.callbackUrl : undefined,
-    error: typeof search.error === 'string' ? search.error : undefined
-  }),
-  component: LoginPage
+  validateSearch: AuthModel.loginSearch,
+  // Without an error, hand straight over to the BFF login route; with one,
+  // stop and show it, so a failure that repeats cannot loop through Cognito.
+  beforeLoad: ({ search }) => {
+    if (search.error) return
+
+    throw redirect({
+      href: search.callbackUrl
+        ? `/api/auth/login?callbackUrl=${encodeURIComponent(search.callbackUrl)}`
+        : '/api/auth/login',
+      reloadDocument: true
+    })
+  },
+  head: () =>
+    generatePageMetadata({
+      title: 'Sign in',
+      description: 'Sign in to Folio'
+    }),
+  component: LoginErrorPage
 })

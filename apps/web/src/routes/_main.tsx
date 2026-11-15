@@ -1,10 +1,11 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import { PageHeader } from '@/components/layout'
-import { fetchOptionalUser } from '@/features/auth/auth.functions'
 import { getUserPermissions } from '@/features/auth/lib/permission'
+import { sessionQueryOptions } from '@/features/auth/lib/queries'
 import { AbilityProvider } from '@/features/auth/providers/PermissionProvider'
 import { ErrorScreenProvider } from '@/features/error/providers/ErrorScreenProvider'
+import { catchAsyncError } from '@/features/error/utils/catchError'
 
 const MainLayout = () => {
   const { user } = Route.useRouteContext()
@@ -22,6 +23,17 @@ const MainLayout = () => {
 }
 
 export const Route = createFileRoute('/_main')({
-  beforeLoad: async () => ({ user: await fetchOptionalUser() }),
+  // Public pages still render when the session lookup fails; the header
+  // then shows the signed-out state.
+  beforeLoad: async ({ context }) => {
+    const session = await catchAsyncError(
+      context.queryClient.fetchQuery(sessionQueryOptions)
+    )
+    const user = session.map((state) =>
+      state.status === 'ready' ? state.user : null
+    )
+
+    return { user: user.unwrapOr(null) }
+  },
   component: MainLayout
 })

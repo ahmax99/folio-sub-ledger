@@ -1,4 +1,4 @@
-import type { Organization, SetupFirmBody } from '@shared/config'
+import type { Organization, SetupOrganizationBody } from '@shared/config'
 import { errAsync, okAsync, type ResultAsync } from 'neverthrow'
 import { v7 as uuidv7 } from 'uuid'
 
@@ -28,16 +28,16 @@ export const OrganizationService = {
       tx.organization.findUnique({ where: { id: orgId }, select })
     ),
 
-  createFirm: (
+  createOrganization: (
     { cognitoSub, email, name }: Identity,
-    { firmName }: SetupFirmBody
+    { name: organizationName }: SetupOrganizationBody
   ): ResultAsync<Organization, AppError> => {
     const orgId = uuidv7()
 
     return organizationDb({ orgId })
       .run(async (tx) => {
         const organization = await tx.organization.create({
-          data: { id: orgId, name: firmName },
+          data: { id: orgId, name: organizationName },
           select
         })
         const { count } = await tx.user.createMany({
@@ -76,10 +76,10 @@ export const OrganizationService = {
       )
   },
 
-  setupFirm: (
+  setupOrganization: (
     identity: Identity,
     member: Member | null,
-    input: SetupFirmBody
+    input: SetupOrganizationBody
   ): ResultAsync<Organization, AppError> =>
     (member
       ? OrganizationService.findOrganization(member)
@@ -87,6 +87,6 @@ export const OrganizationService = {
     ).andThen((existing) =>
       existing
         ? okAsync(existing)
-        : OrganizationService.createFirm(identity, input)
+        : OrganizationService.createOrganization(identity, input)
     )
 } as const

@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { handleLogout } from '@/features/auth/server/auth.server'
 import { redirectResponse } from '@/lib/redirectResponse'
-import { withRequestLogging } from '@/lib/requestLogging'
+import { withRequestLogging } from '@/lib/requestLogging.server'
 
 export const Route = createFileRoute('/api/auth/logout')({
   server: {

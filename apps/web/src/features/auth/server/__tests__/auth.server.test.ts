@@ -1,4 +1,8 @@
-import { authorizationCodeGrant, buildAuthorizationUrl } from 'openid-client'
+import {
+  authorizationCodeGrant,
+  buildAuthorizationUrl,
+  tokenRevocation
+} from 'openid-client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { handleCallback, handleLogin, handleLogout } from '../auth.server'
@@ -6,6 +10,7 @@ import {
   destroyPKCESession,
   destroySession,
   getPKCEData,
+  getSessionData,
   setPKCEData,
   setSessionData
 } from '../session.server'
@@ -14,6 +19,7 @@ import { findMeWithIdToken } from '../user.server'
 vi.mock('openid-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('openid-client')>()),
   authorizationCodeGrant: vi.fn(),
+  tokenRevocation: vi.fn(),
   buildAuthorizationUrl: vi.fn(
     () => new URL('https://auth.example.com/authorize')
   )
@@ -26,6 +32,7 @@ vi.mock('../session.server', () => ({
   destroyPKCESession: vi.fn(),
   destroySession: vi.fn(),
   getPKCEData: vi.fn(),
+  getSessionData: vi.fn().mockResolvedValue({}),
   setPKCEData: vi.fn(),
   setSessionData: vi.fn()
 }))
@@ -80,13 +87,22 @@ describe('handleCallback', () => {
 
   it.each([
     [{ error: 'access_denied' }, 'access_denied'],
-    [{ state: 'state-1' }, 'missing_code'],
     [{ code: 'c', state: 'other' }, 'invalid_state']
   ])('redirects %j to login with %s', async (params, error) => {
     const { redirectUrl } = await handleCallback(callbackUrl, params)
 
     expect(redirectUrl).toBe(`/auth/login?error=${error}`)
     expect(authorizationCodeGrant).not.toHaveBeenCalled()
+  })
+
+  it('encodes the Cognito error so it cannot add query parameters', async () => {
+    const { redirectUrl } = await handleCallback(callbackUrl, {
+      error: 'x&callbackUrl=//evil.example.com'
+    })
+
+    expect(redirectUrl).toBe(
+      '/auth/login?error=x%26callbackUrl%3D%2F%2Fevil.example.com'
+    )
   })
 
   it.each([
@@ -113,6 +129,21 @@ describe('handleCallback', () => {
 
     expect(redirectUrl).toBe('/auth/login?error=invalid_token')
     expect(setSessionData).not.toHaveBeenCalled()
+  })
+
+  it('redirects to login when Cognito rejects the code exchange', async () => {
+    vi.mocked(authorizationCodeGrant).mockRejectedValue(
+      new Error('invalid_grant')
+    )
+
+    const { redirectUrl } = await handleCallback(callbackUrl, {
+      code: 'c',
+      state: 'state-1'
+    })
+
+    expect(redirectUrl).toBe('/auth/login?error=invalid_token')
+    expect(setSessionData).not.toHaveBeenCalled()
+    expect(destroyPKCESession).not.toHaveBeenCalled()
   })
 
   it('starts the session, then drops PKCE state and returns to the callback URL', async () => {
@@ -146,8 +177,34 @@ describe('handleCallback', () => {
 })
 
 describe('handleLogout', () => {
+  it('revokes the refresh token before clearing the cookies', async () => {
+    vi.mocked(getSessionData).mockResolvedValue({ refreshToken: 'refresh-1' })
+    vi.mocked(tokenRevocation).mockResolvedValue(undefined)
+
+    await handleLogout()
+
+    expect(tokenRevocation).toHaveBeenCalledWith({}, 'refresh-1')
+    expect(vi.mocked(tokenRevocation).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(destroySession).mock.invocationCallOrder[0] ?? 0
+    )
+  })
+
+  it('still clears the cookies when revocation fails', async () => {
+    vi.mocked(getSessionData).mockResolvedValue({ refreshToken: 'refresh-1' })
+    vi.mocked(tokenRevocation).mockRejectedValue(new Error('network'))
+
+    await handleLogout()
+
+    expect(destroySession).toHaveBeenCalledOnce()
+    expect(destroyPKCESession).toHaveBeenCalledOnce()
+  })
+
   it('clears both cookies and returns the Cognito logout URL', async () => {
+    vi.mocked(getSessionData).mockResolvedValue({ refreshToken: undefined })
+
     const { logoutUrl } = await handleLogout()
+
+    expect(tokenRevocation).not.toHaveBeenCalled()
 
     expect(destroySession).toHaveBeenCalledOnce()
     expect(destroyPKCESession).toHaveBeenCalledOnce()

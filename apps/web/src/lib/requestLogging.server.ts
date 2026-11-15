@@ -1,7 +1,7 @@
 import type { ErrorBody } from '@shared/config'
 import type { Logger } from 'pino'
 
-import { logger } from '@/config/logger'
+import { logger } from '@/config/logger.server'
 import { catchAsyncError } from '@/features/error/utils/catchError'
 
 const log = logger.child({ module: 'api' })

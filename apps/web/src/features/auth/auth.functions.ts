@@ -1,26 +1,25 @@
 import { createServerFn } from '@tanstack/react-start'
 
-import { catchAsyncError } from '@/features/error/utils/catchError'
+import { AppError } from '@/features/error/lib/AppError'
 
 import type { SessionState } from './lib/access'
 import { handleLogout } from './server/auth.server'
 import { getSessionData } from './server/session.server'
 import { findMe } from './server/user.server'
 
-export const fetchOptionalUser = createServerFn().handler(async () => {
-  const session = await getSessionData()
-  if (!session.refreshToken) return null
-
-  return (await catchAsyncError(findMe())).unwrapOr(null)
-})
-
 export const fetchSessionState = createServerFn().handler(
   async (): Promise<SessionState> => {
     const session = await getSessionData()
     if (!session.refreshToken) return { status: 'signed-out' }
 
-    const user = await findMe()
-    return user ? { status: 'ready', user } : { status: 'no-firm' }
+    const user = await findMe().catch((error: unknown) => {
+      if (error instanceof AppError && error.code === 'UNAUTHORIZED')
+        return 'signed-out' as const
+      throw error
+    })
+    if (user === 'signed-out') return { status: 'signed-out' }
+
+    return user ? { status: 'ready', user } : { status: 'no-organization' }
   }
 )
 

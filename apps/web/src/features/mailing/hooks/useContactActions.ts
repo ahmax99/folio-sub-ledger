@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 import { toast } from 'sonner'
 
-import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
+import { PUBLIC_ROUTES } from '@/lib/routes'
 
 import { sendContactEmail } from '../mailing.functions'
 import type { ContactFormSchema } from '../schemas/contactForm.schema'

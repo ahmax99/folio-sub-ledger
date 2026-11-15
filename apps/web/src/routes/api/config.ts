@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { env } from '@/config/env'
-import { withRequestLogging } from '@/lib/requestLogging'
+import { env } from '@/config/env.server'
+import { withRequestLogging } from '@/lib/requestLogging.server'
 
 export const Route = createFileRoute('/api/config')({
   server: {

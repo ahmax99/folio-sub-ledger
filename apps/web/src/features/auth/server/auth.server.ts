@@ -1,9 +1,14 @@
-import { authorizationCodeGrant, buildAuthorizationUrl } from 'openid-client'
+import {
+  authorizationCodeGrant,
+  buildAuthorizationUrl,
+  tokenRevocation
+} from 'openid-client'
 
-import { env } from '@/config/env'
-import { logger } from '@/config/logger'
+import { env } from '@/config/env.server'
+import { logger } from '@/config/logger.server'
+import { catchAsyncError } from '@/features/error/utils/catchError'
+import { PROTECTED_ROUTES, PUBLIC_ROUTES } from '@/lib/routes'
 
-import { PROTECTED_ROUTES, PUBLIC_ROUTES } from '../lib/routes'
 import type { CallbackParams, PKCEData } from '../schemas/auth.schema'
 import { generateNonce, generatePKCE, generateState } from '../utils/pkce'
 import { safeRelativePath } from '../utils/redirect'
@@ -13,6 +18,7 @@ import {
   destroyPKCESession,
   destroySession,
   getPKCEData,
+  getSessionData,
   setPKCEData,
   setSessionData
 } from './session.server'
@@ -22,8 +28,7 @@ const log = logger.child({ module: 'auth' })
 
 const SESSION_CHECKS = [
   {
-    check: (pkce: PKCEData, state: CallbackParams['state']) =>
-      pkce.state !== state,
+    check: (pkce: PKCEData, state: string) => pkce.state !== state,
     message: 'OAuth state mismatch',
     error: 'invalid_state'
   },
@@ -78,24 +83,7 @@ export const handleLogin = async (callbackUrl?: string) => {
   return { authUrl: authUrl.toString() }
 }
 
-const validateCallbackParams = (params: CallbackParams) => {
-  const { code, state, error } = params
-
-  if (error) {
-    log.warn({ error }, 'OAuth callback returned error')
-    return `/auth/login?error=${error}`
-  }
-
-  const isMissingParams = !code || !state
-  if (isMissingParams) {
-    log.warn('OAuth callback missing code or state')
-    return '/auth/login?error=missing_code'
-  }
-
-  return null
-}
-
-const validateSession = (pkce: PKCEData, state: CallbackParams['state']) => {
+const validateSession = (pkce: PKCEData, state: string) => {
   const failed = SESSION_CHECKS.find(({ check }) => check(pkce, state))
   if (failed) {
     log.warn(failed.message)
@@ -108,20 +96,31 @@ export const handleCallback = async (
   currentUrl: URL,
   params: CallbackParams
 ) => {
-  const paramError = validateCallbackParams(params)
-  if (paramError) return { redirectUrl: paramError }
+  if ('error' in params) {
+    log.warn({ error: params.error }, 'OAuth callback returned error')
+    return {
+      redirectUrl: `/auth/login?error=${encodeURIComponent(params.error)}`
+    }
+  }
 
   const [pkce, config] = await Promise.all([getPKCEData(), getOIDCClient()])
 
   const sessionError = validateSession(pkce, params.state)
   if (sessionError) return { redirectUrl: sessionError }
 
-  const tokens = await authorizationCodeGrant(config, currentUrl, {
-    pkceCodeVerifier: pkce.codeVerifier,
-    expectedState: params.state,
-    expectedNonce: pkce.nonce
-  })
+  const grant = await catchAsyncError(
+    authorizationCodeGrant(config, currentUrl, {
+      pkceCodeVerifier: pkce.codeVerifier,
+      expectedState: params.state,
+      expectedNonce: pkce.nonce
+    })
+  )
+  if (grant.isErr()) {
+    log.warn({ error: grant.error.message }, 'OAuth token exchange failed')
+    return { redirectUrl: '/auth/login?error=invalid_token' }
+  }
 
+  const tokens = grant.value
   const tokenData = getValidTokenData(tokens)
   if (!tokenData) {
     log.warn('OAuth token exchange returned invalid claims or missing id_token')
@@ -141,11 +140,20 @@ export const handleCallback = async (
   return {
     redirectUrl: user
       ? (pkce.callbackUrl ?? PUBLIC_ROUTES.HOME)
-      : PROTECTED_ROUTES.FIRM_SETUP
+      : PROTECTED_ROUTES.ORGANIZATION_SETUP
   }
 }
 
 export const handleLogout = async () => {
+  const { refreshToken } = await getSessionData()
+  // Revoke first so a copied cookie stops working; logout proceeds on failure.
+  if (refreshToken) {
+    const config = await getOIDCClient()
+    await catchAsyncError(tokenRevocation(config, refreshToken)).orTee(() =>
+      log.warn('Refresh token revocation failed')
+    )
+  }
+
   await Promise.all([destroySession(), destroyPKCESession()])
 
   log.info('User logged out')
