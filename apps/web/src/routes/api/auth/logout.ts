@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { handleLogout } from '@/features/auth/server/services/auth'
+import { handleLogout } from '@/features/auth/server/auth.server'
 import { redirectResponse } from '@/lib/redirectResponse'
 import { withRequestLogging } from '@/lib/requestLogging'
 

@@ -5,8 +5,8 @@ import {
   QueryClient
 } from '@tanstack/react-query'
 
-import { showError } from '@/features/error/client/lib/showError'
 import { mapToAppError } from '@/features/error/lib/mapToAppError'
+import { showError } from '@/features/error/lib/showError'
 import { captureError } from '@/features/error/utils/captureError'
 
 const reportError = (error: unknown) => {

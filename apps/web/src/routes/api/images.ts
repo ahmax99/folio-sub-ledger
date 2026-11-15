@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { fetchImage } from '@/features/media/server/api'
+import { fetchImage } from '@/features/media/server/image.server'
 import { withRequestLogging } from '@/lib/requestLogging'
 
 export const Route = createFileRoute('/api/images')({

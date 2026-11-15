@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { OAuth2Start } from '@/features/auth/client/components/OAuth2Start'
+import { OAuth2Start } from '@/features/auth/components/OAuth2Start'
 
 interface LoginSearch {
   callbackUrl?: string

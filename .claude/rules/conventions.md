@@ -45,12 +45,12 @@ Always use named exports, never default exports — except where a framework ent
 - Mark each component's root element with `data-slot="<component-name>"` (e.g. `data-slot="button"`) to enable parent styling via attribute selectors.
 - Compose subcomponents (e.g. `Card`, `CardHeader`, `CardContent`) as separate named exports from a single file — not separate files.
 - Every component is isomorphic (SSR then hydrated). `'use client'` is a no-op under TanStack Start; existing ones are kept as a readability marker for interactive components, but don't rely on it for any boundary.
-- Feature-specific components go in `features/<name>/client/components/` (interactive) or `features/<name>/components/` (presentational, fed by loader data); never in `src/components/`.
-- Presentational components (`features/<name>/components/`) have no React hooks, no browser APIs, and no server-only imports (`env`, `serverApiClient`, services).
+- Feature-specific components go in `features/<name>/components/`; never in `src/components/`.
+- No component imports server-only code (`env`, `serverApiClient`, any `*.server.ts`); it reaches the BFF only through a `<name>.functions.ts` server function. Components that only display loader data take props and use no hooks.
 
 ## Rendering and data (web)
 
-- Page data comes from a route `loader` that calls `context.queryClient.ensureQueryData(...)` with the feature's `queryOptions` (whose `queryFn` is a server function in `features/<name>/server/functions.ts`); the component reads it with `useSuspenseQuery`, never by fetching inside a component. Validate server-function input with `.validator(<Zod schema>)` — it is an external boundary like any route.
+- Page data comes from a route `loader` that calls `context.queryClient.ensureQueryData(...)` with the feature's `queryOptions` (whose `queryFn` is a server function in `features/<name>/<name>.functions.ts`); the component reads it with `useSuspenseQuery`, never by fetching inside a component. Validate server-function input with `.validator(<Zod schema>)` — it is an external boundary like any route.
 - Session-dependent context (the current `user`) is resolved once in the layout route's `beforeLoad` (`_main`, `_authorized`) and read with `Route.useRouteContext()`.
 - Writes go through `useMutation`; after one, invalidate the affected query keys (`queryClient.invalidateQueries`) rather than `router.invalidate()`; navigate with `useNavigate()` / `<Link to>` (typed routes), never `window.location` except for off-site or full-document redirects (`reloadDocument` on links to `/api/auth/*`).
 - Server routes return `Response` objects; for redirects use `redirectResponse()` from `lib/redirectResponse.ts`, not `Response.redirect()` (its immutable headers drop the session's `Set-Cookie`).

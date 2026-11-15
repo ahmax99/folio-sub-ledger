@@ -2,12 +2,12 @@ import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 
 import { Skeleton } from '@/components/atoms'
 import { Logo } from '@/components/molecules/Logo'
+import { fetchSessionState } from '@/features/auth/auth.functions'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
 import { SETUP_REDIRECTS } from '@/features/auth/lib/access'
 import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
-import { fetchSessionState } from '@/features/auth/server/functions'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
-import { FirmSetupForm } from '@/features/organization/client/components/FirmSetupForm'
+import { FirmSetupForm } from '@/features/organization/components/FirmSetupForm'
 
 const SetupPage = () => (
   <>
