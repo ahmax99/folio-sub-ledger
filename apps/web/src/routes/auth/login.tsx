@@ -10,7 +10,11 @@ const LoginErrorPage = () => {
   return (
     <LoginError
       error={error ?? ''}
-      retryHref={`/api/auth/login?${new URLSearchParams(callbackUrl ? { callbackUrl } : {})}`}
+      retryHref={
+        callbackUrl
+          ? `/api/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+          : '/api/auth/login'
+      }
     />
   )
 }
@@ -23,7 +27,9 @@ export const Route = createFileRoute('/auth/login')({
     if (search.error) return
 
     throw redirect({
-      href: `/api/auth/login?${new URLSearchParams(search.callbackUrl ? { callbackUrl: search.callbackUrl } : {})}`,
+      href: search.callbackUrl
+        ? `/api/auth/login?callbackUrl=${encodeURIComponent(search.callbackUrl)}`
+        : '/api/auth/login',
       reloadDocument: true
     })
   },
