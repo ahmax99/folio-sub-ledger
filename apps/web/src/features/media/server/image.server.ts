@@ -5,8 +5,6 @@ import { serverApiClient } from '@/lib/serverApiClient.server'
 export const fetchImage = (imagePath: string) =>
   serverApiClient.get(`images/${imagePath}`)
 
-// The path comes from the browser, so it is validated before it becomes part
-// of a backend URL: an unchecked `../` would reach any backend endpoint.
 export const serveImage = async (searchParams: URLSearchParams) => {
   const query = MediaModel.imageQuery.safeParse(
     Object.fromEntries(searchParams)
