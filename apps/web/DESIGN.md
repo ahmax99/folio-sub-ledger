@@ -39,11 +39,23 @@ typography:
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: '0.01em'
+  body-sm:
+    fontFamily: 'Geist Sans, sans-serif'
+    fontSize: '0.875rem'
+    fontWeight: 400
+    lineHeight: 1.43
+    letterSpacing: '0.01em'
   label:
     fontFamily: 'Geist Sans, sans-serif'
     fontSize: '0.875rem'
     fontWeight: 500
     lineHeight: 1.25
+    letterSpacing: '0.01em'
+  caption:
+    fontFamily: 'Geist Sans, sans-serif'
+    fontSize: '0.75rem'
+    fontWeight: 400
+    lineHeight: 1.33
     letterSpacing: '0.01em'
   mono:
     fontFamily: 'Geist Mono, monospace'
@@ -269,10 +281,13 @@ crisp edges, instant feedback.
 - **Don't** add decorative charts, badges, or stat tiles that don't answer a
   user question — dashboard clutter is an anti-reference.
 
-## Figma
+## Penpot
 
-File: https://www.figma.com/design/UV5Wxg0xLqZXrjZujLyg4C/Folio
+File: <https://design.penpot.app/?screen=workspace&team-id=b4b906dd-9024-819c-8008-f2c1d9a7961e&project-id=110d30a4-9d92-80de-8008-f2c20ea88716&file-id=110d30a4-9d92-80de-8008-f2d3c59d3a39&page-id=110d30a4-9d92-80de-8008-f2d3c59d3a3a>
 
-- `Foundations` — `Color` variables (one per colour token above), `Dimension` variables (`radius/*`, `spacing/*`) and text styles (`display` … `mono`, Geist and Geist Mono), mirroring this file.
-- `Components` — Figma components named after their code components.
-- One page per feature, added as features are designed.
+- **Tokens** mirror `src/styles/tokens/`. Set `core` holds `radius.*` (derived from `radius.base`, as in `borders.css`), `spacing.*` (Tailwind 4px scale; `gap.xs`…`gap.xl` alias it), `size.control*`, `container.*`, `text.*`, `weight.*`, `font.sans`/`font.serif`/`font.mono`, `leading.*`, `tracking.*`, `shadow.2xs`…`shadow.2xl` (with `shadow.default` for Tailwind's `shadow`), `opacity.disabled` and `type.*` (one per typography above, referencing the font, size, weight, leading and tracking tokens). Penpot stores letter spacing in px only, so the CSS's `0.01em` base becomes one `tracking.*` token per type style. Sets `mode/light` and `mode/dark` hold the colour tokens under their CSS-variable names (`background`, `primary-foreground`, `chart-1`, `sidebar-*`). Themes `Mode / Light` and `Mode / Dark` switch between them.
+- **Library** also has the colours (`light/*`, `dark/*`) and typographies (`type/*`), for swatches and text styles.
+- `Foundations` — colour swatches for both modes, the type ramp, spacing, radius and elevation.
+- `Components` — Penpot components named after their code components, grouped as atoms (`Button`, `Badge`, `Input`, `Label`, `Skeleton`, `Avatar`), molecules (`Card`, `Tabs`, `Logo`, `Dialog`, `TableHeader`, `TableRow`), organisms (`Field`) and layout (`PageHeader`). `Dialog` and `Table*` are not in code yet; they follow the shadcn `base-nova` registry sources, and their component annotation says where to add them.
+- One page per feature (`Setup`, `Organization`), boards named `<Feature> / <Screen> / <State>`. `Setup` carries the **Create firm** prototype flow: Default → (click Create firm) Invalid → (click) Loading → (1.5 s) Done. Penpot interactions cannot target another page, so `Setup / Create firm / Done` is a rebuilt copy of `Organization / Home / Default`; keep the two in step.
+- Known deviations from the CSS: Penpot rejects negative shadow spread, so `shadow.sm`…`xl` use spread 0 on the second layer; `bg-destructive/10` (destructive Button) `text-foreground/60` (inactive tab), `ring-foreground/10` (Dialog edge) and `bg-muted/50` (Dialog footer) have no token and are raw fills or strokes; the Tabs list padding is raw 3px because code uses the off-scale `p-[3px]`.
