@@ -2,6 +2,7 @@ import { authorizationCodeGrant, buildAuthorizationUrl } from 'openid-client'
 
 import { env } from '@/config/env.server'
 import { logger } from '@/config/logger.server'
+import { catchAsyncError } from '@/features/error/utils/catchError'
 import { PROTECTED_ROUTES, PUBLIC_ROUTES } from '@/lib/routes'
 
 import type { CallbackParams, PKCEData } from '../schemas/auth.schema'
@@ -116,12 +117,19 @@ export const handleCallback = async (
   const sessionError = validateSession(pkce, params.state)
   if (sessionError) return { redirectUrl: sessionError }
 
-  const tokens = await authorizationCodeGrant(config, currentUrl, {
-    pkceCodeVerifier: pkce.codeVerifier,
-    expectedState: params.state,
-    expectedNonce: pkce.nonce
-  })
+  const grant = await catchAsyncError(
+    authorizationCodeGrant(config, currentUrl, {
+      pkceCodeVerifier: pkce.codeVerifier,
+      expectedState: params.state,
+      expectedNonce: pkce.nonce
+    })
+  )
+  if (grant.isErr()) {
+    log.warn({ error: grant.error.message }, 'OAuth token exchange failed')
+    return { redirectUrl: '/auth/login?error=invalid_token' }
+  }
 
+  const tokens = grant.value
   const tokenData = getValidTokenData(tokens)
   if (!tokenData) {
     log.warn('OAuth token exchange returned invalid claims or missing id_token')

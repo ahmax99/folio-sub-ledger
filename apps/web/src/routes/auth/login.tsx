@@ -2,13 +2,17 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { LoginError } from '@/features/auth/components/LoginError'
 import { AuthModel } from '@/features/auth/schemas/auth.schema'
-import { loginUrl } from '@/features/auth/utils/loginUrl'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
 
 const LoginErrorPage = () => {
   const { callbackUrl, error } = Route.useSearch()
 
-  return <LoginError error={error ?? ''} retryHref={loginUrl(callbackUrl)} />
+  return (
+    <LoginError
+      error={error ?? ''}
+      retryHref={`/api/auth/login?${new URLSearchParams(callbackUrl ? { callbackUrl } : {})}`}
+    />
+  )
 }
 
 export const Route = createFileRoute('/auth/login')({
@@ -18,7 +22,10 @@ export const Route = createFileRoute('/auth/login')({
   beforeLoad: ({ search }) => {
     if (search.error) return
 
-    throw redirect({ href: loginUrl(search.callbackUrl), reloadDocument: true })
+    throw redirect({
+      href: `/api/auth/login?${new URLSearchParams(search.callbackUrl ? { callbackUrl: search.callbackUrl } : {})}`,
+      reloadDocument: true
+    })
   },
   head: () =>
     generatePageMetadata({

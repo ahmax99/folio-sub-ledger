@@ -45,6 +45,6 @@ Entries that say _"verify"_ require an actual Read/grep of the current code befo
 
 These remain flagged on purpose; they are open decisions, not FPs:
 
-- `react-doctor/url-prefilled-privileged-action` — `routes/auth/login.tsx` (via `features/auth/utils/loginUrl.ts`) — needs an auth open-redirect **policy** (same-origin `callbackUrl` allowlist + server-side re-check).
+- `react-doctor/url-prefilled-privileged-action` — `routes/auth/login.tsx` — needs an auth open-redirect **policy**: `handleLogin` keeps `callbackUrl` only when `safeRelativePath` accepts it.
 - `react-doctor/async-parallel` — `auth.ts:142` — the four awaits are **not** independent; `setSessionData`→`clearPKCEData` must stay sequential (documented session-write race).
 - `deslop/unused-file` — `TriggerTestError.tsx` — orphaned example files kept intentionally as boilerplate starting points; delete only on a maintainer's call.

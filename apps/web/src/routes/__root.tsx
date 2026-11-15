@@ -26,7 +26,6 @@ const RootDocument = ({
     <body>
       {children}
       <Toaster position="bottom-right" richColors />
-      {/* Stripped from production builds by the devtools Vite plugin. */}
       <TanStackDevtools
         plugins={[
           { name: 'TanStack Query', render: <ReactQueryDevtoolsPanel /> },

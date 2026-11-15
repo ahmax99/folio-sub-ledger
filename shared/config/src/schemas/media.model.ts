@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-// Each segment starts with a word character or `-`, so `.` and `..` segments
-// (path traversal) cannot match. Mirrors the backend's upload key format.
 const IMAGE_PATH = /^[\w-][\w.-]*(?:\/[\w-][\w.-]*)*$/
 
 export const MediaModel = {

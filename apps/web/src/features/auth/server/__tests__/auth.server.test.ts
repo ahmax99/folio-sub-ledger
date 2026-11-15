@@ -115,6 +115,21 @@ describe('handleCallback', () => {
     expect(setSessionData).not.toHaveBeenCalled()
   })
 
+  it('redirects to login when Cognito rejects the code exchange', async () => {
+    vi.mocked(authorizationCodeGrant).mockRejectedValue(
+      new Error('invalid_grant')
+    )
+
+    const { redirectUrl } = await handleCallback(callbackUrl, {
+      code: 'c',
+      state: 'state-1'
+    })
+
+    expect(redirectUrl).toBe('/auth/login?error=invalid_token')
+    expect(setSessionData).not.toHaveBeenCalled()
+    expect(destroyPKCESession).not.toHaveBeenCalled()
+  })
+
   it('starts the session, then drops PKCE state and returns to the callback URL', async () => {
     grantTokens()
     vi.mocked(findMeWithIdToken).mockResolvedValue({ id: 'u1' } as never)
