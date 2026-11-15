@@ -5,7 +5,6 @@ export const LOGIN_ERROR_MESSAGES: Record<string, string> = {
     'Your sign-in session was lost. Check that cookies are enabled, then try again.',
   missing_nonce:
     'Your sign-in session was lost. Check that cookies are enabled, then try again.',
-  missing_code: 'The sign-in response was incomplete.',
   invalid_token: 'We could not verify your sign-in.',
   invalid_callback: 'The sign-in response was not valid.'
 }

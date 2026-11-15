@@ -80,7 +80,6 @@ describe('handleCallback', () => {
 
   it.each([
     [{ error: 'access_denied' }, 'access_denied'],
-    [{ state: 'state-1' }, 'missing_code'],
     [{ code: 'c', state: 'other' }, 'invalid_state']
   ])('redirects %j to login with %s', async (params, error) => {
     const { redirectUrl } = await handleCallback(callbackUrl, params)

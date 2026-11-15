@@ -10,11 +10,10 @@ export const AuthModel = {
     nonce: z.string().optional(),
     callbackUrl: z.string().optional()
   }),
-  callbackParams: z.object({
-    code: z.string().optional(),
-    state: z.string().optional(),
-    error: z.string().optional()
-  }),
+  callbackParams: z.union([
+    z.object({ error: z.string().min(1) }),
+    z.object({ code: z.string().min(1), state: z.string().min(1) })
+  ]),
   loginSearch: z.object({
     callbackUrl: z.string().optional().catch(undefined),
     error: z.string().optional().catch(undefined)

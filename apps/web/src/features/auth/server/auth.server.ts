@@ -23,8 +23,7 @@ const log = logger.child({ module: 'auth' })
 
 const SESSION_CHECKS = [
   {
-    check: (pkce: PKCEData, state: CallbackParams['state']) =>
-      pkce.state !== state,
+    check: (pkce: PKCEData, state: string) => pkce.state !== state,
     message: 'OAuth state mismatch',
     error: 'invalid_state'
   },
@@ -79,24 +78,7 @@ export const handleLogin = async (callbackUrl?: string) => {
   return { authUrl: authUrl.toString() }
 }
 
-const validateCallbackParams = (params: CallbackParams) => {
-  const { code, state, error } = params
-
-  if (error) {
-    log.warn({ error }, 'OAuth callback returned error')
-    return `/auth/login?error=${error}`
-  }
-
-  const isMissingParams = !code || !state
-  if (isMissingParams) {
-    log.warn('OAuth callback missing code or state')
-    return '/auth/login?error=missing_code'
-  }
-
-  return null
-}
-
-const validateSession = (pkce: PKCEData, state: CallbackParams['state']) => {
+const validateSession = (pkce: PKCEData, state: string) => {
   const failed = SESSION_CHECKS.find(({ check }) => check(pkce, state))
   if (failed) {
     log.warn(failed.message)
@@ -109,8 +91,10 @@ export const handleCallback = async (
   currentUrl: URL,
   params: CallbackParams
 ) => {
-  const paramError = validateCallbackParams(params)
-  if (paramError) return { redirectUrl: paramError }
+  if ('error' in params) {
+    log.warn({ error: params.error }, 'OAuth callback returned error')
+    return { redirectUrl: `/auth/login?error=${params.error}` }
+  }
 
   const [pkce, config] = await Promise.all([getPKCEData(), getOIDCClient()])
 

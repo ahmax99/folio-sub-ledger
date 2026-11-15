@@ -31,8 +31,7 @@ const refreshTokens = async (): Promise<Tokens> => {
   }
 }
 
-// One Cognito refresh per incoming request: a handler that makes several
-// backend calls shares the same ID token. Keyed weakly, so it ends with the request.
+// One Cognito refresh per request, shared by all its backend calls.
 const tokensByRequest = new WeakMap<Request, Promise<Tokens>>()
 
 export const getTokens = () => {
