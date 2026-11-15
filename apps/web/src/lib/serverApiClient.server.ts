@@ -1,10 +1,10 @@
 import ky from 'ky'
 
-import { env } from '@/config/env'
-import { logger } from '@/config/logger'
+import { env } from '@/config/env.server'
+import { logger } from '@/config/logger.server'
 import { getTokens } from '@/features/auth/server/token.server'
 import { AppError } from '@/features/error/lib/AppError'
-import { logAfterResponse, logBeforeRequest } from '@/lib/requestLogging'
+import { logAfterResponse, logBeforeRequest } from '@/lib/requestLogging.server'
 
 import { signingHook } from './sig4.server'
 

@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow'
 
-import { env } from '@/config/env'
+import { env } from '@/config/env.server'
 
 import type { ContactFormSchema } from '../schemas/contactForm.schema'
 

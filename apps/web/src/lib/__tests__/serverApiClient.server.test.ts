@@ -5,11 +5,11 @@ import { getTokens } from '@/features/auth/server/token.server'
 import { serverAuthApiClient } from '../serverApiClient.server'
 import { signingHook } from '../sig4.server'
 
-vi.mock('@/config/env', () => ({
+vi.mock('@/config/env.server', () => ({
   env: { NODE_ENV: 'production', BACKEND_INTERNAL_URL: 'http://backend.test' }
 }))
-vi.mock('@/config/logger', () => ({ logger: { child: () => ({}) } }))
-vi.mock('@/lib/requestLogging', () => ({
+vi.mock('@/config/logger.server', () => ({ logger: { child: () => ({}) } }))
+vi.mock('@/lib/requestLogging.server', () => ({
   logBeforeRequest: () => () => undefined,
   logAfterResponse: () => () => undefined
 }))

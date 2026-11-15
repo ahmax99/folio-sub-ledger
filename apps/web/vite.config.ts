@@ -1,3 +1,4 @@
+import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { redact } from '@tanstack/redact/vite'
 
@@ -20,6 +21,7 @@ export default defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   ...(command === 'build' && { ssr: { noExternal: true } }),
   plugins: [
+    devtools(),
     tailwindcss(),
     tanstackStart({ srcDirectory: 'src' }),
     viteReact(),

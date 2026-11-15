@@ -1,6 +1,6 @@
 import type { User } from '@shared/config'
 
-import { PROTECTED_ROUTES, PUBLIC_AUTH_ROUTES } from './routes'
+import { PROTECTED_ROUTES, PUBLIC_AUTH_ROUTES } from '@/lib/routes'
 
 export type SessionState =
   | { status: 'signed-out' }

@@ -4,12 +4,12 @@ import type { User } from '@shared/config'
 import { User as UserIcon } from 'lucide-react'
 
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
+import { ROLE_LABELS } from '@/features/organization/constants/role'
 import {
   PROTECTED_ROUTES,
   PUBLIC_AUTH_ROUTES,
   PUBLIC_ROUTES
-} from '@/features/auth/lib/routes'
-import { ROLE_LABELS } from '@/features/organization/constants/role'
+} from '@/lib/routes'
 
 import { Badge } from '../atoms/Badge'
 import { ButtonLink } from '../atoms/ButtonLink'

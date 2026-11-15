@@ -51,10 +51,10 @@ Always use named exports, never default exports — except where a framework ent
 ## Rendering and data (web)
 
 - Page data comes from a route `loader` that calls `context.queryClient.ensureQueryData(...)` with the feature's `queryOptions` (whose `queryFn` is a server function in `features/<name>/<name>.functions.ts`); the component reads it with `useSuspenseQuery`, never by fetching inside a component. Validate server-function input with `.validator(<Zod schema>)` — it is an external boundary like any route.
-- Session-dependent context (the current `user`) is resolved once in the layout route's `beforeLoad` (`_main`, `_authorized`) and read with `Route.useRouteContext()`.
+- Session-dependent context (the current `user`) is resolved in the layout route's `beforeLoad` (`_main`, `_authorized`) through `context.queryClient.fetchQuery(sessionQueryOptions)`, never by calling the server function directly, and read with `Route.useRouteContext()`. After a mutation that changes the user or their firm, invalidate `sessionQueryOptions.queryKey` before navigating.
 - Writes go through `useMutation`; after one, invalidate the affected query keys (`queryClient.invalidateQueries`) rather than `router.invalidate()`; navigate with `useNavigate()` / `<Link to>` (typed routes), never `window.location` except for off-site or full-document redirects (`reloadDocument` on links to `/api/auth/*`).
 - Server routes return `Response` objects; for redirects use `redirectResponse()` from `lib/redirectResponse.ts`, not `Response.redirect()` (its immutable headers drop the session's `Set-Cookie`).
-- Search params a page depends on are declared with `validateSearch` on its route.
+- Search params a page depends on are declared with `validateSearch` on its route, passing a Zod schema (Router accepts Standard Schema) with `.catch()` defaults so a bad value falls back instead of throwing.
 
 ## Error Handling
 

@@ -1,9 +1,9 @@
 import { authorizationCodeGrant, buildAuthorizationUrl } from 'openid-client'
 
-import { env } from '@/config/env'
-import { logger } from '@/config/logger'
+import { env } from '@/config/env.server'
+import { logger } from '@/config/logger.server'
+import { PROTECTED_ROUTES, PUBLIC_ROUTES } from '@/lib/routes'
 
-import { PROTECTED_ROUTES, PUBLIC_ROUTES } from '../lib/routes'
 import type { CallbackParams, PKCEData } from '../schemas/auth.schema'
 import { generateNonce, generatePKCE, generateState } from '../utils/pkce'
 import { safeRelativePath } from '../utils/redirect'

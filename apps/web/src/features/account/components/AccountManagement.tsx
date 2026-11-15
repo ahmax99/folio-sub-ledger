@@ -13,11 +13,11 @@ import {
   TabsList,
   TabsTrigger
 } from '@/components/molecules'
-import { PROTECTED_ROUTES } from '@/features/auth/lib/routes'
+import { PROTECTED_ROUTES } from '@/lib/routes'
+
+import type { AccountTab } from '../schemas/accountSearch.schema'
 
 import { DeleteAccountButton } from './DeleteAccountButton'
-
-export type AccountTab = 'profile' | 'danger-zone'
 
 interface AccountManagementProps {
   activeTab: AccountTab

@@ -1,6 +1,6 @@
 import type { SessionOptions } from 'iron-session'
 
-import { env } from '@/config/env'
+import { env } from '@/config/env.server'
 
 import { COOKIE_OPTIONS, PKCE_COOKIE_OPTIONS } from '../constants/cookie'
 

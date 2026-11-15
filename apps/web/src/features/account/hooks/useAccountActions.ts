@@ -1,11 +1,12 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
 import { toast } from 'sonner'
 
 import { logout } from '@/features/auth/auth.functions'
-import { PROTECTED_ROUTES } from '@/features/auth/lib/routes'
+import { sessionQueryOptions } from '@/features/auth/lib/queries'
 import { AppError } from '@/features/error/lib/AppError'
+import { PROTECTED_ROUTES } from '@/lib/routes'
 
 import { deleteUser, fetchPresignedUrl, updateUser } from '../account.functions'
 import type { UpdateProfileSchema } from '../schemas/accountForm.schema'
@@ -28,6 +29,7 @@ const uploadAvatar = async (image: File | null) => {
 
 export const useAccountActions = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const updateProfile = useMutation({
     mutationFn: async ({ name, image }: UpdateProfileSchema) =>
@@ -36,6 +38,9 @@ export const useAccountActions = () => {
       }),
     onSuccess: async () => {
       toast.success('Profile updated successfully')
+      await queryClient.invalidateQueries({
+        queryKey: sessionQueryOptions.queryKey
+      })
       await navigate({ to: PROTECTED_ROUTES.ACCOUNT, replace: true })
     }
   })

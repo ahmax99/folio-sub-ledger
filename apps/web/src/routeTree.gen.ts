@@ -16,7 +16,6 @@ import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as MainContactRouteImport } from './routes/_main/contact'
 import { Route as ApiConfigRouteImport } from './routes/api/config'
 import { Route as ApiImagesRouteImport } from './routes/api/images'
-import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthorizedAccountIndexRouteImport } from './routes/_authorized/account/index'
 import { Route as AuthorizedAccountEditRouteImport } from './routes/_authorized/account/edit'
@@ -56,11 +55,6 @@ const ApiConfigRoute = ApiConfigRouteImport.update({
 const ApiImagesRoute = ApiImagesRouteImport.update({
   id: '/api/images',
   path: '/api/images',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
@@ -105,7 +99,6 @@ export interface FileRoutesByFullPath {
   '/contact': typeof MainContactRoute
   '/api/config': typeof ApiConfigRoute
   '/api/images': typeof ApiImagesRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
@@ -120,7 +113,6 @@ export interface FileRoutesByTo {
   '/contact': typeof MainContactRoute
   '/api/config': typeof ApiConfigRoute
   '/api/images': typeof ApiImagesRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
@@ -137,7 +129,6 @@ export interface FileRoutesById {
   '/_main/contact': typeof MainContactRoute
   '/api/config': typeof ApiConfigRoute
   '/api/images': typeof ApiImagesRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/_main/': typeof MainIndexRoute
   '/_authorized/account/edit': typeof AuthorizedAccountEditRoute
@@ -155,7 +146,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/api/config'
     | '/api/images'
-    | '/auth/callback'
     | '/auth/login'
     | '/account/edit'
     | '/api/auth/callback'
@@ -170,7 +160,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/api/config'
     | '/api/images'
-    | '/auth/callback'
     | '/auth/login'
     | '/account/edit'
     | '/api/auth/callback'
@@ -186,7 +175,6 @@ export interface FileRouteTypes {
     | '/_main/contact'
     | '/api/config'
     | '/api/images'
-    | '/auth/callback'
     | '/auth/login'
     | '/_main/'
     | '/_authorized/account/edit'
@@ -203,7 +191,6 @@ export interface RootRouteChildren {
   SetupRoute: typeof SetupRoute
   ApiConfigRoute: typeof ApiConfigRoute
   ApiImagesRoute: typeof ApiImagesRoute
-  AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
   ApiAuthCallbackRoute: typeof ApiAuthCallbackRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
@@ -259,13 +246,6 @@ declare module '@tanstack/react-router' {
       path: '/api/images'
       fullPath: '/api/images'
       preLoaderRoute: typeof ApiImagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
@@ -354,7 +334,6 @@ const rootRouteChildren: RootRouteChildren = {
   SetupRoute: SetupRoute,
   ApiConfigRoute: ApiConfigRoute,
   ApiImagesRoute: ApiImagesRoute,
-  AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
   ApiAuthCallbackRoute: ApiAuthCallbackRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,

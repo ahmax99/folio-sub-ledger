@@ -1,6 +1,6 @@
 import { type CreateEmailResponse, Resend } from 'resend'
 
-import { env } from '@/config/env'
+import { env } from '@/config/env.server'
 import { AppError } from '@/features/error/lib/AppError'
 import { catchAsyncError } from '@/features/error/utils/catchError'
 

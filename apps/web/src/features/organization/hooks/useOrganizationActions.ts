@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 import type { SetupFirmBody } from '@shared/config'
 
-import { PROTECTED_ROUTES } from '@/features/auth/lib/routes'
+import { PROTECTED_ROUTES } from '@/lib/routes'
 
 import { setupFirm } from '../organization.functions'
 

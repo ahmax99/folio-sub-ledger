@@ -2,17 +2,11 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Skeleton } from '@/components/atoms'
 import { PageTemplate } from '@/components/layout'
-import {
-  AccountManagement,
-  type AccountTab
-} from '@/features/account/components/AccountManagement'
+import { AccountManagement } from '@/features/account/components/AccountManagement'
 import { UserInfo } from '@/features/account/components/UserInfo'
-import { PUBLIC_ROUTES } from '@/features/auth/lib/routes'
+import { accountSearchSchema } from '@/features/account/schemas/accountSearch.schema'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
-
-interface AccountSearch {
-  tab?: AccountTab
-}
+import { PUBLIC_ROUTES } from '@/lib/routes'
 
 const AccountPage = () => {
   const { user } = Route.useRouteContext()
@@ -87,9 +81,7 @@ const AccountSkeleton = () => {
 }
 
 export const Route = createFileRoute('/_authorized/account/')({
-  validateSearch: (search): AccountSearch => ({
-    tab: search.tab === 'danger-zone' ? 'danger-zone' : undefined
-  }),
+  validateSearch: accountSearchSchema,
   head: () =>
     generatePageMetadata({
       title: 'Account',
