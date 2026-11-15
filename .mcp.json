@@ -11,6 +11,14 @@
     "terraform": {
       "command": "docker",
       "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
+    },
+    "penpot": {
+      "type": "http",
+      "url": "https://design.penpot.app/mcp/stream?userToken=${PENPOT_MCP_KEY}"
+    },
+    "shadcn": {
+      "command": "bunx",
+      "args": ["shadcn@latest", "mcp"]
     }
   }
 }

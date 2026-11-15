@@ -11,21 +11,21 @@ Development happens on weekends, when there is free time. The roadmap and every 
 - **Sprint `Dates` are a loose window.** The sprint-plan format needs them, so set the end date 6 weeks after the start. A skipped weekend should never force a sprint review. If the window passes with stories still open, they carry over; that is expected, not a failure.
 - **Run `/run-sprint` by hand** at the start of a weekend session, not on a daily `/loop`.
 - **Weekend estimates below are rough** and only for ordering. They are not commitments.
-- **Design is part of the story, not extra work.** A UI story's Figma screens (`/spec` runs the `product-designer` agent in Design mode) and its `/design-review` after `/implement` count inside that story's place in the 2-to-3-story budget.
+- **Design is part of the story, not extra work.** A UI story's Penpot screens (`/spec` runs the `product-designer` agent in Design mode) and its `/design-review` after `/implement` count inside that story's place in the 2-to-3-story budget.
 
 ## Design track
 
-Design runs alongside the build, not as a separate phase. R0 sets up the foundations once; after that, each roadmap item with screens carries a **Design** line: its screens are designed in Figma before `/implement` and checked with `/design-review` after.
+Design runs alongside the build, not as a separate phase. R0 sets up the foundations once; after that, each roadmap item with screens carries a **Design** line: its screens are designed in Penpot before `/implement` and checked with `/design-review` after.
 
 ## R0 · Design foundations
 
 - Status: now (runs alongside R1; it needs no code)
-- Outcome: Folio has its own product context, design tokens, Figma library and personas, so every later screen is designed from the same base.
+- Outcome: Folio has its own product context, design tokens, Penpot library and personas, so every later screen is designed from the same base.
 - Depends on: none
 - Rough size: 1 to 2 weekends
 - Scope:
   - Replace the boilerplate `apps/web/PRODUCT.md` and `DESIGN.md` with Folio's (re-run `/impeccable init`): accounting-firm users, a dense review surface for operators and a calm reporting surface for clients
-  - Figma file with Foundations and Components pages that mirror `DESIGN.md` tokens and the atomic component layers (`product-designer` agent)
+  - Penpot file with Foundations and Components pages that mirror `DESIGN.md` tokens and the atomic component layers (`product-designer` agent)
   - Personas for Owner (Priya), Analyst (Sam) and Reviewer (Dana) and their main journeys in `docs/research/` (`ux-researcher` agent)
 
 ## R1 · Foundation: tests, CI checks and tenancy

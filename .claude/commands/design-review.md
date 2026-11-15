@@ -18,9 +18,9 @@ serves. Code correctness is `/qa`'s job; don't duplicate it here.
    routes render them.
 2. Ensure the dev server is running (`turbo dev --filter=web`,
    default http://localhost:3000). Start it in the background if it isn't.
-3. This review leans on the impeccable plugin and the Figma MCP server. If
+3. This review leans on the impeccable plugin and the Penpot MCP server. If
    either is unavailable, say so and run the phases that remain.
-4. Collect the intended frames: the `## Design` links of the active spec, if
+4. Collect the intended boards: the `## Design` links of the active spec, if
    any.
 
 ## Review phases
@@ -46,11 +46,12 @@ serves. Code correctness is `/qa`'s job; don't duplicate it here.
    as 4 → Blockers, 3 → High-Priority, 2 → Medium-Priority, 1 → Nitpicks,
    each tagged `[Usability]`.
 
-6. **Figma critique (product-designer)** — spawn `subagent_type:
+6. **Penpot critique (product-designer)** — spawn `subagent_type:
    "product-designer"` in mode "Critique" with the dev server URL, the changed
-   routes and the intended frames, after phase 5. It captures the routes into
-   Figma, annotates its findings on the canvas, and lists drift from the
-   intended frames. Merge its findings into the report below, tagged `[Figma]`.
+   routes, screenshots of those routes and the intended boards, after phase 5.
+   It places the screenshots in Penpot, annotates its findings on the canvas,
+   and lists drift from the intended boards. Merge its findings into the report
+   below, tagged `[Penpot]`.
 
 ## Report
 
@@ -63,7 +64,7 @@ Produce a markdown report with findings categorized as:
 - **Nitpicks** — prefix with "Nit:"; polish suggestions
 
 For each finding: the route/component, what's wrong, and the concrete fix.
-Link the Figma review section. Lead the report with a one-paragraph overall
+Link the Penpot review board. Lead the report with a one-paragraph overall
 verdict that covers both design quality and the walkthrough's task results, and
 include the walkthrough's task table and its "Open questions for real users" at
 the end.
