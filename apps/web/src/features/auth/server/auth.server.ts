@@ -133,7 +133,7 @@ export const handleCallback = async (
   return {
     redirectUrl: user
       ? (pkce.callbackUrl ?? PUBLIC_ROUTES.HOME)
-      : PROTECTED_ROUTES.FIRM_SETUP
+      : PROTECTED_ROUTES.ORGANIZATION_SETUP
   }
 }
 

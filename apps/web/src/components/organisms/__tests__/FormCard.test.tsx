@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest'
 import { useAppForm } from '@/lib/form'
 
 const TestForm = ({ action }: { action?: string }) => {
-  const form = useAppForm({ defaultValues: { firmName: '' } })
+  const form = useAppForm({ defaultValues: { name: '' } })
 
   return (
     <form.AppForm>
       <form.Form action={action}>
-        <form.AppField name="firmName">
+        <form.AppField name="name">
           {(field) => <field.Input label="Firm name" />}
         </form.AppField>
         <form.SubmitButton>Create firm</form.SubmitButton>

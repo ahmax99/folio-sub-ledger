@@ -39,7 +39,7 @@ describe('routeGuardMiddleware', () => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  it.each(['/setup', '/firm'])(
+  it.each(['/setup', '/organization'])(
     'redirects a signed-out visitor from %s to login',
     (path) => {
       const { result, next } = runGuard(path, 'router')

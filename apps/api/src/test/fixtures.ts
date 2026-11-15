@@ -9,13 +9,13 @@ const userOf = (token: Token) => {
 
 export const seedOwner = (
   token: Token = 'test-token',
-  firmName = 'Test Firm'
+  organizationName = 'Test Firm'
 ) =>
   prisma.user.create({
     data: {
       ...userOf(token),
       role: 'OWNER',
-      organization: { create: { name: firmName } }
+      organization: { create: { name: organizationName } }
     }
   })
 

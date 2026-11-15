@@ -11,10 +11,12 @@ describe('session redirects', () => {
   })
 
   it('sends an identity without a firm to setup from authorized pages', () => {
-    expect(AUTHORIZED_REDIRECTS['no-firm']).toBe(PROTECTED_ROUTES.FIRM_SETUP)
+    expect(AUTHORIZED_REDIRECTS['no-organization']).toBe(
+      PROTECTED_ROUTES.ORGANIZATION_SETUP
+    )
   })
 
   it('sends a user with a firm from setup to the firm home', () => {
-    expect(SETUP_REDIRECTS.ready).toBe(PROTECTED_ROUTES.FIRM_HOME)
+    expect(SETUP_REDIRECTS.ready).toBe(PROTECTED_ROUTES.ORGANIZATION_HOME)
   })
 })

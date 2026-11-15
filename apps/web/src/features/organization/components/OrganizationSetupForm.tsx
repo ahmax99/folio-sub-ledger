@@ -1,20 +1,20 @@
-import { OrganizationModel, type SetupFirmBody } from '@shared/config'
+import { OrganizationModel, type SetupOrganizationBody } from '@shared/config'
 
 import { useAppForm } from '@/lib/form'
 
 import { useOrganizationActions } from '../hooks/useOrganizationActions'
 
-const FirmSetupForm = () => {
-  const { createFirm } = useOrganizationActions()
-  const defaultValues: SetupFirmBody = { firmName: '' }
+const OrganizationSetupForm = () => {
+  const { createOrganization } = useOrganizationActions()
+  const defaultValues: SetupOrganizationBody = { name: '' }
   const form = useAppForm({
     defaultValues,
-    validators: { onChange: OrganizationModel.setupFirmBody },
+    validators: { onChange: OrganizationModel.setupOrganizationBody },
     onSubmit: async ({ value }) => {
-      await createFirm.mutateAsync(value)
+      await createOrganization.mutateAsync(value)
     },
     onSubmitInvalid: () =>
-      setTimeout(() => document.getElementById('firmName')?.focus())
+      setTimeout(() => document.getElementById('name')?.focus())
   })
 
   return (
@@ -25,7 +25,7 @@ const FirmSetupForm = () => {
       >
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <form.AppField name="firmName">
+            <form.AppField name="name">
               {(field) => (
                 <field.Input
                   autoFocus
@@ -43,4 +43,4 @@ const FirmSetupForm = () => {
   )
 }
 
-export { FirmSetupForm }
+export { OrganizationSetupForm }

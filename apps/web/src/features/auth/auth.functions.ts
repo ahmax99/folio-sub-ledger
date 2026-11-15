@@ -11,7 +11,7 @@ export const fetchSessionState = createServerFn().handler(
     if (!session.refreshToken) return { status: 'signed-out' }
 
     const user = await findMe()
-    return user ? { status: 'ready', user } : { status: 'no-firm' }
+    return user ? { status: 'ready', user } : { status: 'no-organization' }
   }
 )
 
