@@ -5,7 +5,7 @@ import { AppError } from '@/features/error/lib/AppError'
 import { captureError } from '@/features/error/utils/captureError'
 import { renderWithProviders } from '@/test/render'
 
-import { useErrorStore } from '../../stores/useErrorStore'
+import { errorStore } from '../../stores/errorStore'
 import { ErrorScreenProvider } from '../ErrorScreenProvider'
 
 vi.mock('@/features/error/utils/captureError', () => ({
@@ -18,13 +18,13 @@ const renderWithError = async () => {
   const rendered = await renderWithProviders(<ErrorScreenProvider />, {
     path: '/account'
   })
-  act(() => useErrorStore.getState().setError(error))
+  act(() => errorStore.actions.setError(error))
   await screen.findByText('Database unavailable')
   return rendered
 }
 
 describe('ErrorScreenProvider', () => {
-  afterEach(() => useErrorStore.getState().clearError())
+  afterEach(() => errorStore.actions.clearError())
 
   it('stays hidden without an error', async () => {
     await renderWithProviders(<ErrorScreenProvider />)
@@ -45,7 +45,7 @@ describe('ErrorScreenProvider', () => {
 
     await user.click(screen.getByRole('button', { name: 'Try again' }))
 
-    expect(useErrorStore.getState().error).toBeUndefined()
+    expect(errorStore.state.error).toBeUndefined()
     expect(invalidate).toHaveBeenCalled()
   })
 
@@ -54,7 +54,7 @@ describe('ErrorScreenProvider', () => {
 
     await user.click(screen.getByRole('button', { name: 'Go home' }))
 
-    expect(useErrorStore.getState().error).toBeUndefined()
+    expect(errorStore.state.error).toBeUndefined()
     await waitFor(() => expect(router.state.location.pathname).toBe('/'))
   })
 })
