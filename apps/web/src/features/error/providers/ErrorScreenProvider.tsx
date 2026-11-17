@@ -1,6 +1,7 @@
 'use client'
 
 import { useNavigate, useRouter } from '@tanstack/react-router'
+import { useSelector } from '@tanstack/react-store'
 import { useEffect } from 'react'
 
 import {
@@ -16,12 +17,13 @@ import {
 import { captureError } from '@/features/error/utils/captureError'
 import { PUBLIC_ROUTES } from '@/lib/routes'
 
-import { useErrorStore } from '../stores/useErrorStore'
+import { errorStore } from '../stores/errorStore'
 
 export const ErrorScreenProvider = () => {
   const router = useRouter()
   const navigate = useNavigate()
-  const { error, clearError } = useErrorStore()
+  const error = useSelector(errorStore, (state) => state.error)
+  const { clearError } = errorStore.actions
 
   useEffect(() => {
     if (error) captureError(error)

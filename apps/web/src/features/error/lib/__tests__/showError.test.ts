@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 import { describe, expect, it, vi } from 'vitest'
 
-import { useErrorStore } from '../../stores/useErrorStore'
+import { errorStore } from '../../stores/errorStore'
 import { AppError } from '../AppError'
 import { showError } from '../showError'
 
@@ -12,7 +12,7 @@ describe('showError', () => {
     showError(new AppError('FORBIDDEN', 'Not allowed'))
 
     expect(toast.error).toHaveBeenCalledWith('Not allowed')
-    expect(useErrorStore.getState().error).toBeUndefined()
+    expect(errorStore.state.error).toBeUndefined()
   })
 
   it('shows an internal error on the error screen', () => {
@@ -20,10 +20,10 @@ describe('showError', () => {
 
     showError(error)
 
-    expect(useErrorStore.getState().error).toBe(error)
+    expect(errorStore.state.error).toBe(error)
     expect(toast.error).not.toHaveBeenCalled()
 
-    useErrorStore.getState().clearError()
-    expect(useErrorStore.getState().error).toBeUndefined()
+    errorStore.actions.clearError()
+    expect(errorStore.state.error).toBeUndefined()
   })
 })

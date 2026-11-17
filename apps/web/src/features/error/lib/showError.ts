@@ -1,7 +1,7 @@
 import { ERROR_DEFINITIONS, type ErrorCode } from '@shared/config'
 import { toast } from 'sonner'
 
-import { useErrorStore } from '../stores/useErrorStore'
+import { errorStore } from '../stores/errorStore'
 
 import type { AppError } from './AppError'
 
@@ -18,5 +18,5 @@ export const showError = (error: AppError) => {
   if (ERROR_DISPLAY[error.code] === 'toast')
     return toast.error(error.message ?? ERROR_DEFINITIONS[error.code].message)
 
-  useErrorStore.getState().setError(error)
+  errorStore.actions.setError(error)
 }
