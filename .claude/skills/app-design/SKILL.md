@@ -57,6 +57,10 @@ HTML/CSS/JS, so they compete with shadcn on which element to render.
   scroll-driven animation, Core Web Vitals, HTML sanitization, passkeys,
   `Intl` dates and time zones. Apply it _on_ the composed component, the same
   way impeccable's aesthetic is applied.
+- **Accessibility and security defects are the exception.** If a guide shows
+  one in a shadcn component (a missing announcement, unsanitized HTML in a
+  slot), fix it on top of the component with props, a wrapper or CSS. Never
+  ignore it, and never fix it by swapping in a native element.
 - **Its framework adaptations lose to repo conventions:**
   - No `as any` casts for new HTML attributes; `any` is an oxlint error.
     Augment the React types or narrow from `unknown`.
