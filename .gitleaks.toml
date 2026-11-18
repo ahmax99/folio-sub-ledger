@@ -5,6 +5,9 @@ title = "gitleaks config for boilerplate-template"
 [extend]
 useDefault = true
 
-[[allowlists]]
+# Single-table `[allowlist]`, not `[[allowlists]]`: CI's gitleaks-action pins 8.24.x, which predates the plural form.
+[allowlist]
 description = "Vendored modern-web-guidance guide: 'MLKEM768-X25519' is a WebCrypto algorithm name, not a key"
-paths = ['''^\.agents/skills/modern-web-guidance/guides/security/client-side-encryption\.md$''']
+paths = [
+  '''^\.agents/skills/modern-web-guidance/guides/security/client-side-encryption\.md$'''
+]
