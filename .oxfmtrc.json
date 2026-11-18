@@ -46,6 +46,7 @@
     "**/generated/**",
     "**/graphify-out/**",
     "docs/diagrams/**",
+    ".agents/**",
     "pnpm-lock.yaml"
   ]
 }

@@ -4,3 +4,7 @@ title = "gitleaks config for boilerplate-template"
 # redefining it (https://github.com/gitleaks/gitleaks#configuration).
 [extend]
 useDefault = true
+
+[[allowlists]]
+description = "Vendored modern-web-guidance guide: 'MLKEM768-X25519' is a WebCrypto algorithm name, not a key"
+paths = ['''^\.agents/skills/modern-web-guidance/guides/security/client-side-encryption\.md$''']
