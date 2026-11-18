@@ -43,8 +43,9 @@ palette restraint, anti-patterns) _on_ the correctly-composed component.
 ## Modern web guidance (lowest layer)
 
 The skill calls itself mandatory for all HTML/CSS/JS work. In this repo it
-only fills gaps the layers above leave open. Its guides are vanilla
-HTML/CSS/JS, so they compete with shadcn on which element to render.
+only fills gaps the layers above leave open. Its guides tell agents to keep
+native platform features when adapting to React, so they compete with shadcn
+on which element to render.
 
 - **Never replace a shadcn component with a native element.** If shadcn has
   the component (installed in `src/components/` or in the registry), use it
