@@ -46,6 +46,7 @@ Always use named exports, never default exports — except where a framework ent
 - Compose subcomponents (e.g. `Card`, `CardHeader`, `CardContent`) as separate named exports from a single file — not separate files.
 - Every component is isomorphic (SSR then hydrated). `'use client'` is a no-op under TanStack Start; existing ones are kept as a readability marker for interactive components, but don't rely on it for any boundary.
 - Feature-specific components go in `features/<name>/components/`; never in `src/components/`.
+- The `modern-web-guidance` skill never overrides a shadcn component with a native element (`<dialog>`, `popover`, anchor positioning); its limits are in the `app-design` skill.
 - No component imports server-only code (`env`, `serverApiClient`, any `*.server.ts`); it reaches the BFF only through a `<name>.functions.ts` server function. Components that only display loader data take props and use no hooks.
 
 ## Rendering and data (web)
