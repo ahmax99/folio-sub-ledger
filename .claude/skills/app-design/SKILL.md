@@ -130,6 +130,26 @@ When an app derived from this boilerplate needs its design language defined:
   Blockers/High/Medium/Nitpicks. `/qa` covers code correctness; `/design-review`
   covers design quality — run both before shipping UI.
 
+## Scenario 4: brand marks (logo, favicon, app icon)
+
+The `logo-design` plugin skill owns the mark itself: brief, concepts, SVG
+construction, small-size and one-colour tests, export. The five layers above
+own everything around it. Glue rules:
+
+- Run its brief from `apps/web/PRODUCT.md`, and take colour from
+  `apps/web/DESIGN.md` tokens (Ledger ink primary), not a new palette.
+- Stop at its concept checkpoint and let the user pick a direction before
+  building the kit.
+- Keep its working files in the scratchpad. Commit only the final SVG masters
+  and exported icons.
+- The approved symbol and lockup go into the Penpot `Logo` component
+  (`product-designer`) before code. Code then renders them in
+  `src/components/molecules/Logo.tsx` as inline SVG paths that use
+  `currentColor` or semantic tokens, never raw hex. Favicon, app icons and the
+  webmanifest go in `apps/web/public/`.
+- Never copy, trace or ship a logo from its reference library. Those are other
+  companies' trademarks.
+
 ## If impeccable is not installed
 
 `/impeccable` commands require the impeccable plugin
