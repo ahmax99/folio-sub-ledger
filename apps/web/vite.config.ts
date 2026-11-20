@@ -7,6 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
+import svgr from 'vite-plugin-svgr'
 
 const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
@@ -25,6 +26,7 @@ export default defineConfig(({ command }) => ({
     tailwindcss(),
     tanstackStart({ srcDirectory: 'src' }),
     viteReact(),
+    svgr(),
     babel({ presets: [reactCompilerPreset()] }),
     redact({ features: { activity: false, fragmentRefs: false } }),
     nitro({
