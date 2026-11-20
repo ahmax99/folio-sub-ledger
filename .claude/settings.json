@@ -127,6 +127,7 @@
     "context-mode@context-mode": false,
     "impeccable@impeccable": true,
     "diagram-design@diagram-design": true,
+    "logo-design@logo-design-skill": true,
     "skins@folio-mods": true,
     "savvy-progress@folio-mods": true,
     "model-switch@folio-mods": true,
@@ -138,6 +139,13 @@
   "extraKnownMarketplaces": {
     "folio-mods": {
       "source": { "source": "directory", "path": "./.claude/mods" }
+    },
+    "logo-design-skill": {
+      "source": {
+        "source": "github",
+        "repo": "kaankiziltug/logo-design-skill",
+        "ref": "e9eaddc07895575253d6663320354a708f53e955"
+      }
     }
   }
 }
