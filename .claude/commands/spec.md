@@ -27,6 +27,8 @@ If `$ARGUMENTS` is empty, abort with:
 
 A spec is only useful if it pins down ambiguity. Before writing, ask the user the smallest set of questions that resolve genuine forks — scope boundaries, who the actor is, what "done" means, edge cases, non-goals. Ask only what you can't answer from the codebase or sensible defaults. If the idea is already crisp, skip straight to writing.
 
+Read the Accepted ADRs first (`grep -l '^- Status: Accepted' docs/decisions/*.md`; see `docs/decisions/README.md`). Don't ask the user to decide again what an Accepted ADR already settles.
+
 ### 2. Generate the slug
 
 - Date: today via `date +%Y-%m-%d`
@@ -64,6 +66,7 @@ Use this template:
 ### Constraints
 
 - <Tech-stack / architecture constraints this must respect — e.g. "new schema in @shared/config", "must go through the BFF, not direct Elysia calls", "CASL-gated">
+- <Accepted ADRs this feature must follow — `docs/decisions/<file>.md`>
 
 ## Affected Areas
 
@@ -82,13 +85,16 @@ Use this template:
 ## Open Questions / Risks
 
 - <Unresolved decisions, migration risk, breaking changes>
+- **(ADR)** <An architecturally significant decision this feature forces, with the options and the user's answer if given>
 ```
 
 Keep it focused on _what_ and _why_. The _how_ (file paths, method signatures, ordered steps) belongs in `/plan`, not here.
 
+Mark each open question that is architecturally significant (the list in `docs/decisions/README.md`) with **(ADR)**. `/plan` turns those into Proposed ADRs; the spec doesn't write them. If the feature contradicts an Accepted ADR, say so under Open Questions / Risks, name the file, and mark it **(ADR)**: it needs a superseding ADR before `/implement`.
+
 ### 4. Accounting review (domain features only)
 
-If the feature touches cost basis, lots, disposals, gains, transfers, classification, reconciliation, journal entries or reports, spawn `subagent_type: "accounting-domain-expert"` with the spec path and today's date, asking for a spec review. Fold its **Acceptance criteria to add** into the spec's Acceptance Criteria and its **Policy questions** into Open Questions / Risks. If its verdict is **Not ready**, tell the user which policy decision blocks the spec before suggesting `/plan`. Skip this step for features with no accounting content.
+If the feature touches cost basis, lots, disposals, gains, transfers, classification, reconciliation, journal entries or reports, spawn `subagent_type: "accounting-domain-expert"` with the spec path and today's date, asking for a spec review. Fold its **Acceptance criteria to add** into the spec's Acceptance Criteria and its **Policy questions** into Open Questions / Risks. If its verdict is **Not ready**, tell the user which policy decision blocks the spec before suggesting `/plan`, and that they can dispatch `accounting-domain-expert` to draft it as a Proposed ADR in `docs/decisions/`. Skip this step for features with no accounting content.
 
 ### 5. Eval design (AI features only)
 

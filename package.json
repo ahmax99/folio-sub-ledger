@@ -30,14 +30,15 @@
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "lefthook": "^2.2.2",
-    "oxfmt": "^0.77.0",
-    "oxlint": "^1.92.0",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
     "turbo": "^2.11.10",
     "typescript": "^7.0.2"
   },
   "overrides": {
     "@hono/node-server": "^2.1.5",
     "deepmerge-ts": "^8.0.2",
+    "effect": "^3.22.4",
     "hono": "^4.13.14",
     "lodash": "^4.18.1",
     "mysql2": "^3.24.3"

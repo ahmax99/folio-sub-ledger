@@ -5,7 +5,7 @@ description: Design workflow for building UI in this monorepo and any app derive
 
 # App Design (project glue)
 
-This repo composes four design layers, listed here in precedence order. This
+This repo composes five design layers, listed here in precedence order. This
 skill tells you which layer owns what, so guidance never conflicts:
 
 0. **Penpot** (the `product-designer` agent, Penpot MCP) — what the screens are.
@@ -23,8 +23,14 @@ skill tells you which layer owns what, so guidance never conflicts:
 3. **shadcn skill** (`.claude/skills/shadcn`) — component correctness: which
    component to use, composition rules, semantic tokens, forms, icons. It is
    the source of truth for _how components are written_.
+4. **modern-web-guidance skill** (`.claude/skills/modern-web-guidance`,
+   Google Chrome's vendored guides) — web platform correctness where no layer
+   above decides: modern CSS, browser APIs, accessibility, performance,
+   security, dates. Rules for this layer are in
+   [Modern web guidance](#modern-web-guidance-lowest-layer) below.
 
-**Precedence when they disagree:** repo conventions > impeccable > shadcn.
+**Precedence when they disagree:** repo conventions > impeccable > shadcn >
+modern-web-guidance.
 These layers mostly govern different axes — impeccable owns how it _looks_,
 shadcn owns how components are _written_ — so genuine conflicts are rare. When
 they do collide on aesthetics, impeccable leads: if impeccable's design
@@ -33,6 +39,45 @@ impeccable. But precedence over shadcn is not a licence to hand-roll: impeccable
 never contests composition, so "use the real `Alert` and compose it, don't build
 a bespoke styled div" still holds — apply impeccable's aesthetic (type scale,
 palette restraint, anti-patterns) _on_ the correctly-composed component.
+
+## Modern web guidance (lowest layer)
+
+The skill calls itself mandatory for all HTML/CSS/JS work. In this repo it
+only fills gaps the layers above leave open. Its guides tell agents to keep
+native platform features when adapting to React, so they compete with shadcn
+on which element to render.
+
+- **Never replace a shadcn component with a native element.** If shadcn has
+  the component (installed in `src/components/` or in the registry), use it
+  even when a guide recommends `<dialog>`, `popover`, `commandfor`,
+  `interestfor`, a native `<select>` or CSS anchor positioning. Our shadcn
+  components wrap Base UI (`@base-ui/react`), which already handles focus,
+  scroll lock, dismissal and positioning.
+- **Use it for what shadcn does not decide.** Examples: CSS inside a component
+  (`field-sizing: content`, container queries, `:has()`), view transitions,
+  scroll-driven animation, Core Web Vitals, HTML sanitization, passkeys,
+  `Intl` dates and time zones. Apply it _on_ the composed component, the same
+  way impeccable's aesthetic is applied.
+- **Accessibility and security defects are the exception.** If a guide shows
+  one in a shadcn component (a missing announcement, unsanitized HTML in a
+  slot), fix it on top of the component with props, a wrapper or CSS. Never
+  ignore it, and never fix it by swapping in a native element.
+- **Its framework adaptations lose to repo conventions:**
+  - No `as any` casts for new HTML attributes; `any` is an oxlint error.
+    Augment the React types or narrow from `unknown`.
+  - No polyfills imported from a CDN at runtime, and no new polyfill
+    dependency without the usual dependency rule (`principles.md`).
+  - SSR guards follow `architecture.md`. Browser-only code uses `<ClientOnly>`
+    or `createClientOnlyFn`, not ad-hoc `typeof window` checks.
+- **Run the CLI pinned, with telemetry off.** The skill's commands use
+  `@latest`, which skips `bunfig.toml`'s 7-day `minimumReleaseAge`. Run
+  `DISABLE_TELEMETRY=1 npx -y modern-web-guidance@1.0.0 <command>` instead.
+  Bump the pin only to a version older than `minimumReleaseAge`.
+- **Do not edit the vendored files** under `.agents/skills/modern-web-guidance`.
+  Update them with `npx -y modern-web-guidance@<pinned> update`. Repo rules go
+  here, not in its `SKILL.md`.
+- Run `legacy-scan` only for a broad modernization request, never as part of
+  feature work. Review every finding against the shadcn rule above.
 
 ## Scenario 1: starting the design of a new app
 
@@ -61,6 +106,8 @@ When an app derived from this boilerplate needs its design language defined:
   in Penpot first (`product-designer`, Design mode).
 - Follow the shadcn skill's workflow first: check installed components, search
   registries before writing custom markup, compose rather than reinvent.
+- After the component is chosen, search modern-web-guidance for the platform
+  details shadcn leaves open (see the lowest layer above).
 - For anything beyond a mechanical change — a new page, section, or component
   with real design decisions — use `/impeccable craft` (build) or
   `/impeccable shape` (plan UX before code).
@@ -82,6 +129,26 @@ When an app derived from this boilerplate needs its design language defined:
   annotated on the canvas, and reports
   Blockers/High/Medium/Nitpicks. `/qa` covers code correctness; `/design-review`
   covers design quality — run both before shipping UI.
+
+## Scenario 4: brand marks (logo, favicon, app icon)
+
+The `logo-design` plugin skill owns the mark itself: brief, concepts, SVG
+construction, small-size and one-colour tests, export. The five layers above
+own everything around it. Glue rules:
+
+- Run its brief from `apps/web/PRODUCT.md`, and take colour from
+  `apps/web/DESIGN.md` tokens (Ledger ink primary), not a new palette.
+- Stop at its concept checkpoint and let the user pick a direction before
+  building the kit.
+- Keep its working files in the scratchpad. Commit only the final SVG masters
+  and exported icons.
+- The approved symbol and lockup go into the Penpot `Logo` component
+  (`product-designer`) before code. Code then renders them in
+  `src/components/molecules/Logo.tsx` as inline SVG paths that use
+  `currentColor` or semantic tokens, never raw hex. Favicon, app icons and the
+  webmanifest go in `apps/web/public/`.
+- Never copy, trace or ship a logo from its reference library. Those are other
+  companies' trademarks.
 
 ## If impeccable is not installed
 
