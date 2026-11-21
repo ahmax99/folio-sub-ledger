@@ -125,8 +125,9 @@ or resumed):
   issue or the invocation ends. The worktree persists across phases, so
   committing keeps the branch's state — not an uncommitted working-tree
   diff — the source of truth for the next phase or the eventual PR. `/plan`
-  needs no commit (it only writes to the gitignored `.claude/plans/` and
-  posts a GitHub comment).
+  writes its plan to the gitignored `.claude/plans/`, but any Proposed ADRs
+  it writes to `docs/decisions/` are tracked: commit them and `git push -u`
+  the branch, so the human can accept them on GitHub at G1.
 
 ### 1 — Discovery order
 
@@ -152,17 +153,29 @@ A `*-pending-approval` label always co-exists with `agent:approved` once a
 human clears it — read the **pair** together to know which phase to run next,
 then remove **both** labels when done.
 
-| Current label(s)                                 | Action (in the issue's own worktree)                                                                                                                                                                 | Next label                                                              |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `ready-for-agent`                                | Create the issue's worktree from `main` (step 0), record its actual branch name in `.agent-state.json`; run `/spec` from the issue title+body; commit the spec file; post it as a `gh issue comment` | `agent:spec-pending-approval`                                           |
-| `agent:spec-pending-approval` + `agent:approved` | Enter the issue's worktree (step 0); run `/plan docs/specs/<spec>.md`; post the plan as a comment; remove both labels                                                                                | `agent:plan-pending-approval`                                           |
-| `agent:plan-pending-approval` + `agent:approved` | Enter the issue's worktree (step 0); run `/implement`, then `/qa`; commit the implementation; hand off to the verifier (step 3 below); remove both labels                                            | `agent:pr-open` / `agent:qa-retry` / `agent:blocked` (verifier-decided) |
-| `agent:qa-retry`                                 | Enter the issue's worktree (step 0); `/implement "fix: <qa findings>"`; commit; re-run `/qa`; hand off to the verifier again                                                                         | same branching as above                                                 |
-| `agent:pr-open`                                  | Check `gh pr view --json state` — see PR outcome housekeeping below                                                                                                                                  | _(terminal, or worktree removed)_                                       |
+| Current label(s)                                 | Action (in the issue's own worktree)                                                                                                                                                                                                          | Next label                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `ready-for-agent`                                | Create the issue's worktree from `main` (step 0), record its actual branch name in `.agent-state.json`; run `/spec` from the issue title+body; commit the spec file; post it as a `gh issue comment`                                          | `agent:spec-pending-approval`                                           |
+| `agent:spec-pending-approval` + `agent:approved` | Enter the issue's worktree (step 0); run `/plan docs/specs/<spec>.md`; commit and push any ADRs it added; post the plan as a comment, linking each ADR (`gh browse -n -b <branch> <path>`); remove both labels                                | `agent:plan-pending-approval`                                           |
+| `agent:plan-pending-approval` + `agent:approved` | Enter the issue's worktree (step 0); `git pull --ff-only`; run the ADR check (step 2a) — stop here if it lists any file; run `/implement`, then `/qa`; commit the implementation; hand off to the verifier (step 3 below); remove both labels | `agent:pr-open` / `agent:qa-retry` / `agent:blocked` (verifier-decided) |
+| `agent:qa-retry`                                 | Enter the issue's worktree (step 0); `/implement "fix: <qa findings>"`; commit; re-run `/qa`; hand off to the verifier again                                                                                                                  | same branching as above                                                 |
+| `agent:pr-open`                                  | Check `gh pr view --json state` — see PR outcome housekeeping below                                                                                                                                                                           | _(terminal, or worktree removed)_                                       |
 
 Never advance a second gated phase for the same issue in the same
 `/run-backlog` invocation — spec→plan and plan→implement are always separated
 by a human-approval run boundary.
+
+### 2a — ADR check at G1
+
+Before `/implement`, run the ADR check from `HUMAN-GATES.md` ("ADRs at the
+plan gate"). Branch on its output only:
+
+- **empty** → G1 is cleared; continue the row above.
+- **any file listed** → comment the list on the issue, remove only
+  `agent:approved`, keep `agent:plan-pending-approval`, and move on to the
+  next issue. This does not count against the 3-issue budget.
+- **`git pull --ff-only` fails** (the branch diverged) → anomaly 4,
+  `agent:blocked`.
 
 ### 3 — The verifier handoff (critical)
 
