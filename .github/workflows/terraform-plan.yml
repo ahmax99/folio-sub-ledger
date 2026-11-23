@@ -41,6 +41,8 @@ jobs:
       TF_VAR_frontend_sentry_dsn: ${{ secrets.TF_VAR_frontend_sentry_dsn }}
       TF_VAR_central_ecr_account_id: ${{ vars.CENTRAL_ECR_ACCOUNT_ID }}
       TF_VAR_dns_account_role_arn: ${{ vars.DNS_ACCOUNT_ROLE_ARN }}
+      TF_VAR_neon_org_id: ${{ vars.NEON_ORG_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
       TF_VAR_github_org: ${{ github.repository_owner }}
       TF_VAR_github_org_id: ${{ github.repository_owner_id }}
       TF_VAR_github_repo_id: ${{ github.repository_id }}

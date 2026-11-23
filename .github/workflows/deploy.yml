@@ -110,6 +110,8 @@ jobs:
       TF_VAR_backend_sentry_dsn: ${{ secrets.TF_VAR_backend_sentry_dsn }}
       TF_VAR_frontend_sentry_dsn: ${{ secrets.TF_VAR_frontend_sentry_dsn }}
       TF_VAR_dns_account_role_arn: ${{ vars.DNS_ACCOUNT_ROLE_ARN }}
+      TF_VAR_neon_org_id: ${{ vars.NEON_ORG_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
 
     steps:
       - name: Checkout repository
@@ -420,6 +422,8 @@ jobs:
       TF_VAR_backend_sentry_dsn: ${{ secrets.TF_VAR_backend_sentry_dsn }}
       TF_VAR_frontend_sentry_dsn: ${{ secrets.TF_VAR_frontend_sentry_dsn }}
       TF_VAR_dns_account_role_arn: ${{ vars.DNS_ACCOUNT_ROLE_ARN }}
+      TF_VAR_neon_org_id: ${{ vars.NEON_ORG_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
 
     steps:
       - name: Checkout repository

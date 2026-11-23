@@ -33,6 +33,16 @@ variable "dns_account_role_arn" {
   }
 }
 
+variable "neon_org_id" {
+  description = "Neon organization that owns this environment's project (CI supplies vars.NEON_ORG_ID)"
+  type        = string
+
+  validation {
+    condition     = can(regex("^org-[a-z0-9-]+$", var.neon_org_id))
+    error_message = "neon_org_id must be a Neon organization ID (org-…)."
+  }
+}
+
 variable "database_url" {
   description = "Database connection URL (Neon PostgreSQL)"
   type        = string

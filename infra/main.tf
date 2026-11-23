@@ -132,6 +132,21 @@ module "lambda_permissions" {
 }
 
 # -------------------
+# Database (Neon)
+# -------------------
+module "database" {
+  source = "./modules/database"
+
+  project_name              = local.name_prefix
+  org_id                    = var.neon_org_id
+  region_id                 = local.neon_region_id
+  pg_version                = local.postgres_major
+  history_retention_seconds = local.env.neon_history_retention_seconds
+  database_name             = "folio"
+  database_user             = "folio_owner"
+}
+
+# -------------------
 # Cognito
 # -------------------
 module "cognito" {

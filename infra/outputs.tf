@@ -56,6 +56,14 @@ output "frontend_alias_name" {
 }
 
 # -------------------
+# Database (Neon)
+# -------------------
+output "neon_project_id" {
+  description = "ID of the environment's Neon project; destroy.yml reads it to delete the project"
+  value       = module.database.project_id
+}
+
+# -------------------
 # Cognito
 # -------------------
 output "cognito_domain" {

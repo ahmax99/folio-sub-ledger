@@ -32,3 +32,6 @@ provider "aws" {
     tags = local.common_tags
   }
 }
+
+# Reads its API key from NEON_API_KEY; CI supplies it per environment.
+provider "neon" {}

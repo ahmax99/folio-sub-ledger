@@ -50,6 +50,7 @@ locals {
       enable_alarms                     = false
       cognito_deletion_protection       = "INACTIVE"
       s3_logs_expiration_days           = 7
+      neon_history_retention_seconds    = 21600
     }
     prod = {
       log_retention_days                = 30
@@ -59,8 +60,15 @@ locals {
       enable_alarms                     = true
       cognito_deletion_protection       = "ACTIVE"
       s3_logs_expiration_days           = 90
+      neon_history_retention_seconds    = 21600
     }
   }
 
   env = local.env_config[var.environment]
+
+  # One Postgres major for Neon, CI and local tests (docs/decisions/2026-11-21-postgres-version-source-of-truth.md)
+  postgres_major = tonumber(trimspace(file("${path.root}/../.postgres-version")))
+
+  # Neon has no Tokyo region; Singapore is the nearest to aws_region
+  neon_region_id = "aws-ap-southeast-1"
 }
