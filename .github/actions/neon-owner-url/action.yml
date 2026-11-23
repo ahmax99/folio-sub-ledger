@@ -1,14 +1,10 @@
 name: 'Neon owner URL'
-description: "Finds the environment's Terraform-managed Neon project and, optionally, the folio_owner connection string. Needs NEON_API_KEY and NEON_ORG_ID in the job env."
+description: "Finds the environment's Terraform-managed Neon project and, optionally, the folio_owner connection string. Needs NEON_API_KEY and NEON_ORG_ID in the calling step's env."
 
 inputs:
   environment:
     description: 'dev or prod; the project is <repository>-<environment>'
     required: true
-  branch:
-    description: "Neon branch name or ID; empty means the project's default branch"
-    required: false
-    default: ''
   pooled:
     description: 'Return the pooled URL; migrations need the direct one'
     required: false
@@ -53,16 +49,14 @@ runs:
       shell: bash
       env:
         PROJECT_ID: ${{ steps.lookup.outputs.project_id }}
-        BRANCH: ${{ inputs.branch }}
         POOLED: ${{ inputs.pooled }}
       run: |
         set -euo pipefail
-        args=(connection-string)
-        [ -n "$BRANCH" ] && args+=("$BRANCH")
-        args+=(--project-id "$PROJECT_ID" --role-name folio_owner --database-name folio)
-        [ "$POOLED" = 'true' ] && args+=(--pooled)
-        url=$(npx --yes neon@9.5.0 "${args[@]}" --no-analytics </dev/null)
-        case "$url" in postgresql://* | postgres://*) ;; *) echo "::error::neon connection-string returned no URL"; exit 1 ;; esac
+        # The default branch's read-write endpoint.
+        url=$("$GITHUB_WORKSPACE/.github/scripts/neon-api.sh" GET \
+          "/projects/${PROJECT_ID}/connection_uri?database_name=folio&role_name=folio_owner&pooled=${POOLED}" |
+          jq -r '.uri // empty')
+        case "$url" in postgresql://* | postgres://*) ;; *) echo "::error::The Neon API returned no connection URI"; exit 1 ;; esac
         password="${url#*://*:}"
         echo "::add-mask::${password%%@*}"
         echo "::add-mask::${url}"
