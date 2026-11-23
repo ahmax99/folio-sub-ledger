@@ -50,7 +50,30 @@ If migration SQL files exist, read them and check:
 - No raw SQL that could fail on partial application
 - A rollback path exists
 
-### 4. Report
+### 4. Neon diagnostics (read-only, optional)
+
+Live table and index statistics from the dev project, to size the lock and rewrite risks above. This step never blocks the verdict: when a precondition fails, the report says `Neon diagnostics: SKIPPED — <reason>` and the rest of the report is unchanged.
+
+**Preconditions** (check each with `[ -n … ]`, never echo a value):
+
+- `NEON_API_KEY` and `NEON_ORG_ID` are set.
+- Node is at least 20.19. The CLI runs as `npx --yes neon@9.5.0 … --no-analytics`, with stdin closed (`</dev/null`) so it can never prompt. Parse stdout only: `npx` writes `npm notice` lines to stderr.
+- The dev project exists: `neon projects list --org-id "$NEON_ORG_ID" --output json` has exactly one project named `<project_name>-dev`, Terraform's `local.name_prefix` for dev. Until Terraform has created it, skip with `no Terraform-managed dev project yet`.
+
+**Target:** the PR's `preview/pr-<n>-<branch>` branch when it exists, otherwise dev's default branch. Never prod, unless the user names prod in this invocation. Never read `.env`, and never build a `--db-url` from a secret: pass `--project-id <id> --branch <b> --database-name folio --role-name folio_owner` so the CLI resolves the credential itself.
+
+**Commands** (read-only only; add `--output json` to each):
+
+| Subcommand                                              | Feeds                                           |
+| ------------------------------------------------------- | ----------------------------------------------- |
+| `table-sizes`, `index-sizes`                            | Lock and rewrite risk of each changed table     |
+| `locks`, `long-running-queries`, `stalled-queries`      | Anything that would block the migration         |
+| `bloat`, `vacuum-stats`                                 | Whether a rewrite is worth doing now            |
+| `unused-indexes`, `seq-scans` (dev default branch only) | Index changes; a fresh preview has no stats yet |
+
+A subcommand that needs a missing extension exits 1 with `ERROR: This query needs the "…" extension` (`lfc-hit-rate` needs `neon`; `outliers` and `calls` need `pg_stat_statements`, so they are left out). Report it as `unavailable (extension not installed)`, not as a failure, and never run `CREATE EXTENSION`.
+
+### 5. Report
 
 ```
 ## Migration Safety Report
@@ -65,6 +88,12 @@ If migration SQL files exist, read them and check:
 - Performance: SAFE / CAUTION
 - App compatibility: COMPATIBLE / BREAKING
 - Authz / soft-delete: SAFE / AT RISK
+
+### Neon diagnostics
+[Target: <project>/<branch>, or SKIPPED — <reason>]
+| Check | Finding | Effect on this migration |
+|-------|---------|--------------------------|
+| table-sizes | ... | ... |
 
 ### Recommendations
 - ...
