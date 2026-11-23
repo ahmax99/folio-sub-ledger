@@ -43,12 +43,6 @@ variable "neon_org_id" {
   }
 }
 
-variable "database_url" {
-  description = "Database connection URL (Neon PostgreSQL)"
-  type        = string
-  sensitive   = true
-}
-
 variable "backend_sentry_dsn" {
   description = "Sentry DSN for the backend's error tracking"
   type        = string

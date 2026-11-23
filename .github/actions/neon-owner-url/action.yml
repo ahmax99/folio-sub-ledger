@@ -8,9 +8,9 @@ inputs:
     default: 'false'
 
 outputs:
-  database_url:
+  owner_url:
     description: 'folio_owner connection string (masked); pass it to run steps only through env'
-    value: ${{ steps.url.outputs.database_url }}
+    value: ${{ steps.url.outputs.owner_url }}
 
 runs:
   using: 'composite'
@@ -31,4 +31,4 @@ runs:
         password="${url#*://*:}"
         echo "::add-mask::${password%%@*}"
         echo "::add-mask::${url}"
-        echo "database_url=${url}" >>"$GITHUB_OUTPUT"
+        echo "owner_url=${url}" >>"$GITHUB_OUTPUT"

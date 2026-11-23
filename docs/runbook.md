@@ -201,7 +201,6 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `DNS_ACCOUNT_ROLE_ARN`        | variable | _(leave unset)_                                    | org output `dns_apex_manager_role_arn`              |
 | `STATIC_ASSETS_BUCKET`        | variable | Terraform output after first apply                 | Terraform output after first apply                  |
 | `CLOUDFRONT_DISTRIBUTION_ID`  | variable | Terraform output after first apply                 | Terraform output after first apply                  |
-| `TF_VAR_database_url`         | secret   | dev Neon connection string                         | prod Neon connection string                         |
 | `TF_VAR_google_client_id`     | secret   | dev OAuth client                                   | separate prod OAuth client                          |
 | `TF_VAR_google_client_secret` | secret   | dev OAuth client                                   | prod OAuth client                                   |
 | `TF_VAR_resend_api_key`       | secret   | Resend key                                         | prod Resend key                                     |

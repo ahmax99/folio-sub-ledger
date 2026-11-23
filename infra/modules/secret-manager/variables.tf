@@ -8,12 +8,6 @@ variable "secret_description" {
   type        = string
 }
 
-variable "secret_value" {
-  description = "Value of the secret (JSON string for structured secrets)"
-  type        = string
-  sensitive   = true
-}
-
 variable "recovery_window_days" {
   description = "Number of days to retain secret after deletion"
   type        = number

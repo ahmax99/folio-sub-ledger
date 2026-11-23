@@ -22,7 +22,6 @@ github_repo_id = ""            # github.repository_id (numeric) — gh api repos
 neon_org_id = "" # org-…
 
 # Backend Environment Variables
-database_url       = "postgresql://user:password@host/database"
 backend_sentry_dsn = "https://your-backend-sentry-dsn"
 
 # Frontend Environment Variables

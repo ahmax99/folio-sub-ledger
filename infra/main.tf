@@ -316,12 +316,21 @@ module "frontend" {
 # -------------------
 # Secret Manager
 # -------------------
+# Rotation owns the secret's value; Terraform owns only the secret.
+removed {
+  from = module.database_secret.aws_secretsmanager_secret_version.this
+
+  # Forget the old version (the dead connection string) without deleting it; the first rotation overwrites it.
+  lifecycle {
+    destroy = false
+  }
+}
+
 module "database_secret" {
   source = "./modules/secret-manager"
 
   secret_name          = "${local.name_prefix}/database-url"
-  secret_description   = "Database connection URL for ${var.environment} environment"
-  secret_value         = var.database_url
+  secret_description   = "Runtime database credentials for ${var.environment} (rotated by rotate-db-credentials.yml)"
   recovery_window_days = 7
 
   tags = merge(
@@ -499,6 +508,21 @@ module "monitoring" {
 # -------------------
 # GitHub app-deploy role
 # -------------------
+module "db_rotation_role" {
+  source = "./modules/github-rotation-role"
+
+  role_name      = "${local.name_prefix}-gha-db-rotation"
+  github_subject = "${local.github_repo_ref}:environment:${var.environment}-db-rotation"
+  secret_arn     = module.database_secret.secret_arn
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-gha-db-rotation"
+    }
+  )
+}
+
 module "app_deploy_role" {
   source = "./modules/github-deploy-role"
 
