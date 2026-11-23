@@ -487,9 +487,10 @@ Two more consequences worth expecting:
   unnoticed. Re-dispatch once the variable is set, or purge by hand.
 - **Add an organization Neon key as the environment's `NEON_ORG_API_KEY`
   secret.** The environment's `NEON_API_KEY` is project-scoped and cannot
-  delete the project. The destroy job checks for the key before it touches
-  anything, so a missing key fails the run in seconds. Delete the secret and
-  revoke the key once the teardown is green.
+  delete the project. Without it, the last step ("Delete the Neon project")
+  fails after everything else is destroyed; add the key and re-dispatch, and
+  the delete finds the project by name. Delete the secret and revoke the key
+  once the teardown is green.
 - `NEON_ORG_ID` is set (repo-level variable).
 
 ### Procedure

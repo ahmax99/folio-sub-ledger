@@ -80,16 +80,6 @@ jobs:
       TF_VAR_github_repo_id: ${{ github.repository_id }}
 
     steps:
-      # A project-scoped key cannot delete its project; fail before anything is destroyed.
-      - name: Check for the Neon organization key
-        env:
-          NEON_ORG_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
-        run: |
-          if [ -z "$NEON_ORG_API_KEY" ]; then
-            echo "::error::Add an organization Neon key as this environment's NEON_ORG_API_KEY secret, then re-dispatch (docs/runbook.md, Teardown)."
-            exit 1
-          fi
-
       - name: Checkout
         uses: actions/checkout@v7
         with:
@@ -130,8 +120,8 @@ jobs:
       - name: Release the Neon project from state
         id: neon
         run: |
-          chmod +x .github/scripts/destroy-release-neon-project.sh
-          .github/scripts/destroy-release-neon-project.sh
+          chmod +x .github/scripts/destroy-neon-project.sh
+          .github/scripts/destroy-neon-project.sh release
 
       - name: Terraform destroy
         run: |
@@ -168,8 +158,8 @@ jobs:
           PROJECT_NAME: ${{ github.event.repository.name }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          chmod +x .github/scripts/destroy-delete-neon-project.sh
-          .github/scripts/destroy-delete-neon-project.sh
+          chmod +x .github/scripts/destroy-neon-project.sh
+          .github/scripts/destroy-neon-project.sh delete
 
   ecr-purge:
     name: Purge the shared ECR images

@@ -66,9 +66,5 @@ locals {
 
   env = local.env_config[var.environment]
 
-  # One Postgres major for Neon, CI and local tests (docs/decisions/2026-11-21-postgres-version-source-of-truth.md)
-  postgres_major = tonumber(trimspace(file("${path.root}/../.postgres-version")))
-
-  # Neon has no Tokyo region; Singapore is the nearest to aws_region
   neon_region_id = "aws-ap-southeast-1"
 }

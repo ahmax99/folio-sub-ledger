@@ -140,7 +140,7 @@ module "database" {
   project_name              = local.name_prefix
   org_id                    = var.neon_org_id
   region_id                 = local.neon_region_id
-  pg_version                = local.postgres_major
+  pg_version                = tonumber(trimspace(file("${path.root}/../.postgres-version")))
   history_retention_seconds = local.env.neon_history_retention_seconds
   database_name             = "folio"
   database_user             = "folio_owner"
