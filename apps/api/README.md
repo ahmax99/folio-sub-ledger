@@ -26,12 +26,20 @@ BACKEND_PORT="4000"
 FRONTEND_URL="http://localhost:3000"
 NODE_ENV="development"
 
-# Database (local development only; Lambda loads it from Secrets Manager)
-DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
+# Database (local development only; Lambda builds it from the rotated runtime secret)
+DATABASE_URL="postgresql://folio_owner:<password>@<host>/folio?sslmode=require"
 
 # Monitoring
 SENTRY_DSN="your-sentry-dsn"
 ```
+
+For `DATABASE_URL`, print the dev project's owner connection string with the [Neon CLI](https://neon.com/docs/reference/neon-cli). The project is `folio-sub-ledger-dev`; its ID is in the Neon console.
+
+```bash
+neon connection-string main --project-id <dev-project-id> --role-name folio_owner --database-name folio
+```
+
+Locally the API connects as `folio_owner`, and `db.run` still switches to `folio_app`, so row-level security applies. The deployed API never sees this password: it logs in as a rotated runtime user.
 
 ## Development
 
@@ -53,7 +61,7 @@ export TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/folio_tes
 bun run test
 ```
 
-Use the Postgres major in `.postgres-version`. The run applies the Prisma migrations to `TEST_DATABASE_URL` first and truncates every table before each test. Without the variable, or when the database name doesn't end in `_test`, it aborts before running anything. Environments that block port 5432 can rely on the `PR Checks` CI run instead.
+Use the Postgres major in `.postgres-version`. The run applies the Prisma migrations to `TEST_DATABASE_URL` first and truncates every table before each test. Like the deployed API, the app code under test logs in as the runtime user `folio_runtime_a`, which owns no table and can only become `folio_app`: `globalSetup` gives it a fixed test-only password, and `src/test/setup.ts` points the app's client at it (`runtimeDatabaseUrl`). Seeding, truncation and owner-level assertions use `ownerPrisma` (`src/test/db.ts`), which connects as the `TEST_DATABASE_URL` user. Without the variable, or when the database name doesn't end in `_test`, it aborts before running anything. Environments that block port 5432 can rely on the `PR Checks` CI run instead.
 
 `bun run test:coverage` runs the same suite with V8 coverage and writes `coverage/lcov.info`; `PR Checks` runs it on every PR.
 

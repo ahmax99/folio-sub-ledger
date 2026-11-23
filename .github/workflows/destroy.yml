@@ -151,7 +151,7 @@ jobs:
       - name: Delete the Neon project
         env:
           NEON_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
-          NEON_PROJECT_ID: ${{ steps.neon.outputs.neon_project_id }}
+          RELEASED_PROJECT_ID: ${{ steps.neon.outputs.neon_project_id }}
           NEON_ORG_ID: ${{ vars.NEON_ORG_ID }}
           PROJECT_NAME: ${{ github.event.repository.name }}
           ENVIRONMENT: ${{ inputs.environment }}

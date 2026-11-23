@@ -209,6 +209,22 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `NEON_API_KEY`                | secret   | dev project-scoped key (bootstrap: org key, D3–D5) | prod project-scoped key (bootstrap: org key, P2–P4) |
 | `NEON_ORG_API_KEY`            | secret   | _(unset; teardown only)_                           | _(unset; teardown only)_                            |
 
+### Rotation environments
+
+`rotate-db-credentials.yml` runs in its own GitHub environment per stage, so
+the only job that can assume the rotation role is one that runs there (its
+OIDC trust names exactly `…:environment:<env>-db-rotation`). Create them under
+**Settings → Environments → New environment**, with no reviewer:
+
+| Environment        | Deployment branches and tags                                    | Secret `NEON_API_KEY`   | Variable `DB_ROTATION_ROLE_ARN`    |
+| ------------------ | --------------------------------------------------------------- | ----------------------- | ---------------------------------- |
+| `dev-db-rotation`  | **Selected branches and tags** → branch `main`                  | dev project-scoped key  | dev output `db_rotation_role_arn`  |
+| `prod-db-rotation` | **Selected branches and tags** → branch `main` **and** tag `v*` | prod project-scoped key | prod output `db_rotation_role_arn` |
+
+`prod-db-rotation` needs the `v*` tag rule because `deploy.yml`'s
+`rotate-prod` runs on release tags. `NEON_ORG_ID` and `AWS_REGION` come from
+the repo-level variables. Never put an organization key here.
+
 ### Neon API keys
 
 Neon has no read-only API key. The narrowest key is **project-scoped**: Editor
@@ -292,6 +308,20 @@ There are **no** per-environment ECR variables: image URLs are derived in the
 workflows and in Terraform from `CENTRAL_ECR_ACCOUNT_ID` + the repo name, so
 they cannot drift.
 
+## Neon bring-up order
+
+Three gates thread through the dev and prod steps below. Do them in this
+order:
+
+| Gate                       | Dev             | Prod            | What you do                                                                                                                                                                           |
+| -------------------------- | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A — bootstrap key**      | D3              | P2              | Put an **organization** Neon key in the environment's `NEON_API_KEY` (Settings → Environments → `<env>` → Add environment secret)                                                     |
+| **B — project-scoped key** | D5, after D4    | P4, after P3    | Mint a project-scoped key, run the [check](#neon-api-keys), swap it in; revoke the organization key after P4                                                                          |
+| **C — rotation**           | D5, after B; D7 | P4, after B; P6 | Create `<env>-db-rotation` ([Rotation environments](#rotation-environments)); the next backend deploy's `rotate-<env>`, or a dispatch of **Rotate DB Credentials**, writes the secret |
+
+Until gate C's first rotation, the backend cannot start: the runtime secret
+has no valid value yet.
+
 ## Dev environment setup
 
 **D1 — Confirm prerequisites** (org repo applied, section above), and collect
@@ -343,6 +373,9 @@ Then swap the Neon key. D4 created the `folio-sub-ledger-dev` project, so:
 2. Set it as dev's `NEON_API_KEY`, replacing the organization key, and as the
    repo-level `NEON_API_KEY`.
 3. Keep the organization key until P4 swaps prod's; revoke it then.
+4. Create the `dev-db-rotation` environment
+   ([Rotation environments](#rotation-environments)) with the new
+   project-scoped key and `vars.DB_ROTATION_ROLE_ARN` (`db_rotation_role_arn`).
 
 **D6 — Register the Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -350,7 +383,10 @@ output) on the dev OAuth client.
 
 **D7 — Verify**: push to `main` (or dispatch `Deploy` with `scope: apps-only`,
 now that D5's app-deploy vars exist) — builds push to the central registry and
-deploy to dev. App is live at `https://<project>.dev.<root_domain>`.
+deploy to dev. `migrate-dev` builds the schema, `rotate-dev` writes the first
+runtime credential, then the backend deploys. App is live at
+`https://<project>.dev.<root_domain>`. Check the credential with
+[Database credentials → Check the expiry](#check-the-expiry).
 
 ## Prod environment setup
 
@@ -416,7 +452,9 @@ Then swap the Neon key: create a project-scoped key for
 `folio-sub-ledger-prod`, run the check in [Neon API keys](#neon-api-keys) with
 `--name folio-sub-ledger-prod`, and set it as prod's `NEON_API_KEY`. No
 environment holds the organization key any more, so **revoke it** in the Neon
-console.
+console. Then create `prod-db-rotation`
+([Rotation environments](#rotation-environments)) with the prod
+project-scoped key and prod's `db_rotation_role_arn`.
 
 **P5 — Register the prod Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -424,8 +462,9 @@ output) on the prod OAuth client.
 
 **P6 — Cut the first release**: merge the release PR / push a `v*` tag.
 `deploy.yml` builds once, then (behind the reviewer gate) applies prod
-Terraform via `apply-prod`, then (behind the reviewer gate again) deploys
-that image URI to prod — backend first, then frontend, all in the same
+Terraform via `apply-prod`, then (behind the reviewer gate again) migrates the
+schema (`migrate-prod`), writes the first runtime credential (`rotate-prod`)
+and deploys that image URI to prod — backend first, then frontend, all in the same
 workflow run. Dev is untouched by the release; it already runs the tagged
 commit from the branch push that carried it. App is live at
 `https://<project>.<root_domain>`.
@@ -433,8 +472,9 @@ commit from the branch push that carried it. App is live at
 ## Steady state (after bring-up)
 
 ```
-push to main            → build → deploy dev
-merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: deploy backend → frontend] → prod live
+push to main            → build → migrate → rotate → deploy dev
+merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: migrate → rotate → deploy backend → frontend] → prod live
+daily 03:17 UTC         → rotate-db-credentials.yml rotates dev and prod
 ```
 
 No manual variable wrangling — every value used after bring-up is either a
@@ -442,6 +482,64 @@ stable org/Terraform output already captured, or a secret set once during
 setup. Steady-state Terraform changes flow through PRs: a PR touching
 `infra/**` gets a dev plan comment; merge applies dev; a `v*` tag
 applies prod behind the reviewer gate.
+
+## Database credentials
+
+The API logs in as one of two runtime users, `folio_runtime_a` and
+`folio_runtime_b`. The runtime secret (`<project>-<env>/database-url`) names
+the `active` one and holds both passwords. Each rotation gives the **inactive**
+user a new password valid for 14 days and makes it active; the other user
+keeps its password, so running Lambdas keep working. The daily schedule
+rotates each user every second day. Design:
+[`decisions/2026-11-21-rotated-runtime-database-credentials.md`](decisions/2026-11-21-rotated-runtime-database-credentials.md).
+
+### Rotate now
+
+**Actions → Rotate DB Credentials → Run workflow**, pick the environment. Use
+it after a suspected leak of the secret, or to test. Dispatch **twice** to
+replace both passwords: the first run rotates one user, the second the other.
+
+### Check the expiry
+
+In the Neon console, open the project → **SQL Editor**, database `folio`:
+
+```sql
+SELECT rolname, rolvaliduntil FROM pg_roles WHERE rolname LIKE 'folio_runtime_%';
+```
+
+Both rows should show a time in the future, the newer one about 14 days out.
+
+### An expired credential
+
+If no rotation ran for 14 days, both passwords have expired and every new
+Lambda connection fails with `password authentication failed`. Dispatch the
+rotation **twice** (above): the first run makes one user valid and active, the
+second makes the other valid too, so Lambdas pinned to either user reconnect
+within 5 minutes without a redeploy.
+
+### A lost schedule
+
+GitHub disables scheduled workflows in a repository with no activity for 60
+days. If **Actions → Rotate DB Credentials** shows "This scheduled workflow is
+disabled", select **Enable workflow**, then dispatch once per environment and
+[check the expiry](#check-the-expiry). A failed run in the log needs a
+re-dispatch as soon as the cause is fixed: if it failed after `ALTER ROLE` but
+before writing the secret, Lambdas pinned to that user cannot open new
+connections until a run writes its new password.
+
+## Changing the Postgres major
+
+`pg_version` forces a new Neon project, and `prevent_destroy` blocks Terraform
+from replacing it. A major upgrade therefore **replaces the project through
+`destroy.yml`** and loses its data. For prod, take a `pg_dump` first and plan
+the restore.
+
+1. In one PR, change `.postgres-version`, the `postgres` image digest in
+   `pr-checks.yml`, and the `docker run` image in `apps/api/README.md`.
+2. Tear the environment down ([Teardown](#teardown)), dev first.
+3. Merge the PR, then bring the environment up again with gates A to C
+   ([Neon bring-up order](#neon-bring-up-order)): the new project gets the new
+   major, and the deploy migrates and rotates it.
 
 ## Teardown
 
@@ -452,8 +550,9 @@ Manager name reservation, and Lambda@Edge replicas. Afterwards a fresh
 `terraform apply` succeeds with no manual cleanup.
 
 **The Neon project is deleted.** Its `prevent_destroy` would fail a plain
-destroy, so the workflow first removes `module.database` from state, destroys
-everything else, then deletes the project with the Neon CLI. Every branch
+destroy, so the workflow first removes `module.database` from state
+(`destroy-neon-project.sh release`), destroys everything else, then deletes the
+project with the Neon CLI (`destroy-neon-project.sh delete`). Every branch
 goes with it, the `preview/pr-*` ones included. The next apply creates a fresh
 project, and `deploy.yml`'s `migrate-dev`/`migrate-prod` jobs (see
 [`deployment-environments.md`](deployment-environments.md#rollback)) rebuild
@@ -543,4 +642,6 @@ state, which is exactly what makes the next `terraform apply` clean.
 The environment's project-scoped `NEON_API_KEY` does **not** survive: it dies
 with its project. Before the next apply, put an organization key in that
 environment's `NEON_API_KEY` (and, for dev, remove the repo-level one), then
-swap in a new project-scoped key afterwards, exactly as in D5 / P4.
+swap in a new project-scoped key afterwards, exactly as in D5 / P4, and put
+it in `<env>-db-rotation` too. Until then the daily rotation fails for that
+environment ("found 0" Neon projects); that changes nothing.

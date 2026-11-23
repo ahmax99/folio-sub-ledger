@@ -29,7 +29,7 @@ delete() {
   name="${PROJECT_NAME}-${ENVIRONMENT}"
 
   # A re-dispatch after a failed run has no ID from state, so fall back to the Terraform-derived name.
-  project_id="${NEON_PROJECT_ID:-}"
+  project_id="${RELEASED_PROJECT_ID:-}"
   if [ -n "$project_id" ]; then
     matches=$("$scripts/neon-find-project.sh" --id "$project_id")
   else
