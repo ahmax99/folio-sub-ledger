@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { DATABASE_PASSWORD_TTL_MS } from '@/constants/index.js'
+
 const { send, setDatabasePasswordProvider } = vi.hoisted(() => ({
   send: vi.fn(),
   setDatabasePasswordProvider: vi.fn()
@@ -88,7 +90,7 @@ describe('loadSecrets', () => {
       })
     )
 
-    vi.advanceTimersByTime(5 * 60_000 + 1)
+    vi.advanceTimersByTime(DATABASE_PASSWORD_TTL_MS + 1)
 
     expect(await provider()).toBe('pass-a-2')
     expect(send).toHaveBeenCalledTimes(2)
@@ -104,7 +106,7 @@ describe('loadSecrets', () => {
       })
     )
 
-    vi.advanceTimersByTime(5 * 60_000 + 1)
+    vi.advanceTimersByTime(DATABASE_PASSWORD_TTL_MS + 1)
 
     expect(await provider()).toBe('pass-a-1')
     expect(process.env.DATABASE_URL).toContain('folio_runtime_a@')
@@ -115,7 +117,7 @@ describe('loadSecrets', () => {
     const provider = await loadSecrets()
     send.mockRejectedValueOnce(new Error('ThrottlingException'))
 
-    vi.advanceTimersByTime(5 * 60_000 + 1)
+    vi.advanceTimersByTime(DATABASE_PASSWORD_TTL_MS + 1)
 
     expect(await provider()).toBe('pass-a-1')
     send.mockResolvedValueOnce(

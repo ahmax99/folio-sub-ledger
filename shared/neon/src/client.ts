@@ -20,10 +20,6 @@ let passwordProvider: (() => Promise<string>) | undefined
 export const setDatabasePasswordProvider = (
   provider: () => Promise<string>
 ) => {
-  if (globalForPrisma.prisma)
-    throw new Error(
-      'The database client already exists. Set the password provider before the first query.'
-    )
   passwordProvider = provider
 }
 
