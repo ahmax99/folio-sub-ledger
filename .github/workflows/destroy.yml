@@ -80,6 +80,16 @@ jobs:
       TF_VAR_github_repo_id: ${{ github.repository_id }}
 
     steps:
+      # A project-scoped key cannot delete its project; fail before anything is destroyed.
+      - name: Check for the Neon organization key
+        env:
+          NEON_ORG_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
+        run: |
+          if [ -z "$NEON_ORG_API_KEY" ]; then
+            echo "::error::Add an organization Neon key as this environment's NEON_ORG_API_KEY secret, then re-dispatch (docs/runbook.md, Teardown)."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v7
         with:
@@ -152,6 +162,7 @@ jobs:
 
       - name: Delete the Neon project
         env:
+          NEON_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
           NEON_PROJECT_ID: ${{ steps.neon.outputs.neon_project_id }}
           NEON_ORG_ID: ${{ vars.NEON_ORG_ID }}
           PROJECT_NAME: ${{ github.event.repository.name }}
