@@ -1,17 +1,31 @@
-import { neonConfig } from '@neondatabase/serverless'
+import { neonConfig, parseIntoClientConfig } from '@neondatabase/serverless'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { WebSocket } from 'ws'
 
 import { PrismaClient } from '../prisma/generated/client.js'
 
 neonConfig.webSocketConstructor = WebSocket
-neonConfig.poolQueryViaFetch = true
+// Over HTTP fetch, pool queries fail to authenticate with a password function; WebSocket calls it per connection.
+neonConfig.poolQueryViaFetch = false
 
 declare global {
   var prisma: PrismaClient | undefined
 }
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
+
+let passwordProvider: (() => Promise<string>) | undefined
+
+// Supplies the password for each new connection, so a rotated credential needs no restart. Call before the first query.
+export const setDatabasePasswordProvider = (
+  provider: () => Promise<string>
+) => {
+  if (globalForPrisma.prisma)
+    throw new Error(
+      'The database client already exists. Set the password provider before the first query.'
+    )
+  passwordProvider = provider
+}
 
 const createPrismaClient = () => {
   const DATABASE_URL = process.env.DATABASE_URL
@@ -20,7 +34,11 @@ const createPrismaClient = () => {
       'DATABASE_URL is required. Ensure secrets are loaded before accessing the database.'
     )
 
-  const adapter = new PrismaNeon({ connectionString: DATABASE_URL })
+  const adapter = new PrismaNeon(
+    passwordProvider
+      ? { ...parseIntoClientConfig(DATABASE_URL), password: passwordProvider }
+      : { connectionString: DATABASE_URL }
+  )
   return new PrismaClient({ adapter })
 }
 
