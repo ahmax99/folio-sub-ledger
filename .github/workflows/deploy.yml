@@ -180,6 +180,18 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
 
+  # Rotates after the migration that may create the runtime users, and before the backend that logs in as one.
+  rotate-dev:
+    name: Rotate DB Credentials → Dev
+    needs: migrate-dev
+    if: ${{ !cancelled() && needs.migrate-dev.result == 'success' }}
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/rotate-db-credentials.yml
+    with:
+      environment: dev
+
   # ── Build jobs — push once into the central (shared-services) registry ─────
   build-backend:
     name: Build Backend Image
@@ -280,14 +292,15 @@ jobs:
   # ── Dev deploy jobs ────────────────────────────────────────────────────────
   deploy-dev-backend:
     name: Deploy Backend → Dev
-    needs: [detect, build-backend, apply-dev, migrate-dev]
+    needs: [detect, build-backend, apply-dev, migrate-dev, rotate-dev]
     if: |
       !cancelled() &&
       github.ref_type == 'branch' &&
       needs.detect.outputs.backend == 'true' &&
       needs.build-backend.result == 'success' &&
       (needs.apply-dev.result == 'success' || needs.apply-dev.result == 'skipped') &&
-      (needs.migrate-dev.result == 'success' || needs.migrate-dev.result == 'skipped')
+      (needs.migrate-dev.result == 'success' || needs.migrate-dev.result == 'skipped') &&
+      (needs.rotate-dev.result == 'success' || needs.rotate-dev.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: dev
@@ -500,10 +513,29 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
 
+  rotate-prod:
+    name: Rotate DB Credentials → Prod
+    needs: migrate-prod
+    if: ${{ !cancelled() && needs.migrate-prod.result == 'success' }}
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/rotate-db-credentials.yml
+    with:
+      environment: prod
+
   # ── Prod deploy jobs ───────────────────────────────────────────────────────
   deploy-prod-backend:
     name: Deploy Backend → Prod
-    needs: [detect, build-backend, apply-prod, verify-dev-healthy, migrate-prod]
+    needs:
+      [
+        detect,
+        build-backend,
+        apply-prod,
+        verify-dev-healthy,
+        migrate-prod,
+        rotate-prod
+      ]
     if: |
       !cancelled() &&
       github.ref_type == 'tag' && startsWith(github.ref_name, 'v') &&
@@ -513,7 +545,8 @@ jobs:
       (needs.apply-prod.result == 'success' ||
        (github.event_name == 'workflow_dispatch' && needs.apply-prod.result == 'skipped')) &&
       (needs.migrate-prod.result == 'success' ||
-       (github.event_name == 'workflow_dispatch' && needs.migrate-prod.result == 'skipped'))
+       (github.event_name == 'workflow_dispatch' && needs.migrate-prod.result == 'skipped')) &&
+      (needs.rotate-prod.result == 'success' || needs.rotate-prod.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: prod
