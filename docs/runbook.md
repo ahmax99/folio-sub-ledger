@@ -435,8 +435,15 @@ Two more consequences worth expecting:
 2. Approve the `prod` environment gate when prompted (prod only).
 3. Expect **30–90 minutes**. Most of it is CloudFront disabling-then-deleting and
    Lambda@Edge replicas releasing their functions.
-4. The run is green only if the final **Assert the state is empty** step passes;
-   it fails the job if anything survives in state.
+4. The run is green only if **Assert the state is empty** and **Delete the Neon
+   project** both pass. The assert fails the job if anything survives in state.
+
+**A failed run after "Release the Neon project" leaves the project outside
+Terraform.** It keeps running and billing until a re-dispatch deletes it. The
+re-dispatch finds no project in state, so it looks the project up by name
+(`<repository>-<environment>`) and deletes that. Re-dispatch every failed
+teardown, even one you plan to abandon, or delete the project in the Neon
+console.
 
 ### When the retry loop exhausts
 
