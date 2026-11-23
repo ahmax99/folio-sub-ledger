@@ -110,6 +110,24 @@ describe('loadSecrets', () => {
     expect(process.env.DATABASE_URL).toContain('folio_runtime_a@')
   })
 
+  it('keeps the cached password when a refresh fails after the TTL, and retries on the next connection', async () => {
+    send.mockResolvedValueOnce(secret('folio_runtime_a'))
+    const provider = await loadSecrets()
+    send.mockRejectedValueOnce(new Error('ThrottlingException'))
+
+    vi.advanceTimersByTime(5 * 60_000 + 1)
+
+    expect(await provider()).toBe('pass-a-1')
+    send.mockResolvedValueOnce(
+      secret('folio_runtime_a', {
+        folio_runtime_a: 'pass-a-2',
+        folio_runtime_b: 'pass-b-1'
+      })
+    )
+    expect(await provider()).toBe('pass-a-2')
+    expect(send).toHaveBeenCalledTimes(3)
+  })
+
   it.each([
     [
       'a plain connection string',

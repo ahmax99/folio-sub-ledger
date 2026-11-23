@@ -6,6 +6,8 @@ import { setDatabasePasswordProvider } from '@shared/neon'
 import { Result } from 'neverthrow'
 import { z } from 'zod'
 
+import { catchAsyncError } from '@/error/utils/catchError.js'
+
 // Rotation alternates two runtime users; see docs/decisions/2026-11-21-rotated-runtime-database-credentials.md.
 const runtimeDatabaseSecret = z.object({
   host: z.string().min(1),
@@ -41,9 +43,17 @@ const fetchSecretValue = async (secretName: string) => {
 let cached: { secret: RuntimeDatabaseSecret; readAt: number } | undefined
 
 const readRuntimeSecret = async (secretName: string) => {
-  if (cached && Date.now() - cached.readAt < PASSWORD_TTL_MS)
-    return cached.secret
+  if (!cached) return refreshRuntimeSecret(secretName)
+  if (Date.now() - cached.readAt < PASSWORD_TTL_MS) return cached.secret
 
+  // The cached password stays valid until the next rotation, so a failed refresh (reported to Sentry) must not fail the connection.
+  const stale = cached.secret
+  return (await catchAsyncError(refreshRuntimeSecret(secretName))).unwrapOr(
+    stale
+  )
+}
+
+const refreshRuntimeSecret = async (secretName: string) => {
   const raw = await fetchSecretValue(secretName)
   const parsed = runtimeDatabaseSecret.safeParse(
     Result.fromThrowable(JSON.parse)(raw).unwrapOr(undefined)
