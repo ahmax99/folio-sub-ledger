@@ -15,7 +15,6 @@ We will run Postgres **19** on the new Neon projects, in CI and in local tests. 
 
 - Terraform passes `tonumber(trimspace(file("${path.root}/../.postgres-version")))` as `module.database`'s `pg_version`.
 - `pr-checks.yml` uses `postgres:19-alpine`, pinned by digest. The `docker run` in `apps/api/README.md` uses `postgres:19-alpine`.
-- `apps/api/src/test/__tests__/postgres-version.test.ts` fails when the server it runs against reports a major other than `.postgres-version`.
 
 Only the major version is pinned. Neon applies minor releases itself, and the image digest is refreshed with normal dependency updates.
 
@@ -38,13 +37,12 @@ The spike's throwaway projects (`folio-spike-throwaway`, `folio-spike-g1`, and S
 
 ## Consequences
 
-- Easier: one file to change, and the tests catch drift in CI and on developer machines. The product never needs a 18 → 19 replacement.
-- Harder: we adopt a brand-new major (GA 2026-11-19). Neon's 19 build, Prisma's compatibility and the image are all new. The spike and the test suite are the safety net. No live prod needs protecting, so there is no extra soak period.
+- Easier: one file to change. The product never needs a 18 → 19 replacement.
+- Harder: we adopt a brand-new major (GA 2026-11-19). Neon's 19 build, Prisma's compatibility and the image are all new. The spike and the test suite are the safety net; nothing checks the CI image's major against `.postgres-version` automatically, so the review of a `.postgres-version` change must also update `pr-checks.yml` and the README. No live prod needs protecting, so there is no extra soak period.
 - Moving past 19 later replaces the Neon project (`pg_version` forces replacement, and `prevent_destroy` blocks it). That move is a planned dump/restore or a new project, never a one-line bump.
 
 ## Compliance
 
-- `apps/api/src/test/__tests__/postgres-version.test.ts`.
 - `grep -rn 'postgres:1[0-9]' .github apps/*/README.md` shows only the major in `.postgres-version`.
 - Spike G1, G5 and G6 results recorded in this ADR's verification table before acceptance.
 
