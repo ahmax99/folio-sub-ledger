@@ -23,6 +23,12 @@ const owner = member(1, {
   role: 'OWNER'
 })
 
+// The count's number and word are separate spans, so match the paragraph's whole text.
+const countText = (text: string) =>
+  screen.getByText(
+    (_, element) => element?.tagName === 'P' && element.textContent === text
+  )
+
 const rows = () => screen.getAllByRole('row').slice(1)
 
 const rowAt = (index: number) => {
@@ -37,7 +43,7 @@ describe('MemberList', () => {
       <MemberList currentUserId={owner.id} members={[owner]} />
     )
     expect(screen.getByRole('heading', { name: 'Members' })).toBeDefined()
-    expect(screen.getByText('1 member')).toBeDefined()
+    expect(countText('1 member')).toBeDefined()
     unmount()
 
     await renderWithProviders(
@@ -46,7 +52,7 @@ describe('MemberList', () => {
         members={[owner, ...[2, 3, 4, 5, 6].map((index) => member(index))]}
       />
     )
-    expect(screen.getByText('6 members')).toBeDefined()
+    expect(countText('6 members')).toBeDefined()
   })
 
   it('renders a table with column headers Member, Email and Role as th scope=col', async () => {
@@ -160,7 +166,7 @@ describe('MemberList', () => {
     expect(screen.getAllByRole('columnheader')).toHaveLength(3)
     expect(rows()).toHaveLength(1)
     expect(within(rowAt(0)).getByText('You')).toBeDefined()
-    expect(screen.getByText('1 member')).toBeDefined()
+    expect(countText('1 member')).toBeDefined()
     expect(screen.queryByText(/no members/i)).toBeNull()
   })
 })
