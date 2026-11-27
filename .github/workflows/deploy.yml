@@ -169,10 +169,17 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Get the owner URL from Neon
+        id: owner
+        uses: ./.github/actions/neon-owner-url
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+
       - name: Deploy pending migrations
         run: bunx --bun turbo run db:deploy --filter=@shared/neon
         env:
-          DATABASE_URL: ${{ secrets.TF_VAR_database_url }}
+          DATABASE_URL: ${{ steps.owner.outputs.database_url }}
 
   # ── Build jobs — push once into the central (shared-services) registry ─────
   build-backend:
@@ -483,10 +490,17 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Get the owner URL from Neon
+        id: owner
+        uses: ./.github/actions/neon-owner-url
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+
       - name: Deploy pending migrations
         run: bunx --bun turbo run db:deploy --filter=@shared/neon
         env:
-          DATABASE_URL: ${{ secrets.TF_VAR_database_url }}
+          DATABASE_URL: ${{ steps.owner.outputs.database_url }}
 
   # ── Prod deploy jobs ───────────────────────────────────────────────────────
   deploy-prod-backend:
