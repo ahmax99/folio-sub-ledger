@@ -90,14 +90,6 @@ output "static_assets_bucket_name" {
 }
 
 # -------------------
-# Database rotation role
-# -------------------
-output "db_rotation_role_arn" {
-  description = "ARN of the role rotate-db-credentials.yml assumes; set it as DB_ROTATION_ROLE_ARN in the <env>-db-rotation environment"
-  value       = module.db_rotation_role.role_arn
-}
-
-# -------------------
 # App deploy role
 # -------------------
 output "app_deploy_role_arn" {

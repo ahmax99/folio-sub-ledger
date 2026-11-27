@@ -320,7 +320,7 @@ module "database_secret" {
   source = "./modules/secret-manager"
 
   secret_name          = "${local.name_prefix}/database-url"
-  secret_description   = "Runtime database credentials for ${var.environment} (rotated by rotate-db-credentials.yml)"
+  secret_description   = "Runtime database credentials for ${var.environment} (written once by deploy.yml)"
   recovery_window_days = 7
 
   tags = merge(
@@ -496,35 +496,6 @@ module "monitoring" {
 }
 
 # -------------------
-# Database rotation role
-# -------------------
-module "db_rotation_role" {
-  source = "./modules/github-oidc-role"
-
-  role_name      = "${local.name_prefix}-gha-db-rotation"
-  github_subject = "${local.github_repo_ref}:environment:${var.environment}-db-rotation"
-
-  policy_statements = [
-    {
-      sid = "RotateDatabaseSecret"
-      actions = [
-        "secretsmanager:DescribeSecret",
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:PutSecretValue",
-      ]
-      resources = [module.database_secret.secret_arn]
-    },
-  ]
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.name_prefix}-gha-db-rotation"
-    }
-  )
-}
-
-# -------------------
 # GitHub app-deploy role
 # -------------------
 module "app_deploy_role" {
@@ -597,6 +568,16 @@ module "app_deploy_role" {
       sid       = "CloudFrontInvalidate"
       actions   = ["cloudfront:CreateInvalidation"]
       resources = [local.cloudfront_distribution_arn]
+    },
+    {
+      # The migrate job writes the runtime credential on a new project, then only reads it.
+      sid = "RuntimeDatabaseSecret"
+      actions = [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:PutSecretValue",
+      ]
+      resources = [module.database_secret.secret_arn]
     },
   ]
 
