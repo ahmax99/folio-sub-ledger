@@ -209,6 +209,21 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `NEON_PROJECT_ID`             | variable | Terraform output `neon_project_id` (D5)            | Terraform output `neon_project_id` (P4)             |
 | `NEON_ORG_API_KEY`            | secret   | _(unset; teardown only)_                           | _(unset; teardown only)_                            |
 
+### Preview environment
+
+`neon-workflow.yml`'s preview-branch jobs run PR-head code, so they run in
+their own environment, `dev-preview`, not in `dev`. They then see none of
+dev's other secrets, and their OIDC claim (`environment:dev-preview`) matches
+no AWS role. Create it under **Settings → Environments → New environment**,
+with no reviewer and no branch rule:
+
+| Name              | Type     | Value                                    |
+| ----------------- | -------- | ---------------------------------------- |
+| `NEON_API_KEY`    | secret   | the dev project-scoped key (same as dev) |
+| `NEON_PROJECT_ID` | variable | dev's Terraform output `neon_project_id` |
+
+Put nothing else in it.
+
 ### Neon API keys
 
 Neon has no read-only API key. The narrowest key is **project-scoped**: Editor
@@ -361,7 +376,9 @@ Then swap the Neon key. D4 created the `folio-sub-ledger-dev` project, so:
    dev's `vars.NEON_PROJECT_ID` to `neon_project_id`. Delete the old
    repo-level `NEON_PROJECT_ID` variable if it still exists: an environment
    without its own value would fall back to it.
-3. Keep the organization key until P4 swaps prod's; revoke it then.
+3. Set the same key and project ID in `dev-preview`
+   ([Preview environment](#preview-environment)).
+4. Keep the organization key until P4 swaps prod's; revoke it then.
 
 **D6 — Register the Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -572,12 +589,13 @@ Two more consequences worth expecting:
 4. The run is green only if **Assert the state is empty** and **Delete the Neon
    project** both pass. The assert fails the job if anything survives in state.
 
-**A failed run after "Release the Neon project" leaves the project outside
-Terraform.** It keeps running and billing until a re-dispatch deletes it. The
-re-dispatch finds no project in state, so it looks the project up by name
-(`<repository>-<environment>`) and deletes that. Re-dispatch every failed
-teardown, even one you plan to abandon, or delete the project in the Neon
-console.
+**A failed run after "Release the Neon project" puts the project back in
+Terraform state** ("Put the Neon project back in state"), so a later apply
+can't create a second one. The project keeps running and billing: re-dispatch
+to finish the teardown. If that step failed too, the re-dispatch finds no
+project in state, looks it up by name (`<repository>-<environment>`) and
+deletes it. Re-dispatch every failed teardown, even one you plan to abandon,
+or delete the project in the Neon console.
 
 ### When the retry loop exhausts
 
@@ -607,3 +625,4 @@ The environment's project-scoped `NEON_API_KEY` and `NEON_PROJECT_ID` do
 **not** survive: they die with the project. Before the next apply, put an
 organization key in that environment's `NEON_API_KEY`. Afterwards, swap in a
 new project-scoped key and the new `neon_project_id`, exactly as in D5 / P4.
+For dev, update `dev-preview` too.

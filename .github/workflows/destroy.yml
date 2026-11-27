@@ -149,6 +149,7 @@ jobs:
           echo "State is empty — every managed resource is destroyed."
 
       - name: Delete the Neon project
+        id: delete_neon
         env:
           NEON_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
           RELEASED_PROJECT_ID: ${{ steps.neon.outputs.neon_project_id }}
@@ -158,6 +159,18 @@ jobs:
         run: |
           chmod +x .github/scripts/destroy-neon-project.sh
           .github/scripts/destroy-neon-project.sh delete
+
+      # A run that failed after the release must not leave the project outside state: a later apply would create a second one.
+      - name: Put the Neon project back in state
+        if: failure() && steps.neon.outputs.neon_project_id != '' && steps.delete_neon.outcome != 'success'
+        env:
+          # The import's provider and the lookup both use the organization key; the project may be half torn down.
+          NEON_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
+          RELEASED_PROJECT_ID: ${{ steps.neon.outputs.neon_project_id }}
+          NEON_ORG_ID: ${{ vars.NEON_ORG_ID }}
+        run: |
+          chmod +x .github/scripts/destroy-neon-project.sh
+          .github/scripts/destroy-neon-project.sh restore
 
   ecr-purge:
     name: Purge the shared ECR images

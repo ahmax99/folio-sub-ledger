@@ -37,8 +37,9 @@ locals {
   app_lambda_function_arns = [module.backend.function_arn, module.frontend.function_arn]
 
   # OIDC subjects the GitHub roles trust
-  github_repo_ref       = "repo:${var.github_org}@${var.github_org_id}/${var.project_name}@${var.github_repo_id}"
-  github_deploy_subject = var.environment == "prod" ? "${local.github_repo_ref}:environment:prod" : "${local.github_repo_ref}:*"
+  github_repo_ref = "repo:${var.github_org}@${var.github_org_id}/${var.project_name}@${var.github_repo_id}"
+  # Only jobs in the environment's GitHub environment; the PR preview jobs run in dev-preview, so they get a different claim.
+  github_deploy_subject = "${local.github_repo_ref}:environment:${var.environment}"
 
   # Maintenance switch
   provisioned_concurrent_executions = var.maintenance_mode ? 0 : local.env.provisioned_concurrent_executions
@@ -53,7 +54,6 @@ locals {
       enable_alarms                     = false
       cognito_deletion_protection       = "INACTIVE"
       s3_logs_expiration_days           = 7
-      neon_history_retention_seconds    = 21600
     }
     prod = {
       log_retention_days                = 30
@@ -63,11 +63,14 @@ locals {
       enable_alarms                     = true
       cognito_deletion_protection       = "ACTIVE"
       s3_logs_expiration_days           = 90
-      neon_history_retention_seconds    = 21600
     }
   }
 
   env = local.env_config[var.environment]
 
-  neon_region_id = "aws-ap-southeast-1"
+  # Neon settings that are the same in every environment
+  neon_region_id                 = "aws-ap-southeast-1"
+  neon_history_retention_seconds = 21600
+  database_name                  = "folio"
+  database_owner                 = "folio_owner"
 }

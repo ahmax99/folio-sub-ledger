@@ -17,7 +17,7 @@ We will write the runtime credential once per Neon project and not rotate it. `d
 
 - Easier: no schedule that GitHub can disable, no rotation role, no extra GitHub environments, and no outage when rotation stops.
 - Harder: a leaked runtime password works until someone replaces it. The runbook's "Replace the credential" step does that: make the secret invalid, then deploy.
-- In dev, the app-deploy role trusts any ref of the repository, so a PR's workflow could read dev's runtime passwords. Dev holds no client data. Prod's role trusts only the `prod` environment.
+- Each app-deploy role trusts only its GitHub environment (`environment:dev`, `environment:prod`). The PR preview jobs run in `dev-preview`, so they can't assume it. `terraform-plan.yml`'s PR job still runs in `dev`, so a same-repo PR that touches `infra/**` could read dev's runtime passwords. Dev holds no client data.
 - Two runtime users remain although only `folio_runtime_a` is active. Removing one needs an API and migration change, which this decision does not make.
 
 ## Compliance

@@ -1,0 +1,69 @@
+name: 'Neon migrate'
+description: "Deploys pending Prisma migrations to the environment's Neon project, then sets up the API's runtime credential. Needs id-token: write."
+
+inputs:
+  environment:
+    description: 'dev or prod; picks the runtime secret <repository>-<environment>/database-url'
+    required: true
+  neon-api-key:
+    description: "The environment's project-scoped Neon API key"
+    required: true
+  neon-project-id:
+    description: "The environment's Neon project ID (Terraform output neon_project_id)"
+    required: true
+  role-to-assume:
+    description: 'The app-deploy role, which can read and write the runtime secret'
+    required: true
+  aws-region:
+    description: 'AWS region of the runtime secret'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      with:
+        bun-version-file: .bun-version
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Get the owner URL from Neon
+      id: owner
+      uses: ./.github/actions/neon-owner-url
+      env:
+        NEON_API_KEY: ${{ inputs.neon-api-key }}
+        NEON_PROJECT_ID: ${{ inputs.neon-project-id }}
+
+    - name: Deploy pending migrations
+      shell: bash
+      run: bunx --bun turbo run db:deploy --filter=@shared/neon
+      env:
+        DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
+
+    # Runs after the migration that may create the runtime users, and before the backend that logs in as one.
+    - name: Get the pooled owner URL from Neon
+      id: pooled
+      uses: ./.github/actions/neon-owner-url
+      with:
+        pooled: 'true'
+      env:
+        NEON_API_KEY: ${{ inputs.neon-api-key }}
+        NEON_PROJECT_ID: ${{ inputs.neon-project-id }}
+
+    - name: Configure AWS credentials (app-deploy role)
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ inputs.role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+        role-session-name: SetUpDbCredential
+
+    # Writes the runtime credential on a new project; after that only checks that it logs in.
+    - name: Set up the runtime credential
+      shell: bash
+      run: '"$GITHUB_WORKSPACE/.github/scripts/set-up-runtime-credential.sh"'
+      env:
+        OWNER_URL: ${{ steps.pooled.outputs.owner_url }}
+        SECRET_ID: ${{ github.event.repository.name }}-${{ inputs.environment }}/database-url
