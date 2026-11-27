@@ -81,22 +81,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # Preview branches live in the Terraform-managed dev project.
-      - name: Find the dev Neon project
-        id: project
-        uses: ./.github/actions/neon-owner-url
-        with:
-          environment: dev
-          url: 'false'
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_ORG_ID: ${{ vars.NEON_ORG_ID }}
-
       - name: Create Neon Branch
         id: create_neon_branch
         uses: neondatabase/create-branch-action@72ed4f69a12b6be9c16aebfad893f6a21e9aba8b # v6.4.0
         with:
-          project_id: ${{ steps.project.outputs.project_id }}
+          project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
           database: folio
           role: folio_owner
@@ -120,7 +109,7 @@ jobs:
       - name: Post Schema Diff Comment to PR
         uses: neondatabase/schema-diff-action@80cfa8521628e890015b60f5291a7738926617dc # v1.0.1
         with:
-          project_id: ${{ steps.project.outputs.project_id }}
+          project_id: ${{ vars.NEON_PROJECT_ID }}
           compare_branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
           database: folio
           api_key: ${{ secrets.NEON_API_KEY }}
@@ -139,19 +128,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Find the dev Neon project
-        id: project
-        uses: ./.github/actions/neon-owner-url
-        with:
-          environment: dev
-          url: 'false'
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_ORG_ID: ${{ vars.NEON_ORG_ID }}
-
       - name: Delete Neon Branch
         uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776 # v3.2.1
         with:
-          project_id: ${{ steps.project.outputs.project_id }}
+          project_id: ${{ vars.NEON_PROJECT_ID }}
           branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
           api_key: ${{ secrets.NEON_API_KEY }}

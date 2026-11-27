@@ -1,23 +1,13 @@
 name: 'Neon owner URL'
-description: "Finds the environment's Terraform-managed Neon project and, optionally, the folio_owner connection string. Needs NEON_API_KEY and NEON_ORG_ID in the calling step's env."
+description: "Gets the folio_owner connection string of the environment's Neon project. Needs NEON_API_KEY and NEON_PROJECT_ID in the calling step's env."
 
 inputs:
-  environment:
-    description: 'dev or prod; the project is <repository>-<environment>'
-    required: true
   pooled:
     description: 'Return the pooled URL; migrations need the direct one'
     required: false
     default: 'false'
-  url:
-    description: 'Fetch the owner connection string; false returns only project_id'
-    required: false
-    default: 'true'
 
 outputs:
-  project_id:
-    description: 'ID of the Neon project'
-    value: ${{ steps.lookup.outputs.project_id }}
   database_url:
     description: 'folio_owner connection string (masked); pass it to run steps only through env'
     value: ${{ steps.url.outputs.database_url }}
@@ -25,35 +15,16 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Find the Neon project
-      id: lookup
-      shell: bash
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-        REPOSITORY: ${{ github.event.repository.name }}
-      run: |
-        set -euo pipefail
-        case "$ENVIRONMENT" in dev | prod) ;; *) echo "::error::environment must be dev or prod"; exit 1 ;; esac
-        name="${REPOSITORY}-${ENVIRONMENT}"
-        matches=$("$GITHUB_WORKSPACE/.github/scripts/neon-find-project.sh" --name "$name")
-        count=$(grep -c . <<<"$matches" || true)
-        if [ "$count" -ne 1 ]; then
-          echo "::error::Expected exactly one Neon project named ${name} in the organization, found ${count}. Terraform creates it on the first apply."
-          exit 1
-        fi
-        echo "project_id=${matches}" >>"$GITHUB_OUTPUT"
-
     - name: Get the owner connection string
       id: url
-      if: inputs.url == 'true'
       shell: bash
       env:
-        PROJECT_ID: ${{ steps.lookup.outputs.project_id }}
         POOLED: ${{ inputs.pooled }}
       run: |
         set -euo pipefail
+        : "${NEON_PROJECT_ID:?NEON_PROJECT_ID is required: set it in the environment from the Terraform output neon_project_id}"
         # The default branch's read-write endpoint; the CLI reads NEON_API_KEY from the environment.
-        url=$(npx --yes neon@9.5.0 connection-string --project-id "$PROJECT_ID" \
+        url=$(npx --yes neon@9.5.0 connection-string --project-id "$NEON_PROJECT_ID" \
           --role-name folio_owner --database-name folio --endpoint-type read_write \
           --pooled="$POOLED" --no-analytics </dev/null)
         case "$url" in postgresql://* | postgres://*) ;; *) echo "::error::The Neon CLI returned no connection string"; exit 1 ;; esac
