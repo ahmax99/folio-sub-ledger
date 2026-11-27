@@ -268,7 +268,7 @@ must change to resolve the project by ID before project-scoped keys can work.
 >   Broad by necessity: Terraform manages the whole account's app infra.
 > - **`APP_DEPLOY_ROLE_ARN`** (per-env, scoped `gha-app-deploy`) — the
 >   `deploy.yml` app deploy jobs. This role is created by **this repo's own
->   Terraform** (`modules/github-deploy-role`, consuming the org-created OIDC
+>   Terraform** (`modules/github-oidc-role`, consuming the org-created OIDC
 >   provider), so it's a captured Terraform output, not an org output. Its
 >   policy grants only the Lambda/CodeDeploy/S3/CloudFront/ECR-pull actions
 >   those jobs perform, scoped to this environment's **exact** resource ARNs — a

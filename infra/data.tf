@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 data "aws_route53_zone" "main" {
   count    = var.environment == "prod" ? 1 : 0
   provider = aws.dns

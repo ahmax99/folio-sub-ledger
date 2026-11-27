@@ -17,9 +17,9 @@ data "aws_iam_policy_document" "trust" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Exact match: only jobs in the <env>-db-rotation environment, which is restricted to main.
+    # Only a subject with a wildcard is matched as a pattern; every other subject must match exactly.
     condition {
-      test     = "StringEquals"
+      test     = strcontains(var.github_subject, "*") ? "StringLike" : "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
       values   = [var.github_subject]
     }
@@ -27,13 +27,13 @@ data "aws_iam_policy_document" "trust" {
 }
 
 data "aws_iam_policy_document" "permissions" {
-  statement {
-    sid = "RotateDatabaseSecret"
-    actions = [
-      "secretsmanager:DescribeSecret",
-      "secretsmanager:GetSecretValue",
-      "secretsmanager:PutSecretValue",
-    ]
-    resources = [var.secret_arn]
+  dynamic "statement" {
+    for_each = var.policy_statements
+
+    content {
+      sid       = statement.value.sid
+      actions   = statement.value.actions
+      resources = statement.value.resources
+    }
   }
 }
