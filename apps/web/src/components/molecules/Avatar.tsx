@@ -40,4 +40,20 @@ function AvatarImage({
   )
 }
 
-export { Avatar, AvatarImage }
+function AvatarFallback({
+  className,
+  ...props
+}: Readonly<AvatarPrimitive.Fallback.Props>) {
+  return (
+    <AvatarPrimitive.Fallback
+      className={cn(
+        'flex size-full items-center justify-center rounded-full bg-muted font-medium text-muted-foreground text-xs group-data-[size=sm]/avatar:text-[10px]',
+        className
+      )}
+      data-slot="avatar-fallback"
+      {...props}
+    />
+  )
+}
+
+export { Avatar, AvatarFallback, AvatarImage }

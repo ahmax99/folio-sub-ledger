@@ -10,7 +10,10 @@ fetch('/api/config')
 
     Sentry.init({
       dsn: sentryDsn,
-      integrations: [Sentry.replayIntegration()],
+      // Pages show member names and emails; a replay must never record them.
+      integrations: [
+        Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true })
+      ],
       tracesSampleRate: import.meta.env.DEV ? 1 : 0.1,
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1

@@ -15,13 +15,17 @@ export const userController = new Elysia({ prefix: '/users' })
   .use(openapi({ references: fromTypes() }))
   .get(
     '/',
-    async ({ db, ability, userService }) =>
-      handleApiError(userService.getAll(db, ability)),
+    async ({ db, ability, userService, set }) => {
+      set.headers['cache-control'] = 'private, no-store'
+      return handleApiError(userService.listMembers(db, ability))
+    },
     {
       organization: true,
+      response: UserModel.memberList,
       detail: {
-        summary: 'Get all users',
-        description: 'Retrieve a list of all users',
+        summary: "List the caller's firm members",
+        description:
+          "Retrieve the id, name, email and role of every member of the caller's firm",
         tags: ['Users']
       }
     }

@@ -1,9 +1,18 @@
+import type { MemberList } from '@shared/config'
 import { prisma } from '@shared/neon'
 import { v7 as uuidv7 } from 'uuid'
 import { describe, expect, it, vi } from 'vitest'
 
+import { logger } from '@/config/logger.js'
+import { MEMBER_LIST_LIMIT } from '@/constants/index.js'
 import { userController } from '@/modules/users/user.controller.js'
-import { addAnalyst, seedOwner, send } from '@/test/fixtures.js'
+import {
+  addAnalyst,
+  addMembers,
+  addReviewer,
+  seedOwner,
+  send
+} from '@/test/fixtures.js'
 import type { Token } from '@/test/identities.js'
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({
@@ -168,8 +177,129 @@ describe('user controller', () => {
       const res = await call('GET', '/users', 'test-token')
 
       expect(res.status).toBe(200)
-      const users: { orgId: string }[] = await res.json()
-      expect(users.map((user) => user.orgId)).toEqual([orgId, orgId])
+      const members: MemberList = await res.json()
+      expect(members.map((member) => member.email)).toEqual([
+        'analyst@example.com',
+        'test@example.com'
+      ])
+    })
+  })
+
+  describe('GET /users', () => {
+    it('returns exactly id, name, email and role for each member', async () => {
+      const { orgId } = await seedOwner()
+      await addAnalyst(orgId)
+
+      const members: MemberList = await (
+        await call('GET', '/users', 'test-token')
+      ).json()
+
+      expect(members).toHaveLength(2)
+      for (const member of members)
+        expect(Object.keys(member).sort()).toEqual([
+          'email',
+          'id',
+          'name',
+          'role'
+        ])
+    })
+
+    it('orders members by name, then email', async () => {
+      const { orgId } = await seedOwner()
+      await addMembers(orgId, [
+        { name: 'Sam Lee', email: 'b@x.test' },
+        { name: 'Sam Lee', email: 'a@x.test' }
+      ])
+
+      const members: MemberList = await (
+        await call('GET', '/users', 'test-token')
+      ).json()
+
+      expect(members.map(({ name, email }) => `${name} <${email}>`)).toEqual([
+        'Sam Lee <a@x.test>',
+        'Sam Lee <b@x.test>',
+        'Test User <test@example.com>'
+      ])
+    })
+
+    it('returns the same list to an Owner, an Analyst and a Reviewer', async () => {
+      const { orgId } = await seedOwner()
+      await addAnalyst(orgId)
+      await addReviewer(orgId)
+
+      const bodies = await Promise.all(
+        (['test-token', 'analyst-token', 'reviewer-token'] as const).map(
+          async (token) => (await call('GET', '/users', token)).json()
+        )
+      )
+
+      expect(bodies[0]).toHaveLength(3)
+      expect(bodies[1]).toEqual(bodies[0])
+      expect(bodies[2]).toEqual(bodies[0])
+    })
+
+    it('is sent with Cache-Control: private, no-store', async () => {
+      await seedOwner()
+
+      const res = await call('GET', '/users', 'test-token')
+
+      expect(res.status).toBe(200)
+      expect(res.headers.get('cache-control')).toBe('private, no-store')
+    })
+
+    it('without a token returns 401', async () => {
+      const res = await call('GET', '/users')
+
+      expect(res.status).toBe(401)
+    })
+
+    it('for an identity with no firm returns 403 and no member data', async () => {
+      await seedOwner('other-token', 'Other Firm')
+
+      const res = await call('GET', '/users', 'test-token')
+
+      expect(res.status).toBe(403)
+      const body = await res.json()
+      expect(Array.isArray(body)).toBe(false)
+      expect(body).toHaveProperty('error')
+      expect(JSON.stringify(body)).not.toContain('other@example.com')
+    })
+
+    it('for a firm over MEMBER_LIST_LIMIT returns an error, never a cut list', async () => {
+      const { orgId } = await seedOwner()
+      const rows = Array.from({ length: MEMBER_LIST_LIMIT }, (_, index) => ({
+        name: `Member ${index}`,
+        email: `member${index}@x.test`
+      }))
+      await addMembers(orgId, rows)
+      const warn = vi.spyOn(logger, 'warn')
+
+      const res = await call('GET', '/users', 'test-token')
+
+      expect(res.status).toBe(500)
+      const body = await res.json()
+      expect(Array.isArray(body)).toBe(false)
+      expect(body).toHaveProperty('error')
+      const logged = JSON.stringify(warn.mock.calls)
+      expect(logged).not.toContain('@x.test')
+      expect(logged).not.toContain('Member 0')
+      warn.mockRestore()
+    })
+
+    it('for a firm at exactly MEMBER_LIST_LIMIT returns every member', async () => {
+      const { orgId } = await seedOwner()
+      await addMembers(
+        orgId,
+        Array.from({ length: MEMBER_LIST_LIMIT - 1 }, (_, index) => ({
+          name: `Member ${index}`,
+          email: `member${index}@x.test`
+        }))
+      )
+
+      const res = await call('GET', '/users', 'test-token')
+
+      expect(res.status).toBe(200)
+      expect(await res.json()).toHaveLength(MEMBER_LIST_LIMIT)
     })
   })
 

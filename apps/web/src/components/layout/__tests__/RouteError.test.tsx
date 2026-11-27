@@ -19,6 +19,39 @@ describe('RouteError', () => {
     expect(captureError).toHaveBeenCalledWith(error)
     expect(screen.getByRole('button', { name: /reload page/i })).toBeDefined()
   })
+
+  it('renders the given title and description', async () => {
+    await renderWithProviders(
+      <RouteError
+        description="Check your connection and try again."
+        error={new Error('down')}
+        reset={vi.fn()}
+        title="We couldn't load your firm's members"
+      />
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: "We couldn't load your firm's members"
+      })
+    ).toBeDefined()
+    expect(
+      screen.getByText('Check your connection and try again.')
+    ).toBeDefined()
+  })
+
+  it('with retry, shows a Retry button that calls router.invalidate and offers no document reload', async () => {
+    const { router, user } = await renderWithProviders(
+      <RouteError error={new Error('down')} reset={vi.fn()} retry />
+    )
+    const invalidate = vi.spyOn(router, 'invalidate')
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }))
+
+    expect(invalidate).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('button', { name: /reload page/i })).toBeNull()
+    expect(document.querySelector('a[href]')).toBeNull()
+  })
 })
 
 describe('NotFound', () => {
