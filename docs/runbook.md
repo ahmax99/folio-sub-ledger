@@ -472,8 +472,8 @@ commit from the branch push that carried it. App is live at
 ## Steady state (after bring-up)
 
 ```
-push to main            → build → migrate → rotate → deploy dev
-merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: migrate → rotate → deploy backend → frontend] → prod live
+push to main            → build → migrate → credential check → deploy dev
+merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: migrate → credential check → deploy backend → frontend] → prod live
 daily 03:17 UTC         → rotate-db-credentials.yml rotates dev and prod
 ```
 
@@ -490,7 +490,9 @@ The API logs in as one of two runtime users, `folio_runtime_a` and
 the `active` one and holds both passwords. Each rotation gives the **inactive**
 user a new password valid for 14 days and makes it active; the other user
 keeps its password, so running Lambdas keep working. The daily schedule
-rotates each user every second day. Design:
+rotates each user every second day. A deploy doesn't rotate: `rotate-<env>`
+writes the secret only when it is missing or invalid (a new or rebuilt
+project), and otherwise checks that the active user logs in. Design:
 [`decisions/2026-11-21-rotated-runtime-database-credentials.md`](decisions/2026-11-21-rotated-runtime-database-credentials.md).
 
 ### Rotate now
@@ -515,7 +517,8 @@ If no rotation ran for 14 days, both passwords have expired and every new
 Lambda connection fails with `password authentication failed`. Dispatch the
 rotation **twice** (above): the first run makes one user valid and active, the
 second makes the other valid too, so Lambdas pinned to either user reconnect
-within 5 minutes without a redeploy.
+within 5 minutes without a redeploy. Until then, every backend deploy stops at
+`rotate-<env>` with `cannot log in`.
 
 ### A lost schedule
 
@@ -539,7 +542,7 @@ the restore.
 2. Tear the environment down ([Teardown](#teardown)), dev first.
 3. Merge the PR, then bring the environment up again with gates A to C
    ([Neon bring-up order](#neon-bring-up-order)): the new project gets the new
-   major, and the deploy migrates and rotates it.
+   major, and the deploy migrates it and writes its first credential.
 
 ## Teardown
 
