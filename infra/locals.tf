@@ -54,6 +54,7 @@ locals {
       enable_alarms                     = false
       cognito_deletion_protection       = "INACTIVE"
       s3_logs_expiration_days           = 7
+      sentry_traces_sample_rate         = 1
     }
     prod = {
       log_retention_days                = 30
@@ -63,6 +64,7 @@ locals {
       enable_alarms                     = true
       cognito_deletion_protection       = "ACTIVE"
       s3_logs_expiration_days           = 90
+      sentry_traces_sample_rate         = 0.1
     }
   }
 

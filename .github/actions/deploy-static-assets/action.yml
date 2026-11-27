@@ -17,6 +17,21 @@ inputs:
   central-ecr-account-id:
     description: 'Account ID of the shared-services account hosting the central ECR registry'
     required: true
+  release:
+    description: 'Sentry release the source maps belong to (the image tag)'
+    required: true
+  sentry-auth-token:
+    description: 'Sentry auth token with project:releases scope; without it the source maps are not uploaded'
+    required: false
+    default: ''
+  sentry-org:
+    description: 'Sentry organization slug'
+    required: false
+    default: ''
+  sentry-project:
+    description: 'Sentry project slug for the browser and BFF'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -33,6 +48,11 @@ runs:
         STATIC_ASSETS_BUCKET: ${{ inputs.static-assets-bucket }}
         CLOUDFRONT_DISTRIBUTION_ID: ${{ inputs.cloudfront-distribution-id }}
         AWS_REGION: ${{ inputs.aws-region }}
+        RELEASE: ${{ inputs.release }}
+        SENTRY_AUTH_TOKEN: ${{ inputs.sentry-auth-token }}
+        SENTRY_ORG: ${{ inputs.sentry-org }}
+        SENTRY_PROJECT: ${{ inputs.sentry-project }}
+        SENTRY_CLI_VERSION: '3.8.2'
       run: |
         chmod +x .github/scripts/deploy-static-assets.sh
         .github/scripts/deploy-static-assets.sh

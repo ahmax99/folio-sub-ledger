@@ -101,6 +101,10 @@ COPY --from=builder /app/shared/neon/prisma ./shared/neon/prisma
 COPY --from=builder /app/shared/neon/package.json ./shared/neon/package.json
 COPY --from=prod-deps /app/shared/neon/node_modules ./shared/neon/node_modules
 
+# Sentry release: the image tag, passed by deploy.yml and read from the environment at runtime
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+
 # Lambda Web Adapter configuration
 ENV PORT=4000
 ENV NODE_ENV=production

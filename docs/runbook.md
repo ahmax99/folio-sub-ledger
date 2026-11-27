@@ -205,9 +205,17 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `TF_VAR_resend_api_key`       | secret   | Resend key                                         | prod Resend key                                     |
 | `TF_VAR_backend_sentry_dsn`   | secret   | dev backend Sentry project                         | prod backend Sentry project                         |
 | `TF_VAR_frontend_sentry_dsn`  | secret   | dev frontend Sentry project                        | prod frontend Sentry project                        |
+| `SENTRY_AUTH_TOKEN`           | secret   | Sentry org token (`project:releases` scope)        | same token, or a separate prod token                |
+| `SENTRY_ORG`                  | variable | Sentry organization slug                           | Sentry organization slug                            |
+| `SENTRY_FRONTEND_PROJECT`     | variable | dev frontend Sentry project slug                   | prod frontend Sentry project slug                   |
 | `NEON_API_KEY`                | secret   | dev project-scoped key (bootstrap: org key, D3–D5) | prod project-scoped key (bootstrap: org key, P2–P4) |
 | `NEON_PROJECT_ID`             | variable | Terraform output `neon_project_id` (D5)            | Terraform output `neon_project_id` (P4)             |
 | `NEON_ORG_API_KEY`            | secret   | _(unset; teardown only)_                           | _(unset; teardown only)_                            |
+
+Without the three `SENTRY_*` values, a deploy still succeeds, but it prints a
+warning and skips the source-map upload, so browser stack traces stay minified.
+The maps are deleted before the S3 sync either way: they never reach the public
+bucket.
 
 ### Preview environment
 

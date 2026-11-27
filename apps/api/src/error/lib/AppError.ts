@@ -10,9 +10,14 @@ export class AppError extends Error {
   readonly code: ErrorCode
   readonly fields?: FieldErrors
 
-  constructor(code: ErrorCode, message?: string, fields?: FieldErrors) {
+  constructor(
+    code: ErrorCode,
+    message?: string,
+    fields?: FieldErrors,
+    options?: ErrorOptions
+  ) {
     const definition = ERROR_DEFINITIONS[code]
-    super(message ?? definition.message)
+    super(message ?? definition.message, options)
     this.code = code
     this.status = definition.status
     this.fields = fields

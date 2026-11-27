@@ -22,8 +22,11 @@ export const mapToAppError = (error: unknown) => {
       return error
     case error instanceof ForbiddenError:
       return new AppError('FORBIDDEN', error.message)
+    // `cause` keeps the original stack, which Sentry shows as a linked error.
     case error instanceof Error:
-      return new AppError('INTERNAL_ERROR', error.message)
+      return new AppError('INTERNAL_ERROR', error.message, undefined, {
+        cause: error
+      })
     default:
       return new AppError('INTERNAL_ERROR', stringifyUnknownError(error))
   }
