@@ -316,16 +316,6 @@ module "frontend" {
 # -------------------
 # Secret Manager
 # -------------------
-# Rotation owns the secret's value; Terraform owns only the secret.
-removed {
-  from = module.database_secret.aws_secretsmanager_secret_version.this
-
-  # Forget the old version (the dead connection string) without deleting it; the first rotation overwrites it.
-  lifecycle {
-    destroy = false
-  }
-}
-
 module "database_secret" {
   source = "./modules/secret-manager"
 
