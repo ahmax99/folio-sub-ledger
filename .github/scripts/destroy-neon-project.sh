@@ -41,7 +41,7 @@ delete() {
       echo "::notice::No Neon project ${project_id:-named ${name}}; it is already deleted."
       ;;
     1)
-      "$scripts/neon-api.sh" DELETE "/projects/${matches}" >/dev/null
+      npx --yes neon@9.5.0 projects delete "$matches" --output json --no-analytics </dev/null >/dev/null
       echo "Deleted Neon project ${matches}."
       ;;
     *)

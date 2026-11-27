@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Prints the ID of each Neon project in NEON_ORG_ID that matches exactly, one per line: --name <name> or --id <id>.
+# The Neon CLI reads NEON_API_KEY from the environment and pages through every project.
 set -euo pipefail
 
+: "${NEON_API_KEY:?NEON_API_KEY is required}"
 : "${NEON_ORG_ID:?NEON_ORG_ID is required}"
 
 case "${1:-}" in
@@ -14,23 +16,5 @@ case "${1:-}" in
 esac
 value="${2:?a value is required}"
 
-api="$(dirname "$0")/neon-api.sh"
-uri() { jq -rn --arg v "$1" '$v | @uri'; }
-page_size=400
-# search matches partial names and IDs; the jq filter below keeps only exact matches.
-query="org_id=$(uri "$NEON_ORG_ID")&limit=${page_size}&search=$(uri "$value")"
-
-cursor=''
-while :; do
-  page=$("$api" GET "/projects?${query}${cursor:+&cursor=$(uri "$cursor")}")
-  # On a server-side timeout the API returns a partial list, which could hide the project.
-  if [ "$(jq '.unavailable // [] | length' <<<"$page")" -ne 0 ]; then
-    echo "::error::The Neon API returned an incomplete project list; re-run the job." >&2
-    exit 1
-  fi
-  jq -r --arg field "$field" --arg value "$value" \
-    '.projects[] | select(.[$field] == $value) | .id' <<<"$page"
-  [ "$(jq '.projects | length' <<<"$page")" -lt "$page_size" ] && break
-  cursor=$(jq -r '.pagination.cursor // empty' <<<"$page")
-  [ -n "$cursor" ] || break
-done
+npx --yes neon@9.5.0 projects list --org-id "$NEON_ORG_ID" --output json --no-analytics </dev/null |
+  jq -r --arg field "$field" --arg value "$value" '.[] | select(.[$field] == $value) | .id'

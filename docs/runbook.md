@@ -242,8 +242,8 @@ easy.
 
 **Check each project-scoped key once, before relying on it.** CI finds the
 project by listing the organization's projects, and Neon does not document
-whether a project-scoped key may do that. From the repo root, with the new key
-typed at the prompt:
+whether a project-scoped key may do that. From the repo root, with Node 20.19
+or later (for the Neon CLI) and the new key typed at the prompt:
 
 ```bash
 read -rs -p 'Project-scoped key: ' NEON_API_KEY && export NEON_API_KEY
@@ -454,7 +454,7 @@ Manager name reservation, and Lambda@Edge replicas. Afterwards a fresh
 
 **The Neon project is deleted.** Its `prevent_destroy` would fail a plain
 destroy, so the workflow first removes `module.database` from state, destroys
-everything else, then deletes the project through the Neon API. Every branch
+everything else, then deletes the project with the Neon CLI. Every branch
 goes with it, the `preview/pr-*` ones included. The next apply creates a fresh
 project, and `deploy.yml`'s `migrate-dev`/`migrate-prod` jobs (see
 [`deployment-environments.md`](deployment-environments.md#rollback)) rebuild
