@@ -187,10 +187,9 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 
 ### Repo-level secrets
 
-| Name                         | Value                                                                                     |
-| ---------------------------- | ----------------------------------------------------------------------------------------- |
-| `AUTOMATION_APP_PRIVATE_KEY` | Full contents of the `.pem` file from step 5 above                                        |
-| `NEON_API_KEY`               | the **dev** project-scoped Neon key (see [Neon API keys](#neon-api-keys)); unset until D5 |
+| Name                         | Value                                              |
+| ---------------------------- | -------------------------------------------------- |
+| `AUTOMATION_APP_PRIVATE_KEY` | Full contents of the `.pem` file from step 5 above |
 
 ### Per-environment values
 
@@ -207,6 +206,7 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `TF_VAR_backend_sentry_dsn`   | secret   | dev backend Sentry project                         | prod backend Sentry project                         |
 | `TF_VAR_frontend_sentry_dsn`  | secret   | dev frontend Sentry project                        | prod frontend Sentry project                        |
 | `NEON_API_KEY`                | secret   | dev project-scoped key (bootstrap: org key, D3–D5) | prod project-scoped key (bootstrap: org key, P2–P4) |
+| `NEON_PROJECT_ID`             | variable | Terraform output `neon_project_id` (D5)            | Terraform output `neon_project_id` (P4)             |
 | `NEON_ORG_API_KEY`            | secret   | _(unset; teardown only)_                           | _(unset; teardown only)_                            |
 
 ### Neon API keys
@@ -218,9 +218,9 @@ a project, or read any other project. So:
 
 - **Steady state, every Neon caller holds only its own environment's
   project-scoped key.** The `dev` and `prod` environments each hold their own
-  `NEON_API_KEY`. The repo-level `NEON_API_KEY` (preview branches in
-  `neon-workflow.yml`, which run without an environment) is the **dev** key. PR
-  plans run in the `dev` environment, so they get the dev key too. A leaked
+  `NEON_API_KEY`. There is no repo-level `NEON_API_KEY`: preview branches
+  (`neon-workflow.yml`) and PR plans run in the `dev` environment, so they get
+  the dev key. A leaked
   dev key cannot touch prod, and no standing key can delete a project.
 - **Creating a project needs an organization key, once.** A project-scoped key
   can only be minted for a project that already exists, and it cannot create
@@ -239,20 +239,24 @@ Create new**: **Organization** for the bootstrap and teardown key,
 after its use, e.g. `folio-sub-ledger-dev-ci`, so revoking the right one is
 easy.
 
-**Check each project-scoped key once, before relying on it.** CI finds the
-project by listing the organization's projects, and Neon does not document
-whether a project-scoped key may do that. From the repo root, with Node 20.19
-or later (for the Neon CLI) and the new key typed at the prompt:
+**CI finds the project by ID, not by name.** A project-scoped key cannot list
+the organization's projects ("not allowed to perform actions outside the
+project this key is scoped to"), so each environment holds the project's ID in
+`vars.NEON_PROJECT_ID`, from the Terraform output `neon_project_id`. Only
+teardown, which runs with an organization key, still finds the project by name.
+
+**Check each project-scoped key once, before relying on it.** From any
+directory, with Node 20.19 or later and the new key typed at the prompt:
 
 ```bash
 read -rs -p 'Project-scoped key: ' NEON_API_KEY && export NEON_API_KEY
-NEON_ORG_ID=org-… .github/scripts/neon-find-project.sh --name folio-sub-ledger-dev
+npx --yes neon@9.5.0 connection-string --project-id <project-id> --role-name folio_owner --database-name folio --no-analytics </dev/null >/dev/null && echo ok
 unset NEON_API_KEY
 ```
 
-It must print exactly one project ID. If it prints nothing or fails with 401 or
-403, **keep the organization key in place and do not revoke it**: the lookup
-must change to resolve the project by ID before project-scoped keys can work.
+It must print `ok`. The connection string goes to `/dev/null`, so the owner
+password never reaches your terminal. If it fails, **keep the organization key
+in place and do not revoke it**.
 
 > **Three roles, three privilege tiers** (all variables — an IAM role ARN isn't
 > a secret). Each pipeline step assumes the least-privileged role that still
@@ -292,6 +296,19 @@ There are **no** per-environment ECR variables: image URLs are derived in the
 workflows and in Terraform from `CENTRAL_ECR_ACCOUNT_ID` + the repo name, so
 they cannot drift.
 
+## Neon bring-up order
+
+Two gates thread through the dev and prod steps below. Do them in this
+order:
+
+| Gate                       | Dev          | Prod         | What you do                                                                                                                       |
+| -------------------------- | ------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| **A — bootstrap key**      | D3           | P2           | Put an **organization** Neon key in the environment's `NEON_API_KEY` (Settings → Environments → `<env>` → Add environment secret) |
+| **B — project-scoped key** | D5, after D4 | P4, after P3 | Mint a project-scoped key, run the [check](#neon-api-keys), swap it in; revoke the organization key after P4                      |
+
+Until the first deploy after gate B (D7, P6), the backend cannot start: the
+runtime secret has no valid value yet. That deploy's migrate job writes it.
+
 ## Dev environment setup
 
 **D1 — Confirm prerequisites** (org repo applied, section above), and collect
@@ -314,8 +331,7 @@ rules), then set the repo-level variables and dev's per-environment values per
 the tables above. Skip the three Terraform-output rows for now
 (`STATIC_ASSETS_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, `APP_DEPLOY_ROLE_ARN`).
 Set dev's `NEON_API_KEY` to the bootstrap **organization** key: D4 creates the
-Neon project, and a project-scoped key cannot. Leave the repo-level
-`NEON_API_KEY` unset for now.
+Neon project, and a project-scoped key cannot.
 
 **D4 — First dev apply**: run `Deploy` (`deploy.yml`) via **workflow_dispatch**
 with `scope: infra-only` (leave `apply_prod` unchecked — it's ignored for this
@@ -339,9 +355,12 @@ apply role, so the app-deploy role exists after it — capture it before D7.
 Then swap the Neon key. D4 created the `folio-sub-ledger-dev` project, so:
 
 1. Create a project-scoped key for `folio-sub-ledger-dev` and run the check in
-   [Neon API keys](#neon-api-keys). Stop here if it fails.
-2. Set it as dev's `NEON_API_KEY`, replacing the organization key, and as the
-   repo-level `NEON_API_KEY`.
+   [Neon API keys](#neon-api-keys) with dev's `neon_project_id`. Stop here if
+   it fails.
+2. Set it as dev's `NEON_API_KEY`, replacing the organization key, and set
+   dev's `vars.NEON_PROJECT_ID` to `neon_project_id`. Delete the old
+   repo-level `NEON_PROJECT_ID` variable if it still exists: an environment
+   without its own value would fall back to it.
 3. Keep the organization key until P4 swaps prod's; revoke it then.
 
 **D6 — Register the Google OAuth redirect URI**
@@ -350,7 +369,10 @@ output) on the dev OAuth client.
 
 **D7 — Verify**: push to `main` (or dispatch `Deploy` with `scope: apps-only`,
 now that D5's app-deploy vars exist) — builds push to the central registry and
-deploy to dev. App is live at `https://<project>.dev.<root_domain>`.
+deploy to dev. `migrate-dev` builds the schema and writes the first runtime
+credential, then the backend deploys. App is live at
+`https://<project>.dev.<root_domain>`. `migrate-dev`'s log ends with
+`folio_runtime_a logs in through …`.
 
 ## Prod environment setup
 
@@ -414,7 +436,8 @@ bootstrap mode only applies + publishes Lambda versions.
 
 Then swap the Neon key: create a project-scoped key for
 `folio-sub-ledger-prod`, run the check in [Neon API keys](#neon-api-keys) with
-`--name folio-sub-ledger-prod`, and set it as prod's `NEON_API_KEY`. No
+prod's `neon_project_id`, and set it as prod's `NEON_API_KEY`. Set prod's
+`vars.NEON_PROJECT_ID` to `neon_project_id`. No
 environment holds the organization key any more, so **revoke it** in the Neon
 console.
 
@@ -424,8 +447,8 @@ output) on the prod OAuth client.
 
 **P6 — Cut the first release**: merge the release PR / push a `v*` tag.
 `deploy.yml` builds once, then (behind the reviewer gate) applies prod
-Terraform via `apply-prod`, then (behind the reviewer gate again) deploys
-that image URI to prod — backend first, then frontend, all in the same
+Terraform via `apply-prod`, then (behind the reviewer gate again) migrates the
+schema and writes the first runtime credential (`migrate-prod`), and deploys that image URI to prod — backend first, then frontend, all in the same
 workflow run. Dev is untouched by the release; it already runs the tagged
 commit from the branch push that carried it. App is live at
 `https://<project>.<root_domain>`.
@@ -433,8 +456,8 @@ commit from the branch push that carried it. App is live at
 ## Steady state (after bring-up)
 
 ```
-push to main            → build → deploy dev
-merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: deploy backend → frontend] → prod live
+push to main            → build → migrate + credential check → deploy dev
+merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: migrate + credential check → deploy backend → frontend] → prod live
 ```
 
 No manual variable wrangling — every value used after bring-up is either a
@@ -442,6 +465,45 @@ stable org/Terraform output already captured, or a secret set once during
 setup. Steady-state Terraform changes flow through PRs: a PR touching
 `infra/**` gets a dev plan comment; merge applies dev; a `v*` tag
 applies prod behind the reviewer gate.
+
+## Database credentials
+
+The API logs in as one of two runtime users, `folio_runtime_a` and
+`folio_runtime_b`. The runtime secret (`<project>-<env>/database-url`) names
+the `active` one and holds both passwords. The passwords do not expire and are
+not rotated. `migrate-<env>` runs `set-up-runtime-credential.sh` after each
+migration with the app-deploy role: when the secret is missing or invalid (a
+new or rebuilt project), it gives both users a new password and writes the
+secret; otherwise it only checks that the active user logs in. Design:
+[`decisions/2026-11-27-static-runtime-database-credentials.md`](decisions/2026-11-27-static-runtime-database-credentials.md).
+
+### Replace the credential
+
+Use it after a suspected leak of the secret. Make the secret invalid, then
+deploy:
+
+```bash
+aws secretsmanager put-secret-value --secret-id <project>-<env>/database-url --secret-string '{}'
+```
+
+Then dispatch `Deploy` with `scope: apps-only` (prod: cut a release). Its
+migrate job gives both users new passwords. Running Lambdas keep their cached
+password until it changes, then reconnect with the new one within 5 minutes
+(`DATABASE_PASSWORD_TTL_MS`).
+
+## Changing the Postgres major
+
+`pg_version` forces a new Neon project, and `prevent_destroy` blocks Terraform
+from replacing it. A major upgrade therefore **replaces the project through
+`destroy.yml`** and loses its data. For prod, take a `pg_dump` first and plan
+the restore.
+
+1. In one PR, change `.postgres-version`, the `postgres` image digest in
+   `pr-checks.yml`, and the `docker run` image in `apps/api/README.md`.
+2. Tear the environment down ([Teardown](#teardown)), dev first.
+3. Merge the PR, then bring the environment up again with gates A to C
+   ([Neon bring-up order](#neon-bring-up-order)): the new project gets the new
+   major, and the deploy migrates it and writes its first credential.
 
 ## Teardown
 
@@ -452,8 +514,9 @@ Manager name reservation, and Lambda@Edge replicas. Afterwards a fresh
 `terraform apply` succeeds with no manual cleanup.
 
 **The Neon project is deleted.** Its `prevent_destroy` would fail a plain
-destroy, so the workflow first removes `module.database` from state, destroys
-everything else, then deletes the project with the Neon CLI. Every branch
+destroy, so the workflow first removes `module.database` from state
+(`destroy-neon-project.sh release`), destroys everything else, then deletes the
+project with the Neon CLI (`destroy-neon-project.sh delete`). Every branch
 goes with it, the `preview/pr-*` ones included. The next apply creates a fresh
 project, and `deploy.yml`'s `migrate-dev`/`migrate-prod` jobs (see
 [`deployment-environments.md`](deployment-environments.md#rollback)) rebuild
@@ -540,7 +603,7 @@ The Route53 **hosted zone** (org-owned — only the records go), the central ECR
 and the state bucket. The state object is left present and holding an empty
 state, which is exactly what makes the next `terraform apply` clean.
 
-The environment's project-scoped `NEON_API_KEY` does **not** survive: it dies
-with its project. Before the next apply, put an organization key in that
-environment's `NEON_API_KEY` (and, for dev, remove the repo-level one), then
-swap in a new project-scoped key afterwards, exactly as in D5 / P4.
+The environment's project-scoped `NEON_API_KEY` and `NEON_PROJECT_ID` do
+**not** survive: they die with the project. Before the next apply, put an
+organization key in that environment's `NEON_API_KEY`. Afterwards, swap in a
+new project-scoped key and the new `neon_project_id`, exactly as in D5 / P4.
