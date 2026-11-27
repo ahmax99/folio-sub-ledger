@@ -20,6 +20,7 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthorizedAccountIndexRouteImport } from './routes/_authorized/account/index'
 import { Route as AuthorizedAccountEditRouteImport } from './routes/_authorized/account/edit'
 import { Route as AuthorizedOrganizationIndexRouteImport } from './routes/_authorized/organization/index'
+import { Route as AuthorizedOrganizationMembersRouteImport } from './routes/_authorized/organization/members'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
@@ -78,6 +79,12 @@ const AuthorizedOrganizationIndexRoute =
     path: '/organization/',
     getParentRoute: () => AuthorizedRoute,
   } as any)
+const AuthorizedOrganizationMembersRoute =
+  AuthorizedOrganizationMembersRouteImport.update({
+    id: '/organization/members',
+    path: '/organization/members',
+    getParentRoute: () => AuthorizedRoute,
+  } as any)
 const ApiAuthCallbackRoute = ApiAuthCallbackRouteImport.update({
   id: '/api/auth/callback',
   path: '/api/auth/callback',
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/api/images': typeof ApiImagesRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
+  '/organization/members': typeof AuthorizedOrganizationMembersRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
   '/api/images': typeof ApiImagesRoute
   '/auth/login': typeof AuthLoginRoute
   '/account/edit': typeof AuthorizedAccountEditRoute
+  '/organization/members': typeof AuthorizedOrganizationMembersRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -133,6 +142,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/_main/': typeof MainIndexRoute
   '/_authorized/account/edit': typeof AuthorizedAccountEditRoute
+  '/_authorized/organization/members': typeof AuthorizedOrganizationMembersRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/api/images'
     | '/auth/login'
     | '/account/edit'
+    | '/organization/members'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/api/images'
     | '/auth/login'
     | '/account/edit'
+    | '/organization/members'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -179,6 +191,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/_main/'
     | '/_authorized/account/edit'
+    | '/_authorized/organization/members'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthorizedOrganizationIndexRouteImport
       parentRoute: typeof AuthorizedRoute
     }
+    '/_authorized/organization/members': {
+      id: '/_authorized/organization/members'
+      path: '/organization/members'
+      fullPath: '/organization/members'
+      preLoaderRoute: typeof AuthorizedOrganizationMembersRouteImport
+      parentRoute: typeof AuthorizedRoute
+    }
     '/api/auth/callback': {
       id: '/api/auth/callback'
       path: '/api/auth/callback'
@@ -303,12 +323,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthorizedRouteChildren {
   AuthorizedAccountEditRoute: typeof AuthorizedAccountEditRoute
+  AuthorizedOrganizationMembersRoute: typeof AuthorizedOrganizationMembersRoute
   AuthorizedAccountIndexRoute: typeof AuthorizedAccountIndexRoute
   AuthorizedOrganizationIndexRoute: typeof AuthorizedOrganizationIndexRoute
 }
 
 const AuthorizedRouteChildren: AuthorizedRouteChildren = {
   AuthorizedAccountEditRoute: AuthorizedAccountEditRoute,
+  AuthorizedOrganizationMembersRoute: AuthorizedOrganizationMembersRoute,
   AuthorizedAccountIndexRoute: AuthorizedAccountIndexRoute,
   AuthorizedOrganizationIndexRoute: AuthorizedOrganizationIndexRoute,
 }

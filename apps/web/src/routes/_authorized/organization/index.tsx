@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { ButtonLink } from '@/components/atoms/ButtonLink'
 import { PageTemplate } from '@/components/layout'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
+import { PROTECTED_ROUTES } from '@/lib/routes'
 
 const OrganizationHomePage = () => {
   const { user } = Route.useRouteContext()
@@ -16,6 +18,13 @@ const OrganizationHomePage = () => {
           Your firm is ready. Client portfolios and transactions will appear
           here.
         </p>
+        <ButtonLink
+          className="self-start"
+          to={PROTECTED_ROUTES.ORGANIZATION_MEMBERS}
+          variant="outline"
+        >
+          View members
+        </ButtonLink>
       </div>
     </PageTemplate>
   )
