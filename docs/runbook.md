@@ -187,10 +187,9 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 
 ### Repo-level secrets
 
-| Name                         | Value                                                                                     |
-| ---------------------------- | ----------------------------------------------------------------------------------------- |
-| `AUTOMATION_APP_PRIVATE_KEY` | Full contents of the `.pem` file from step 5 above                                        |
-| `NEON_API_KEY`               | the **dev** project-scoped Neon key (see [Neon API keys](#neon-api-keys)); unset until D5 |
+| Name                         | Value                                              |
+| ---------------------------- | -------------------------------------------------- |
+| `AUTOMATION_APP_PRIVATE_KEY` | Full contents of the `.pem` file from step 5 above |
 
 ### Per-environment values
 
@@ -234,9 +233,9 @@ a project, or read any other project. So:
 
 - **Steady state, every Neon caller holds only its own environment's
   project-scoped key.** The `dev` and `prod` environments each hold their own
-  `NEON_API_KEY`. The repo-level `NEON_API_KEY` (preview branches in
-  `neon-workflow.yml`, which run without an environment) is the **dev** key. PR
-  plans run in the `dev` environment, so they get the dev key too. A leaked
+  `NEON_API_KEY`. There is no repo-level `NEON_API_KEY`: preview branches
+  (`neon-workflow.yml`) and PR plans run in the `dev` environment, so they get
+  the dev key. A leaked
   dev key cannot touch prod, and no standing key can delete a project.
 - **Creating a project needs an organization key, once.** A project-scoped key
   can only be minted for a project that already exists, and it cannot create
@@ -344,8 +343,7 @@ rules), then set the repo-level variables and dev's per-environment values per
 the tables above. Skip the three Terraform-output rows for now
 (`STATIC_ASSETS_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, `APP_DEPLOY_ROLE_ARN`).
 Set dev's `NEON_API_KEY` to the bootstrap **organization** key: D4 creates the
-Neon project, and a project-scoped key cannot. Leave the repo-level
-`NEON_API_KEY` unset for now.
+Neon project, and a project-scoped key cannot.
 
 **D4 — First dev apply**: run `Deploy` (`deploy.yml`) via **workflow_dispatch**
 with `scope: infra-only` (leave `apply_prod` unchecked — it's ignored for this
@@ -370,8 +368,7 @@ Then swap the Neon key. D4 created the `folio-sub-ledger-dev` project, so:
 
 1. Create a project-scoped key for `folio-sub-ledger-dev` and run the check in
    [Neon API keys](#neon-api-keys). Stop here if it fails.
-2. Set it as dev's `NEON_API_KEY`, replacing the organization key, and as the
-   repo-level `NEON_API_KEY`.
+2. Set it as dev's `NEON_API_KEY`, replacing the organization key.
 3. Keep the organization key until P4 swaps prod's; revoke it then.
 4. Create the `dev-db-rotation` environment
    ([Rotation environments](#rotation-environments)) with the new
@@ -644,7 +641,7 @@ state, which is exactly what makes the next `terraform apply` clean.
 
 The environment's project-scoped `NEON_API_KEY` does **not** survive: it dies
 with its project. Before the next apply, put an organization key in that
-environment's `NEON_API_KEY` (and, for dev, remove the repo-level one), then
+environment's `NEON_API_KEY`, then
 swap in a new project-scoped key afterwards, exactly as in D5 / P4, and put
 it in `<env>-db-rotation` too. Until then the daily rotation fails for that
 environment ("found 0" Neon projects); that changes nothing.
