@@ -2,6 +2,7 @@ import pino from 'pino'
 import pretty from 'pino-pretty'
 
 import { env } from '@/config/env.server'
+import { currentRequestContext } from '@/lib/requestContext.server'
 
 const isDevelopment = env.NODE_ENV === 'development'
 
@@ -16,6 +17,7 @@ const devStream = isDevelopment
 export const logger = pino(
   {
     level: isDevelopment ? 'debug' : 'info',
+    mixin: currentRequestContext,
     redact: {
       paths: [
         'req.headers.authorization',

@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 
+import { addMemberToRequestContext } from '@/config/requestContext.js'
 import { handleApiError } from '@/error/utils/handleApiError.js'
 import { authPlugin } from '@/modules/auth/auth.plugin.js'
 import { getUserPermissions } from '@/modules/auth/permission.js'
@@ -15,6 +16,7 @@ export const organizationPlugin = new Elysia({ name: 'organization-plugin' })
       const member = await handleApiError(
         OrganizationService.findMember(user.cognitoSub)
       )
+      if (member) addMemberToRequestContext(member)
 
       return {
         member,

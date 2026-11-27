@@ -27,14 +27,19 @@ export const send = (
   app: { handle: (request: Request) => Promise<Response> },
   method: string,
   path: string,
-  { token, body }: { token?: Token; body?: unknown } = {}
+  {
+    token,
+    body,
+    headers
+  }: { token?: Token; body?: unknown; headers?: Record<string, string> } = {}
 ) =>
   app.handle(
     new Request(`http://localhost${path}`, {
       method,
       headers: {
         'content-type': 'application/json',
-        ...(token && { authorization: `Bearer ${token}` })
+        ...(token && { authorization: `Bearer ${token}` }),
+        ...headers
       },
       ...(body !== undefined && { body: JSON.stringify(body) })
     })

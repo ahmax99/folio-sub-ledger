@@ -4,6 +4,7 @@ import { env } from '@/config/env.server'
 import { logger } from '@/config/logger.server'
 import { getTokens } from '@/features/auth/server/token.server'
 import { AppError } from '@/features/error/lib/AppError'
+import { forwardRequestContext } from '@/lib/requestContext.server'
 import { logAfterResponse, logBeforeRequest } from '@/lib/requestLogging.server'
 
 import { signingHook } from './sig4.server'
@@ -35,6 +36,7 @@ export const serverApiClient = ky.create({
   ...baseConfig,
   hooks: {
     beforeRequest: [
+      forwardRequestContext,
       logBeforeRequest(log),
       ...(isProduction ? [signingHook] : [])
     ],
@@ -45,7 +47,8 @@ export const serverApiClient = ky.create({
 // signingHook returns a new Request, which makes ky break out of its
 // beforeRequest loop. ky.extend() appends hooks AFTER the parent's, so any
 // auth-token hook added via extend would never run. We instead create a
-// fresh client (not extended) and put the ID-token hook BEFORE signingHook.
+// fresh client (not extended) and put the ID-token and request-context hooks
+// BEFORE signingHook, so SigV4 also signs those headers.
 export const serverAuthApiClient = ky.create({
   ...baseConfig,
   hooks: {
@@ -57,6 +60,7 @@ export const serverAuthApiClient = ky.create({
 
         request.headers.set(ID_TOKEN_HEADER, idToken)
       },
+      forwardRequestContext,
       logBeforeRequest(log),
       ...(isProduction ? [signingHook] : [])
     ],
