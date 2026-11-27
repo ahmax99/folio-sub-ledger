@@ -2,6 +2,7 @@ import { type Prisma, prisma } from '@shared/neon'
 import { describe, expect, it } from 'vitest'
 
 import { organizationDb } from '@/modules/organizations/organization.db.js'
+import { ownerPrisma } from '@/test/db.js'
 import { seedOwner } from '@/test/fixtures.js'
 
 const asApp = <T>(
@@ -56,7 +57,7 @@ describe('row-level security', () => {
           VALUES (gen_random_uuid(), ${b.orgId}, 'ANALYST', 'x-sub', 'x@example.com', 'X', now())`
       )
     ).rejects.toThrow()
-    expect(await prisma.user.count({ where: { orgId: b.orgId } })).toBe(1)
+    expect(await ownerPrisma.user.count({ where: { orgId: b.orgId } })).toBe(1)
   })
 
   it('forces RLS on every table and gives folio_app no bypass', async () => {
@@ -85,7 +86,7 @@ describe('row-level security', () => {
 
 describe('organization table ids', () => {
   it('stores ids and org ids as native uuid', async () => {
-    const columns = await prisma.$queryRaw<
+    const columns = await ownerPrisma.$queryRaw<
       { table_name: string; column_name: string; data_type: string }[]
     >`SELECT table_name, column_name, data_type FROM information_schema.columns
       WHERE table_schema = 'public' AND column_name IN ('id', 'org_id')
@@ -137,6 +138,99 @@ describe('organizationDb', () => {
       { org: string | null; role: string }[]
     >`SELECT coalesce(current_setting('app.org_id', true), '') AS org, current_user AS role`
 
-    expect(after).toEqual([{ org: '', role: 'postgres' }])
+    expect(after).toEqual([{ org: '', role: 'folio_runtime_a' }])
+  })
+})
+
+const runtimeRoles = ['folio_runtime_a', 'folio_runtime_b']
+
+describe('runtime login roles', () => {
+  it('folio_runtime_a and folio_runtime_b can log in and are neither superuser nor BYPASSRLS', async () => {
+    const roles = await ownerPrisma.$queryRaw<
+      {
+        rolname: string
+        rolcanlogin: boolean
+        rolsuper: boolean
+        rolbypassrls: boolean
+      }[]
+    >`SELECT rolname, rolcanlogin, rolsuper, rolbypassrls FROM pg_roles
+      WHERE rolname = ANY(${runtimeRoles}) ORDER BY rolname`
+    const [session] = await prisma.$queryRaw<
+      { user: string }[]
+    >`SELECT session_user::text AS user`
+
+    expect(roles).toEqual(
+      runtimeRoles.map((rolname) => ({
+        rolname,
+        rolcanlogin: true,
+        rolsuper: false,
+        rolbypassrls: false
+      }))
+    )
+    expect(session).toEqual({ user: 'folio_runtime_a' })
+  })
+
+  it('no role reachable from a runtime role through pg_auth_members is superuser or BYPASSRLS', async () => {
+    const reachable = await ownerPrisma.$queryRaw<
+      { rolname: string; rolsuper: boolean; rolbypassrls: boolean }[]
+    >`WITH RECURSIVE reachable(oid) AS (
+        SELECT oid FROM pg_roles WHERE rolname = ANY(${runtimeRoles})
+        UNION
+        SELECT m.roleid FROM pg_auth_members m JOIN reachable r ON m.member = r.oid
+      )
+      SELECT p.rolname::text, p.rolsuper, p.rolbypassrls
+      FROM reachable r JOIN pg_roles p ON p.oid = r.oid
+      WHERE p.rolsuper OR p.rolbypassrls`
+
+    expect(reachable).toEqual([])
+  })
+
+  it('a runtime role holds no table privilege outside folio_app', async () => {
+    const privileges = await ownerPrisma.$queryRaw<
+      { role: string; table_name: string; privilege: string }[]
+    >`SELECT r.role, t.table_name::text, p.privilege
+      FROM unnest(${runtimeRoles}::text[]) AS r(role)
+      CROSS JOIN information_schema.tables t
+      CROSS JOIN unnest(ARRAY['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE']) AS p(privilege)
+      WHERE t.table_schema = 'public'
+        AND has_table_privilege(r.role, format('public.%I', t.table_name), p.privilege)`
+
+    expect(privileges).toEqual([])
+  })
+
+  it('the prisma singleton cannot read users outside db.run', async () => {
+    await seedOwner('test-token', 'Firm A')
+
+    await expect(prisma.user.findMany()).rejects.toThrow(
+      /permission denied for table users/
+    )
+  })
+
+  it('organizationDb on the runtime connection returns only the bound firm rows', async () => {
+    const a = await seedOwner('test-token', 'Firm A')
+    await seedOwner('other-token', 'Firm B')
+
+    const result = await organizationDb({ orgId: a.orgId }).run(async (tx) => ({
+      session: await tx.$queryRaw<
+        { user: string }[]
+      >`SELECT session_user::text AS user`,
+      orgIds: (await tx.user.findMany()).map(({ orgId }) => orgId)
+    }))
+
+    expect(result._unsafeUnwrap()).toEqual({
+      session: [{ user: 'folio_runtime_a' }],
+      orgIds: [a.orgId]
+    })
+  })
+
+  it('a runtime role cannot SET ROLE to the table owner', async () => {
+    const [table] = await ownerPrisma.$queryRaw<
+      { owner: string }[]
+    >`SELECT tableowner::text AS owner FROM pg_tables WHERE schemaname = 'public' AND tablename = 'users'`
+
+    expect(table).toBeDefined()
+    await expect(
+      prisma.$executeRawUnsafe(`SET ROLE "${table?.owner}"`)
+    ).rejects.toThrow(/permission denied to set role/)
   })
 })
