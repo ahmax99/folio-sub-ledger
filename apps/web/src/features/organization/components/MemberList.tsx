@@ -1,4 +1,4 @@
-import type { MemberList as Members } from '@shared/config'
+import type { MemberListItem } from '@shared/config'
 
 import { Badge } from '@/components/atoms/Badge'
 import { Skeleton } from '@/components/atoms/Skeleton'
@@ -37,7 +37,7 @@ const MemberTable = ({ children }: Readonly<{ children: React.ReactNode }>) => (
 const MemberRow = ({
   member,
   isCaller
-}: Readonly<{ member: Members[number]; isCaller: boolean }>) => (
+}: Readonly<{ member: MemberListItem; isCaller: boolean }>) => (
   <TableRow>
     {/* Below sm the email folds under the name, so both lines fit the 40px row. */}
     <TableCell className="py-0.5">
@@ -84,7 +84,7 @@ const MemberRow = ({
 export const MemberList = ({
   members,
   currentUserId
-}: Readonly<{ members: Members; currentUserId: string }>) => (
+}: Readonly<{ members: MemberListItem[]; currentUserId: string }>) => (
   <section className="flex flex-col gap-4">
     <div className="flex flex-col gap-1">
       <h1 className="text-3xl font-bold">Members</h1>

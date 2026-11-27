@@ -6,7 +6,8 @@ import { OrganizationModel } from './organization.model.js'
 const memberListItem = z.object({
   id: z.uuid(),
   name: z.string(),
-  email: z.email(),
+  // Stored as Cognito sent it, never validated on write: one odd value must not fail the whole list.
+  email: z.string(),
   role: OrganizationModel.role
 })
 

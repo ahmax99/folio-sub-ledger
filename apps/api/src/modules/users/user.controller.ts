@@ -21,7 +21,7 @@ export const userController = new Elysia({ prefix: '/users' })
     },
     {
       organization: true,
-      response: UserModel.memberList,
+      response: { 200: UserModel.memberList },
       detail: {
         summary: "List the caller's firm members",
         description:
