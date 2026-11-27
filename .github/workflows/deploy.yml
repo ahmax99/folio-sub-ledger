@@ -151,6 +151,7 @@ jobs:
     timeout-minutes: 15
     environment: dev
     permissions:
+      id-token: write
       contents: read
     concurrency:
       group: neon-migrate-dev
@@ -179,6 +180,30 @@ jobs:
         run: bunx --bun turbo run db:deploy --filter=@shared/neon
         env:
           DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
+
+      # Runs after the migration that may create the runtime users, and before the backend that logs in as one.
+      - name: Get the pooled owner URL from Neon
+        id: pooled
+        uses: ./.github/actions/neon-owner-url
+        with:
+          pooled: 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+
+      - name: Configure AWS credentials (app-deploy role)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.APP_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: SetUpDbCredentialDev
+
+      # Writes the runtime credential on a new project; after that only checks that it logs in.
+      - name: Set up the runtime credential
+        run: .github/scripts/set-up-runtime-credential.sh
+        env:
+          OWNER_URL: ${{ steps.pooled.outputs.owner_url }}
+          SECRET_ID: ${{ github.event.repository.name }}-dev/database-url
 
   # ── Build jobs — push once into the central (shared-services) registry ─────
   build-backend:
@@ -471,6 +496,7 @@ jobs:
     timeout-minutes: 15
     environment: prod # required-reviewer gate
     permissions:
+      id-token: write
       contents: read
     concurrency:
       group: neon-migrate-prod
@@ -499,6 +525,30 @@ jobs:
         run: bunx --bun turbo run db:deploy --filter=@shared/neon
         env:
           DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
+
+      # Runs after the migration that may create the runtime users, and before the backend that logs in as one.
+      - name: Get the pooled owner URL from Neon
+        id: pooled
+        uses: ./.github/actions/neon-owner-url
+        with:
+          pooled: 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+
+      - name: Configure AWS credentials (app-deploy role)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.APP_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: SetUpDbCredentialProd
+
+      # Writes the runtime credential on a new project; after that only checks that it logs in.
+      - name: Set up the runtime credential
+        run: .github/scripts/set-up-runtime-credential.sh
+        env:
+          OWNER_URL: ${{ steps.pooled.outputs.owner_url }}
+          SECRET_ID: ${{ github.event.repository.name }}-prod/database-url
 
   # ── Prod deploy jobs ───────────────────────────────────────────────────────
   deploy-prod-backend:
