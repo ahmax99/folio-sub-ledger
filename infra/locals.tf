@@ -33,7 +33,10 @@ locals {
   # CloudFront distribution ARN
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
 
-  # OIDC subject the app-deploy role trusts
+  # Lambda functions the app-deploy role updates and publishes
+  app_lambda_function_arns = [module.backend.function_arn, module.frontend.function_arn]
+
+  # OIDC subjects the GitHub roles trust
   github_repo_ref       = "repo:${var.github_org}@${var.github_org_id}/${var.project_name}@${var.github_repo_id}"
   github_deploy_subject = var.environment == "prod" ? "${local.github_repo_ref}:environment:prod" : "${local.github_repo_ref}:*"
 

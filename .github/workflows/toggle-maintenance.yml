@@ -43,7 +43,6 @@ jobs:
       TF_VAR_root_domain: ${{ vars.TF_VAR_root_domain }}
       TF_VAR_contact_to_email: ${{ vars.TF_VAR_contact_to_email }}
       TF_VAR_from_email: ${{ vars.TF_VAR_from_email }}
-      TF_VAR_database_url: ${{ secrets.TF_VAR_database_url }}
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}
       TF_VAR_resend_api_key: ${{ secrets.TF_VAR_resend_api_key }}

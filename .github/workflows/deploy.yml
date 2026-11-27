@@ -103,7 +103,6 @@ jobs:
     env:
       TF_VAR_environment: dev
       TF_VAR_maintenance_mode: ${{ vars.MAINTENANCE_MODE || 'false' }}
-      TF_VAR_database_url: ${{ secrets.TF_VAR_database_url }}
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}
       TF_VAR_resend_api_key: ${{ secrets.TF_VAR_resend_api_key }}
@@ -179,7 +178,7 @@ jobs:
       - name: Deploy pending migrations
         run: bunx --bun turbo run db:deploy --filter=@shared/neon
         env:
-          DATABASE_URL: ${{ steps.owner.outputs.database_url }}
+          DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
 
   # ── Build jobs — push once into the central (shared-services) registry ─────
   build-backend:
@@ -422,7 +421,6 @@ jobs:
     env:
       TF_VAR_environment: prod
       TF_VAR_maintenance_mode: ${{ vars.MAINTENANCE_MODE || 'false' }}
-      TF_VAR_database_url: ${{ secrets.TF_VAR_database_url }}
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}
       TF_VAR_resend_api_key: ${{ secrets.TF_VAR_resend_api_key }}
@@ -500,7 +498,7 @@ jobs:
       - name: Deploy pending migrations
         run: bunx --bun turbo run db:deploy --filter=@shared/neon
         env:
-          DATABASE_URL: ${{ steps.owner.outputs.database_url }}
+          DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
 
   # ── Prod deploy jobs ───────────────────────────────────────────────────────
   deploy-prod-backend:

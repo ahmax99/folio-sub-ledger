@@ -201,7 +201,6 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `DNS_ACCOUNT_ROLE_ARN`        | variable | _(leave unset)_                                    | org output `dns_apex_manager_role_arn`              |
 | `STATIC_ASSETS_BUCKET`        | variable | Terraform output after first apply                 | Terraform output after first apply                  |
 | `CLOUDFRONT_DISTRIBUTION_ID`  | variable | Terraform output after first apply                 | Terraform output after first apply                  |
-| `TF_VAR_database_url`         | secret   | dev Neon connection string                         | prod Neon connection string                         |
 | `TF_VAR_google_client_id`     | secret   | dev OAuth client                                   | separate prod OAuth client                          |
 | `TF_VAR_google_client_secret` | secret   | dev OAuth client                                   | prod OAuth client                                   |
 | `TF_VAR_resend_api_key`       | secret   | Resend key                                         | prod Resend key                                     |
@@ -269,7 +268,7 @@ must change to resolve the project by ID before project-scoped keys can work.
 >   Broad by necessity: Terraform manages the whole account's app infra.
 > - **`APP_DEPLOY_ROLE_ARN`** (per-env, scoped `gha-app-deploy`) — the
 >   `deploy.yml` app deploy jobs. This role is created by **this repo's own
->   Terraform** (`modules/github-deploy-role`, consuming the org-created OIDC
+>   Terraform** (`modules/github-oidc-role`, consuming the org-created OIDC
 >   provider), so it's a captured Terraform output, not an org output. Its
 >   policy grants only the Lambda/CodeDeploy/S3/CloudFront/ECR-pull actions
 >   those jobs perform, scoped to this environment's **exact** resource ARNs — a
