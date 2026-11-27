@@ -59,10 +59,12 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   )
 }
 
+// No vertical padding: the row's h-10 sets the height and align-middle centres
+// the content, so a 24px avatar or a two-line cell can't grow a row past 40px.
 function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   return (
     <td
-      className={cn('px-3 py-2.5 align-middle text-sm', className)}
+      className={cn('px-3 align-middle text-sm', className)}
       data-slot="table-cell"
       {...props}
     />

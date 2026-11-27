@@ -17,23 +17,26 @@ import { ROLE_LABELS } from '../constants/role'
 import { getInitials } from '../utils/initials'
 
 // table-fixed lets long names and emails truncate instead of widening the page.
+// Emails run longer than names, so at sm: Email takes the width left over.
 const MemberTable = ({ children }: Readonly<{ children: React.ReactNode }>) => (
-  <Table className="table-fixed">
-    <TableHeader>
-      <TableRow>
-        <TableHead className="sm:w-100" scope="col">
-          Member
-        </TableHead>
-        <TableHead className="hidden sm:table-cell" scope="col">
-          Email
-        </TableHead>
-        <TableHead className="w-28 sm:w-50" scope="col">
-          Role
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>{children}</TableBody>
-  </Table>
+  <div className="overflow-hidden rounded-lg border">
+    <Table className="table-fixed">
+      <TableHeader className="bg-muted [&_th]:text-muted-foreground">
+        <TableRow>
+          <TableHead className="sm:w-60" scope="col">
+            Member
+          </TableHead>
+          <TableHead className="hidden sm:table-cell" scope="col">
+            Email
+          </TableHead>
+          <TableHead className="w-28" scope="col">
+            Role
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>{children}</TableBody>
+    </Table>
+  </div>
 )
 
 const MemberRow = ({
@@ -41,22 +44,26 @@ const MemberRow = ({
   isCaller
 }: Readonly<{ member: MemberListItem; isCaller: boolean }>) => (
   <TableRow>
-    {/* Below sm the email folds under the name, so both lines fit the 40px row. */}
-    <TableCell className="py-0.5 sm:py-2.5">
+    {/* Below sm the email folds under the name: 20px + 16px lines fit the 40px row. */}
+    <TableCell>
       <div className="flex min-w-0 items-center gap-2">
         <Avatar size="sm">
-          <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+          <AvatarFallback className="group-data-[size=sm]/avatar:text-xs">
+            {getInitials(member.name)}
+          </AvatarFallback>
         </Avatar>
-        <div className="flex min-w-0 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <span
-            className="truncate text-sm leading-5 font-medium"
+            className="flex h-5 min-w-0 items-center gap-2 text-sm leading-5 font-medium"
             data-slot="member-name"
           >
-            {member.name}
+            <span className="truncate">{member.name}</span>
             {isCaller && (
               <>
                 {' '}
-                <Badge variant="outline">You</Badge>
+                <Badge className="h-5" variant="outline">
+                  You
+                </Badge>
               </>
             )}
           </span>
@@ -78,7 +85,9 @@ const MemberRow = ({
       </span>
     </TableCell>
     <TableCell>
-      <Badge variant="secondary">{ROLE_LABELS[member.role]}</Badge>
+      <Badge className="h-5" variant="secondary">
+        {ROLE_LABELS[member.role]}
+      </Badge>
     </TableCell>
   </TableRow>
 )
@@ -124,7 +133,7 @@ export const MemberListSkeleton = () => (
     <MemberTable>
       {PLACEHOLDER_ROWS.map((row) => (
         <TableRow key={row.name}>
-          <TableCell className="py-0.5 sm:py-2.5">
+          <TableCell>
             <div className="flex items-center gap-2">
               <Skeleton className="size-6 rounded-full" />
               <div className="flex flex-col gap-1">
