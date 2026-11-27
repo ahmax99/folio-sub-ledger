@@ -2,6 +2,7 @@
 # Two phases of an environment teardown, because prevent_destroy blocks terraform destroy on the Neon project:
 #   release  takes the project out of Terraform state (before the destroy) and writes its ID to GITHUB_OUTPUT
 #   delete   deletes the project (after the destroy); a project that is already gone only gives a notice
+#   restore  re-imports a released project after a failed run, so a later apply can't create a second one
 set -euo pipefail
 
 release() {
@@ -51,11 +52,23 @@ delete() {
   esac
 }
 
+restore() {
+  : "${RELEASED_PROJECT_ID:?RELEASED_PROJECT_ID is required}"
+
+  if [ -z "$("$(dirname "$0")/neon-find-project.sh" --id "$RELEASED_PROJECT_ID")" ]; then
+    echo "::notice::Neon project ${RELEASED_PROJECT_ID} is already deleted; nothing to restore."
+    return
+  fi
+  terraform -chdir=infra import -input=false module.database.neon_project.this "$RELEASED_PROJECT_ID"
+  echo "::warning::The teardown failed, so Neon project ${RELEASED_PROJECT_ID} is back in Terraform state. Re-dispatch to finish."
+}
+
 case "${1:-}" in
   release) release ;;
   delete) delete ;;
+  restore) restore ;;
   *)
-    echo "Usage: $0 release|delete" >&2
+    echo "Usage: $0 release|delete|restore" >&2
     exit 2
     ;;
 esac

@@ -141,9 +141,9 @@ module "database" {
   org_id                    = var.neon_org_id
   region_id                 = local.neon_region_id
   pg_version                = tonumber(trimspace(file("${path.root}/../.postgres-version")))
-  history_retention_seconds = local.env.neon_history_retention_seconds
-  database_name             = "folio"
-  database_user             = "folio_owner"
+  history_retention_seconds = local.neon_history_retention_seconds
+  database_name             = local.database_name
+  database_user             = local.database_owner
 }
 
 # -------------------

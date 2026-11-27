@@ -161,49 +161,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Migrate and set up the runtime credential
+        uses: ./.github/actions/neon-migrate
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Get the owner URL from Neon
-        id: owner
-        uses: ./.github/actions/neon-owner-url
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
-
-      - name: Deploy pending migrations
-        run: bunx --bun turbo run db:deploy --filter=@shared/neon
-        env:
-          DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
-
-      # Runs after the migration that may create the runtime users, and before the backend that logs in as one.
-      - name: Get the pooled owner URL from Neon
-        id: pooled
-        uses: ./.github/actions/neon-owner-url
-        with:
-          pooled: 'true'
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
-
-      - name: Configure AWS credentials (app-deploy role)
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
+          environment: dev
+          neon-api-key: ${{ secrets.NEON_API_KEY }}
+          neon-project-id: ${{ vars.NEON_PROJECT_ID }}
           role-to-assume: ${{ vars.APP_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: SetUpDbCredentialDev
-
-      # Writes the runtime credential on a new project; after that only checks that it logs in.
-      - name: Set up the runtime credential
-        run: .github/scripts/set-up-runtime-credential.sh
-        env:
-          OWNER_URL: ${{ steps.pooled.outputs.owner_url }}
-          SECRET_ID: ${{ github.event.repository.name }}-dev/database-url
 
   # ── Build jobs — push once into the central (shared-services) registry ─────
   build-backend:
@@ -506,49 +471,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Migrate and set up the runtime credential
+        uses: ./.github/actions/neon-migrate
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Get the owner URL from Neon
-        id: owner
-        uses: ./.github/actions/neon-owner-url
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
-
-      - name: Deploy pending migrations
-        run: bunx --bun turbo run db:deploy --filter=@shared/neon
-        env:
-          DATABASE_URL: ${{ steps.owner.outputs.owner_url }}
-
-      # Runs after the migration that may create the runtime users, and before the backend that logs in as one.
-      - name: Get the pooled owner URL from Neon
-        id: pooled
-        uses: ./.github/actions/neon-owner-url
-        with:
-          pooled: 'true'
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
-
-      - name: Configure AWS credentials (app-deploy role)
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
+          environment: prod
+          neon-api-key: ${{ secrets.NEON_API_KEY }}
+          neon-project-id: ${{ vars.NEON_PROJECT_ID }}
           role-to-assume: ${{ vars.APP_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: SetUpDbCredentialProd
-
-      # Writes the runtime credential on a new project; after that only checks that it logs in.
-      - name: Set up the runtime credential
-        run: .github/scripts/set-up-runtime-credential.sh
-        env:
-          OWNER_URL: ${{ steps.pooled.outputs.owner_url }}
-          SECRET_ID: ${{ github.event.repository.name }}-prod/database-url
 
   # ── Prod deploy jobs ───────────────────────────────────────────────────────
   deploy-prod-backend:
