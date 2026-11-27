@@ -37,6 +37,18 @@ Use `Grep` and `Read` to identify:
 
 Do not start writing the plan until you have a clear mental model of the touched area. Follow `.claude/rules/architecture.md`, `conventions.md`, and `principles.md`.
 
+Also read the Accepted ADRs (`grep -l '^- Status: Accepted' docs/decisions/*.md`) that cover the touched area. The plan follows them. If the task can't, the plan proposes a superseding ADR (step 2a) instead of quietly contradicting one.
+
+### 2a. Propose ADRs for significant decisions
+
+For each decision the plan makes that is architecturally significant by the list in `docs/decisions/README.md`, and that no Accepted ADR already covers, write a Proposed ADR:
+
+- File: `docs/decisions/<date>-<title>.md`, the title derived and validated exactly like the plan slug in step 1 (`^[a-z0-9-]+$`, `-2` suffix if taken).
+- Content: copy `docs/decisions/template.md` and fill Context, Decision, Consequences and Compliance (Alternatives and Sources when they help). `Status: Proposed`, `Proposed: <date> by planner`, `Accepted:` left blank. Never write `Accepted` — only a human approves.
+- To replace an Accepted ADR, set `Supersedes: <old file>` and leave the old file unchanged; the human updates it on acceptance.
+
+Decisions that are local to one step (a helper's name, a file's location inside a feature) stay in the plan only.
+
 ### 3. Write the plan file
 
 Use this exact template, writing to `.claude/plans/<slug>.md` via the `Write` tool:
@@ -84,7 +96,8 @@ Use this exact template, writing to `.claude/plans/<slug>.md` via the `Write` to
 
 ## Architecture Decisions
 
-- <Decision 1>: <rationale>
+- <Decision 1>: <rationale> — `docs/decisions/<file>.md` (Proposed | Accepted)
+- <Local decision with no ADR>: <rationale>
 
 ## Risk Assessment
 
@@ -113,6 +126,9 @@ Active plan:  .claude/plans/.current → <slug>.md
 Key architectural decisions:
 - ...
 
+Proposed ADRs (need a human to set Status: Accepted before /implement):
+- docs/decisions/<file>.md — <one-line decision>   (or "none")
+
 Risks to flag:
 - ...
 ```
@@ -132,4 +148,4 @@ Risks to flag:
 ## Limits
 
 - Maximum 12 implementation steps. If the task needs more, note this at the top of the plan and recommend splitting into sub-plans.
-- Do not invoke other subagents. Your job ends at writing the plan and updating `.current`.
+- Do not invoke other subagents. Your job ends at writing the plan, its Proposed ADRs, and updating `.current`.

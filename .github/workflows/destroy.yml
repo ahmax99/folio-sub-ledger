@@ -64,7 +64,6 @@ jobs:
       TF_VAR_root_domain: ${{ vars.TF_VAR_root_domain }}
       TF_VAR_contact_to_email: ${{ vars.TF_VAR_contact_to_email }}
       TF_VAR_from_email: ${{ vars.TF_VAR_from_email }}
-      TF_VAR_database_url: ${{ secrets.TF_VAR_database_url }}
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}
       TF_VAR_resend_api_key: ${{ secrets.TF_VAR_resend_api_key }}
@@ -72,6 +71,8 @@ jobs:
       TF_VAR_frontend_sentry_dsn: ${{ secrets.TF_VAR_frontend_sentry_dsn }}
       TF_VAR_central_ecr_account_id: ${{ vars.CENTRAL_ECR_ACCOUNT_ID }}
       TF_VAR_dns_account_role_arn: ${{ vars.DNS_ACCOUNT_ROLE_ARN }}
+      TF_VAR_neon_org_id: ${{ vars.NEON_ORG_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
       TF_VAR_github_org: ${{ github.repository_owner }}
       TF_VAR_github_org_id: ${{ github.repository_owner_id }}
       TF_VAR_github_repo_id: ${{ github.repository_id }}
@@ -114,6 +115,12 @@ jobs:
           chmod +x .github/scripts/destroy-purge-buckets.sh
           .github/scripts/destroy-purge-buckets.sh
 
+      - name: Release the Neon project from state
+        id: neon
+        run: |
+          chmod +x .github/scripts/destroy-neon-project.sh
+          .github/scripts/destroy-neon-project.sh release
+
       - name: Terraform destroy
         run: |
           chmod +x .github/scripts/terraform-destroy-retry.sh
@@ -141,31 +148,29 @@ jobs:
           fi
           echo "State is empty — every managed resource is destroyed."
 
-  db-reset:
-    name: Reset the ${{ inputs.environment }} database
-    needs: destroy
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: ${{ inputs.environment }}
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          ref: main
-
-      - name: Ensure psql is available
-        run: command -v psql >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client; }
-
-      - name: Drop every table
+      - name: Delete the Neon project
+        id: delete_neon
         env:
-          DATABASE_URL: ${{ secrets.TF_VAR_database_url }}
+          NEON_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
+          RELEASED_PROJECT_ID: ${{ steps.neon.outputs.neon_project_id }}
+          NEON_ORG_ID: ${{ vars.NEON_ORG_ID }}
+          PROJECT_NAME: ${{ github.event.repository.name }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          chmod +x .github/scripts/destroy-reset-database.sh
-          .github/scripts/destroy-reset-database.sh
+          chmod +x .github/scripts/destroy-neon-project.sh
+          .github/scripts/destroy-neon-project.sh delete
+
+      # A run that failed after the release must not leave the project outside state: a later apply would create a second one.
+      - name: Put the Neon project back in state
+        if: failure() && steps.neon.outputs.neon_project_id != '' && steps.delete_neon.outcome != 'success'
+        env:
+          # The import's provider and the lookup both use the organization key; the project may be half torn down.
+          NEON_API_KEY: ${{ secrets.NEON_ORG_API_KEY }}
+          RELEASED_PROJECT_ID: ${{ steps.neon.outputs.neon_project_id }}
+          NEON_ORG_ID: ${{ vars.NEON_ORG_ID }}
+        run: |
+          chmod +x .github/scripts/destroy-neon-project.sh
+          .github/scripts/destroy-neon-project.sh restore
 
   ecr-purge:
     name: Purge the shared ECR images

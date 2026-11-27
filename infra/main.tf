@@ -132,6 +132,21 @@ module "lambda_permissions" {
 }
 
 # -------------------
+# Database (Neon)
+# -------------------
+module "database" {
+  source = "./modules/database"
+
+  project_name              = local.name_prefix
+  org_id                    = var.neon_org_id
+  region_id                 = local.neon_region_id
+  pg_version                = tonumber(trimspace(file("${path.root}/../.postgres-version")))
+  history_retention_seconds = local.neon_history_retention_seconds
+  database_name             = local.database_name
+  database_user             = local.database_owner
+}
+
+# -------------------
 # Cognito
 # -------------------
 module "cognito" {
@@ -305,8 +320,7 @@ module "database_secret" {
   source = "./modules/secret-manager"
 
   secret_name          = "${local.name_prefix}/database-url"
-  secret_description   = "Database connection URL for ${var.environment} environment"
-  secret_value         = var.database_url
+  secret_description   = "Runtime database credentials for ${var.environment} (written once by deploy.yml)"
   recovery_window_days = 7
 
   tags = merge(
@@ -485,17 +499,87 @@ module "monitoring" {
 # GitHub app-deploy role
 # -------------------
 module "app_deploy_role" {
-  source = "./modules/github-deploy-role"
+  source = "./modules/github-oidc-role"
 
   role_name      = "${local.name_prefix}-app-deploy"
   github_subject = local.github_deploy_subject
 
-  lambda_function_arns             = [module.backend.function_arn, module.frontend.function_arn]
-  codedeploy_application_arns      = [module.codedeploy_backend.application_arn, module.codedeploy_frontend.application_arn]
-  codedeploy_deployment_group_arns = [module.codedeploy_backend.deployment_group_arn, module.codedeploy_frontend.deployment_group_arn]
-  static_assets_bucket_arn         = module.s3_static_assets.bucket_arn
-  cloudfront_distribution_arn      = local.cloudfront_distribution_arn
-  ecr_pull_repository_arns         = [local.ecr_backend_repository_arn, local.ecr_frontend_repository_arn]
+  policy_statements = [
+    {
+      sid = "LambdaDeploy"
+      actions = [
+        "lambda:UpdateFunctionCode",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:PublishVersion",
+        "lambda:GetAlias",
+        "lambda:ListVersionsByFunction",
+      ]
+      resources = concat(
+        local.app_lambda_function_arns,
+        [for arn in local.app_lambda_function_arns : "${arn}:*"],
+      )
+    },
+    {
+      sid = "CodeDeploy"
+      actions = [
+        "codedeploy:CreateDeployment",
+        "codedeploy:GetDeployment",
+        "codedeploy:RegisterApplicationRevision",
+        "codedeploy:GetApplicationRevision",
+      ]
+      resources = [
+        module.codedeploy_backend.application_arn,
+        module.codedeploy_frontend.application_arn,
+        module.codedeploy_backend.deployment_group_arn,
+        module.codedeploy_frontend.deployment_group_arn,
+      ]
+    },
+    {
+      sid       = "CodeDeployConfig"
+      actions   = ["codedeploy:GetDeploymentConfig"]
+      resources = ["arn:aws:codedeploy:${var.aws_region}:${data.aws_caller_identity.current.account_id}:deploymentconfig:*"]
+    },
+    {
+      sid       = "EcrAuth"
+      actions   = ["ecr:GetAuthorizationToken"]
+      resources = ["*"]
+    },
+    {
+      sid = "EcrPull"
+      actions = [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer",
+      ]
+      resources = [local.ecr_backend_repository_arn, local.ecr_frontend_repository_arn]
+    },
+    {
+      sid       = "StaticAssetsList"
+      actions   = ["s3:ListBucket"]
+      resources = [module.s3_static_assets.bucket_arn]
+    },
+    {
+      sid       = "StaticAssetsWrite"
+      actions   = ["s3:PutObject", "s3:DeleteObject"]
+      resources = ["${module.s3_static_assets.bucket_arn}/*"]
+    },
+    {
+      sid       = "CloudFrontInvalidate"
+      actions   = ["cloudfront:CreateInvalidation"]
+      resources = [local.cloudfront_distribution_arn]
+    },
+    {
+      # The migrate job writes the runtime credential on a new project, then only reads it.
+      sid = "RuntimeDatabaseSecret"
+      actions = [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:PutSecretValue",
+      ]
+      resources = [module.database_secret.secret_arn]
+    },
+  ]
 
   tags = merge(
     local.common_tags,

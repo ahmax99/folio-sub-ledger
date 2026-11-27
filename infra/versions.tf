@@ -14,5 +14,9 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
+    neon = {
+      source  = "neondatabase/neon"
+      version = "0.19.0-beta.4"
+    }
   }
 }

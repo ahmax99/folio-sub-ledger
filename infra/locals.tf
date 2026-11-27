@@ -33,9 +33,13 @@ locals {
   # CloudFront distribution ARN
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
 
-  # OIDC subject the app-deploy role trusts
-  github_repo_ref       = "repo:${var.github_org}@${var.github_org_id}/${var.project_name}@${var.github_repo_id}"
-  github_deploy_subject = var.environment == "prod" ? "${local.github_repo_ref}:environment:prod" : "${local.github_repo_ref}:*"
+  # Lambda functions the app-deploy role updates and publishes
+  app_lambda_function_arns = [module.backend.function_arn, module.frontend.function_arn]
+
+  # OIDC subjects the GitHub roles trust
+  github_repo_ref = "repo:${var.github_org}@${var.github_org_id}/${var.project_name}@${var.github_repo_id}"
+  # Only jobs in the environment's GitHub environment; the PR preview jobs run in dev-preview, so they get a different claim.
+  github_deploy_subject = "${local.github_repo_ref}:environment:${var.environment}"
 
   # Maintenance switch
   provisioned_concurrent_executions = var.maintenance_mode ? 0 : local.env.provisioned_concurrent_executions
@@ -63,4 +67,10 @@ locals {
   }
 
   env = local.env_config[var.environment]
+
+  # Neon settings that are the same in every environment
+  neon_region_id                 = "aws-ap-southeast-1"
+  neon_history_retention_seconds = 21600
+  database_name                  = "folio"
+  database_owner                 = "folio_owner"
 }

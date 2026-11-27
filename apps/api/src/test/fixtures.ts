@@ -1,5 +1,4 @@
-import { prisma } from '@shared/neon'
-
+import { ownerPrisma } from '@/test/db.js'
 import { identities, type Token } from '@/test/identities.js'
 
 const userOf = (token: Token) => {
@@ -11,7 +10,7 @@ export const seedOwner = (
   token: Token = 'test-token',
   organizationName = 'Test Firm'
 ) =>
-  prisma.user.create({
+  ownerPrisma.user.create({
     data: {
       ...userOf(token),
       role: 'OWNER',
@@ -20,7 +19,7 @@ export const seedOwner = (
   })
 
 export const addAnalyst = (orgId: string) =>
-  prisma.user.create({
+  ownerPrisma.user.create({
     data: { ...userOf('analyst-token'), role: 'ANALYST', orgId }
   })
 

@@ -103,13 +103,14 @@ jobs:
     env:
       TF_VAR_environment: dev
       TF_VAR_maintenance_mode: ${{ vars.MAINTENANCE_MODE || 'false' }}
-      TF_VAR_database_url: ${{ secrets.TF_VAR_database_url }}
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}
       TF_VAR_resend_api_key: ${{ secrets.TF_VAR_resend_api_key }}
       TF_VAR_backend_sentry_dsn: ${{ secrets.TF_VAR_backend_sentry_dsn }}
       TF_VAR_frontend_sentry_dsn: ${{ secrets.TF_VAR_frontend_sentry_dsn }}
       TF_VAR_dns_account_role_arn: ${{ vars.DNS_ACCOUNT_ROLE_ARN }}
+      TF_VAR_neon_org_id: ${{ vars.NEON_ORG_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
 
     steps:
       - name: Checkout repository
@@ -150,6 +151,7 @@ jobs:
     timeout-minutes: 15
     environment: dev
     permissions:
+      id-token: write
       contents: read
     concurrency:
       group: neon-migrate-dev
@@ -159,18 +161,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Migrate and set up the runtime credential
+        uses: ./.github/actions/neon-migrate
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Deploy pending migrations
-        run: bunx --bun turbo run db:deploy --filter=@shared/neon
-        env:
-          DATABASE_URL: ${{ secrets.TF_VAR_database_url }}
+          environment: dev
+          neon-api-key: ${{ secrets.NEON_API_KEY }}
+          neon-project-id: ${{ vars.NEON_PROJECT_ID }}
+          role-to-assume: ${{ vars.APP_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
   # ── Build jobs — push once into the central (shared-services) registry ─────
   build-backend:
@@ -413,13 +411,14 @@ jobs:
     env:
       TF_VAR_environment: prod
       TF_VAR_maintenance_mode: ${{ vars.MAINTENANCE_MODE || 'false' }}
-      TF_VAR_database_url: ${{ secrets.TF_VAR_database_url }}
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}
       TF_VAR_resend_api_key: ${{ secrets.TF_VAR_resend_api_key }}
       TF_VAR_backend_sentry_dsn: ${{ secrets.TF_VAR_backend_sentry_dsn }}
       TF_VAR_frontend_sentry_dsn: ${{ secrets.TF_VAR_frontend_sentry_dsn }}
       TF_VAR_dns_account_role_arn: ${{ vars.DNS_ACCOUNT_ROLE_ARN }}
+      TF_VAR_neon_org_id: ${{ vars.NEON_ORG_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
 
     steps:
       - name: Checkout repository
@@ -462,6 +461,7 @@ jobs:
     timeout-minutes: 15
     environment: prod # required-reviewer gate
     permissions:
+      id-token: write
       contents: read
     concurrency:
       group: neon-migrate-prod
@@ -471,18 +471,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Migrate and set up the runtime credential
+        uses: ./.github/actions/neon-migrate
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Deploy pending migrations
-        run: bunx --bun turbo run db:deploy --filter=@shared/neon
-        env:
-          DATABASE_URL: ${{ secrets.TF_VAR_database_url }}
+          environment: prod
+          neon-api-key: ${{ secrets.NEON_API_KEY }}
+          neon-project-id: ${{ vars.NEON_PROJECT_ID }}
+          role-to-assume: ${{ vars.APP_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
   # ── Prod deploy jobs ───────────────────────────────────────────────────────
   deploy-prod-backend:

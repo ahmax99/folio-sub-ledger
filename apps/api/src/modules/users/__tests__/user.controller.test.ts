@@ -1,8 +1,8 @@
-import { prisma } from '@shared/neon'
 import { v7 as uuidv7 } from 'uuid'
 import { describe, expect, it, vi } from 'vitest'
 
 import { userController } from '@/modules/users/user.controller.js'
+import { ownerPrisma } from '@/test/db.js'
 import { addAnalyst, seedOwner, send } from '@/test/fixtures.js'
 import type { Token } from '@/test/identities.js'
 
@@ -15,7 +15,7 @@ const call = (method: string, path: string, token?: Token, body?: unknown) =>
 
 describe('user controller', () => {
   it('starts every test with empty tables', async () => {
-    expect(await prisma.user.count()).toBe(0)
+    expect(await ownerPrisma.user.count()).toBe(0)
   })
 
   it('GET /users/me returns the caller with their organization and role', async () => {
@@ -57,7 +57,7 @@ describe('user controller', () => {
 
     expect(res.status).toBe(401)
     expect(res.headers.get('www-authenticate')).toBe('Bearer realm="api"')
-    expect(await prisma.user.count()).toBe(0)
+    expect(await ownerPrisma.user.count()).toBe(0)
   })
 
   it.each([
@@ -86,8 +86,8 @@ describe('user controller', () => {
     const res = await call('DELETE', `/users/${owner.id}`, 'test-token')
 
     expect(res.status).toBe(200)
-    expect(await prisma.user.count()).toBe(0)
-    expect(await prisma.organization.count()).toBe(0)
+    expect(await ownerPrisma.user.count()).toBe(0)
+    expect(await ownerPrisma.organization.count()).toBe(0)
   })
 
   it('DELETE /users/:id by an Owner is refused while other members remain', async () => {
@@ -97,8 +97,8 @@ describe('user controller', () => {
     const res = await call('DELETE', `/users/${owner.id}`, 'test-token')
 
     expect(res.status).toBe(400)
-    expect(await prisma.user.count()).toBe(2)
-    expect(await prisma.organization.count()).toBe(1)
+    expect(await ownerPrisma.user.count()).toBe(2)
+    expect(await ownerPrisma.organization.count()).toBe(1)
   })
 
   it('PUT /users/:id by an Analyst on a colleague returns 403', async () => {
@@ -155,7 +155,7 @@ describe('user controller', () => {
 
         expect(res.status).toBe(404)
         expect(
-          await prisma.user.findUnique({ where: { id: victim.id } })
+          await ownerPrisma.user.findUnique({ where: { id: victim.id } })
         ).toEqual(victim)
       }
     )

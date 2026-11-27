@@ -1,8 +1,8 @@
-import { prisma } from '@shared/neon'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { logger } from '@/config/logger.js'
 import { organizationController } from '@/modules/organizations/organization.controller.js'
+import { ownerPrisma } from '@/test/db.js'
 import { send } from '@/test/fixtures.js'
 import type { Token } from '@/test/identities.js'
 
@@ -11,10 +11,12 @@ const setupOrganization = (body: unknown, token: Token = 'test-token') =>
 
 describe('organization controller', () => {
   afterEach(async () => {
-    await prisma.$executeRawUnsafe(
+    await ownerPrisma.$executeRawUnsafe(
       'DROP TRIGGER IF EXISTS fail_user_insert ON users'
     )
-    await prisma.$executeRawUnsafe('DROP FUNCTION IF EXISTS fail_user_insert()')
+    await ownerPrisma.$executeRawUnsafe(
+      'DROP FUNCTION IF EXISTS fail_user_insert()'
+    )
   })
 
   it('creates one organization and one OWNER user with that orgId', async () => {
@@ -23,8 +25,8 @@ describe('organization controller', () => {
     expect(res.status).toBe(200)
     const org = await res.json()
     expect(org).toMatchObject({ name: 'Acme CPA' })
-    expect(await prisma.organization.count()).toBe(1)
-    expect(await prisma.user.findMany()).toMatchObject([
+    expect(await ownerPrisma.organization.count()).toBe(1)
+    expect(await ownerPrisma.user.findMany()).toMatchObject([
       {
         orgId: org.id,
         role: 'OWNER',
@@ -36,19 +38,19 @@ describe('organization controller', () => {
   })
 
   it('rolls back the organization when the user insert fails', async () => {
-    await prisma.$executeRawUnsafe(`
+    await ownerPrisma.$executeRawUnsafe(`
       CREATE FUNCTION fail_user_insert() RETURNS trigger AS $$
       BEGIN RAISE EXCEPTION 'forced failure'; END;
       $$ LANGUAGE plpgsql`)
-    await prisma.$executeRawUnsafe(`
+    await ownerPrisma.$executeRawUnsafe(`
       CREATE TRIGGER fail_user_insert BEFORE INSERT ON users
       FOR EACH ROW EXECUTE FUNCTION fail_user_insert()`)
 
     const res = await setupOrganization({ name: 'Acme CPA' })
 
     expect(res.status).toBeGreaterThanOrEqual(500)
-    expect(await prisma.organization.count()).toBe(0)
-    expect(await prisma.user.count()).toBe(0)
+    expect(await ownerPrisma.organization.count()).toBe(0)
+    expect(await ownerPrisma.user.count()).toBe(0)
   })
 
   it('returns the same organization on a second call and creates no rows', async () => {
@@ -58,8 +60,8 @@ describe('organization controller', () => {
 
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual(first)
-    expect(await prisma.organization.count()).toBe(1)
-    expect(await prisma.user.count()).toBe(1)
+    expect(await ownerPrisma.organization.count()).toBe(1)
+    expect(await ownerPrisma.user.count()).toBe(1)
   })
 
   it('produces exactly one organization for two parallel calls', async () => {
@@ -71,12 +73,12 @@ describe('organization controller', () => {
     expect(a.status).toBe(200)
     expect(b.status).toBe(200)
     expect(await a.json()).toEqual(await b.json())
-    expect(await prisma.organization.count()).toBe(1)
-    expect(await prisma.user.count()).toBe(1)
+    expect(await ownerPrisma.organization.count()).toBe(1)
+    expect(await ownerPrisma.user.count()).toBe(1)
   })
 
   it('ignores role, orgId, userId and cognitoSub in the body', async () => {
-    const existing = await prisma.organization.create({
+    const existing = await ownerPrisma.organization.create({
       data: { name: 'Victim Firm' }
     })
 
@@ -89,10 +91,10 @@ describe('organization controller', () => {
     })
 
     expect(res.status).toBe(200)
-    const user = await prisma.user.findFirstOrThrow()
+    const user = await ownerPrisma.user.findFirstOrThrow()
     expect(user).toMatchObject({ role: 'OWNER', cognitoSub: 'test-sub' })
     expect(user.orgId).not.toBe(existing.id)
-    expect(await prisma.organization.count()).toBe(2)
+    expect(await ownerPrisma.organization.count()).toBe(2)
   })
 
   it('gives two identities two organizations even with the same firm name', async () => {
@@ -102,8 +104,8 @@ describe('organization controller', () => {
     ).json()
 
     expect(a.id).not.toBe(b.id)
-    expect(await prisma.organization.count()).toBe(2)
-    expect(await prisma.user.count({ where: { role: 'OWNER' } })).toBe(2)
+    expect(await ownerPrisma.organization.count()).toBe(2)
+    expect(await ownerPrisma.user.count({ where: { role: 'OWNER' } })).toBe(2)
   })
 
   it('returns 401 without a token', async () => {
@@ -112,7 +114,7 @@ describe('organization controller', () => {
     })
 
     expect(res.status).toBe(401)
-    expect(await prisma.organization.count()).toBe(0)
+    expect(await ownerPrisma.organization.count()).toBe(0)
   })
 
   it.each([
@@ -125,7 +127,7 @@ describe('organization controller', () => {
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error.fields).toHaveProperty('name')
-    expect(await prisma.organization.count()).toBe(0)
+    expect(await ownerPrisma.organization.count()).toBe(0)
   })
 
   it('logs one access-provisioning line without the email or firm name', async () => {
@@ -133,7 +135,7 @@ describe('organization controller', () => {
 
     await setupOrganization({ name: 'Acme CPA' })
 
-    const org = await prisma.organization.findFirstOrThrow()
+    const org = await ownerPrisma.organization.findFirstOrThrow()
     const lines = info.mock.calls.filter(([entry]) =>
       JSON.stringify(entry).includes('Access provisioned')
     )

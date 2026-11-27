@@ -12,12 +12,12 @@ The following actions require explicit human approval before the loop
 proceeds. The loop halts at each gate and waits for a clear "go" — it never
 self-approves.
 
-| #   | Gate                           | Trigger condition                        | Who approves        | Clearance signal                                                    |
-| --- | ------------------------------ | ---------------------------------------- | ------------------- | ------------------------------------------------------------------- |
-| G1  | Pre-implement (first live run) | Plan posted as a comment on the issue    | Loop owner          | Add the `agent:approved` label                                      |
-| G0  | Pre-plan                       | Spec posted as a comment on the issue    | Loop owner          | Add the `agent:approved` label                                      |
-| G2  | Anomaly                        | Any of the four anomaly conditions below | Loop owner          | Manual: remove `agent:blocked` after fixing/deciding, then re-queue |
-| G3  | Merge                          | PR opened by the loop                    | Designated reviewer | Merge or close the PR yourself — the loop never merges              |
+| #   | Gate                           | Trigger condition                                                      | Who approves        | Clearance signal                                                                              |
+| --- | ------------------------------ | ---------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| G1  | Pre-implement (first live run) | Plan posted as a comment on the issue, with any Proposed ADRs it added | Loop owner          | Set each of those ADRs to `Accepted` on the issue branch, then add the `agent:approved` label |
+| G0  | Pre-plan                       | Spec posted as a comment on the issue                                  | Loop owner          | Add the `agent:approved` label                                                                |
+| G2  | Anomaly                        | Any of the four anomaly conditions below                               | Loop owner          | Manual: remove `agent:blocked` after fixing/deciding, then re-queue                           |
+| G3  | Merge                          | PR opened by the loop                                                  | Designated reviewer | Merge or close the PR yourself — the loop never merges                                        |
 
 G0 and G1 both clear on the same signal (`agent:approved`), but at different
 points in the pipeline: G0 gates `/plan` running at all (nothing has been
@@ -25,6 +25,27 @@ written to code yet); G1 gates `/implement` running (the first step that
 actually writes code) — this is the loop-maker-mandated "gate before the
 first real run." G2 is loop-maker's mandated anomaly gate. G3 is this loop's
 non-negotiable: it never merges its own work.
+
+### ADRs at the plan gate (G1)
+
+The planner writes a `Proposed` ADR in `docs/decisions/` for each
+architecturally significant decision a plan makes (see
+`docs/decisions/README.md`). Approving the plan without its ADRs would let
+`/implement` build on decisions no human has accepted, so G1 covers both.
+
+**The plan is approved only when every ADR the issue branch adds is
+Accepted.** The loop checks this before `/implement`, from git, not from the
+plan's prose:
+
+```
+git diff --name-only --diff-filter=A origin/main...HEAD -- docs/decisions/ \
+  | while read -r f; do grep -q '^- Status: Accepted' "$f" || echo "$f"; done
+```
+
+Empty output clears the ADR half of G1. Any file listed means G1 is not
+cleared, even with `agent:approved` present: the loop comments the list,
+removes `agent:approved`, keeps `agent:plan-pending-approval`, and stops for
+that issue. This is a normal wait, not an anomaly.
 
 ### Anomaly gate (G2) — trigger conditions
 
@@ -37,7 +58,10 @@ in-progress phase label, and posts a comment naming which condition tripped:
    regardless of the QA gate's result, per `.claude/rules/infra.md`'s
    existing rule against unattended infrastructure state changes.
 3. Scope drift — the branch's `git diff --stat` touches files not named in
-   the plan's "Files to modify/create" list or acceptance criteria.
+   the plan's "Files to modify/create" list or acceptance criteria. ADR
+   files under `docs/decisions/` are in scope when the plan's
+   **Architecture Decisions** section links them, or when an added ADR's
+   `Supersedes:` line names them.
 4. Any non-deterministic failure — a crash, a tool error, or
    `scripts/verify_qa_gate.sh` exiting 2 (misuse/anomaly, distinct from a
    normal exit-1 gate fail). Never silently retried.
@@ -55,6 +79,17 @@ in-progress phase label, and posts a comment naming which condition tripped:
   reviews it and adds the `agent:approved` label. The loop reads the
   `*-pending-approval` label + `agent:approved` pair together on its next
   invocation, acts, and removes both.
+- **G1's ADRs** — the plan comment links each Proposed ADR on the pushed
+  issue branch. For each one, before adding `agent:approved`:
+  - **Accept:** change `- Status: Proposed` to `- Status: Accepted`, fill the
+    `Accepted:` line, and commit to the issue branch (on GitHub, or in the
+    issue's worktree — commit there, because an uncommitted edit trips
+    anomaly 5). If it has `Supersedes: <old file>`, also set the old ADR's
+    status to `Superseded by <new file>` in the same commit.
+  - **Change:** edit the decision to the one you want, then accept it.
+  - **Reject the decision outright:** don't approve. Comment why, then move
+    the issue back to `agent:spec-pending-approval` + `agent:approved` so the
+    next run writes a fresh plan.
 - **G2** — a human reads the `agent:blocked` comment, resolves the underlying
   issue (fixes the code, decides to abandon, or manually intervenes), removes
   `agent:blocked`, and re-applies whichever label lets discovery pick the
@@ -65,7 +100,8 @@ in-progress phase label, and posts a comment naming which condition tripped:
 
 Never self-approve. The loop must not treat its own `/qa` output, or any of
 its own generated content, as a gate clearance — only an explicit
-human-applied label or a human merge/close action clears a gate.
+human-applied label, a human merge/close action, or a human edit of an ADR's
+status clears a gate. The loop never changes an ADR's `Status:` line.
 
 ---
 

@@ -14,12 +14,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**'],
-      exclude: [
-        'src/test/**',
-        '**/__tests__/**',
-        'src/index.ts',
-        'src/config/secrets.ts'
-      ],
+      exclude: ['src/test/**', '**/__tests__/**', 'src/index.ts'],
       reporter: ['text', 'text-summary', 'lcov']
     },
     env: {
