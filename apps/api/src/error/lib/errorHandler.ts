@@ -2,6 +2,7 @@ import type { FieldErrors } from '@shared/config'
 import { Elysia, ValidationError } from 'elysia'
 
 import { logger } from '@/config/logger.js'
+import { withRequestId } from '@/config/requestContext.js'
 import { AppError } from '@/error/lib/AppError.js'
 import { captureError } from '@/error/utils/captureError.js'
 import { mapToAppError } from '@/error/utils/catchError.js'
@@ -29,13 +30,13 @@ export const errorHandler = new Elysia({ name: 'error-handler' })
         path,
         method: request.method
       })
-      return error.toResponse()
+      return withRequestId(error.toResponse())
     }
 
     if (error instanceof ValidationError)
-      return toBadRequest(error).toResponse()
+      return withRequestId(toBadRequest(error).toResponse())
 
     const appError = mapToAppError(error)
     captureError(appError)
-    return appError.toResponse()
+    return withRequestId(appError.toResponse())
   })

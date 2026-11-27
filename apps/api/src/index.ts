@@ -1,35 +1,13 @@
 // Must stay the first import: Sentry instruments modules as they load.
 import '@/instrument.js'
-import { cors } from '@elysiajs/cors'
-import { Elysia } from 'elysia'
-import { helmet } from 'elysia-helmet'
-
+import { app } from '@/app.js'
 import { env } from '@/config/env.js'
-import { logger, loggerPlugin } from '@/config/logger.js'
+import { logger } from '@/config/logger.js'
 import { loadSecrets } from '@/config/secrets.js'
-import { routes } from '@/routes/index.js'
 
 await loadSecrets()
 
-const app = new Elysia()
-  .use(loggerPlugin)
-  .use(helmet())
-  .use(
-    cors({
-      origin: env.FRONTEND_URL,
-      credentials: true
-    })
-  )
-  .get('/', () => ({
-    message: 'Folio API',
-    version: '1.0.0',
-    documentation: '/api/v1/openapi',
-    endpoints: {
-      users: '/api/v1/users'
-    }
-  }))
-  .use(routes)
-  .listen(env.BACKEND_PORT)
+app.listen(env.BACKEND_PORT)
 
 logger.info(`🚀 Server running on port ${env.BACKEND_PORT}`)
 
