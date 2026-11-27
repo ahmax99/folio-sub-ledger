@@ -206,6 +206,7 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `TF_VAR_backend_sentry_dsn`   | secret   | dev backend Sentry project                         | prod backend Sentry project                         |
 | `TF_VAR_frontend_sentry_dsn`  | secret   | dev frontend Sentry project                        | prod frontend Sentry project                        |
 | `NEON_API_KEY`                | secret   | dev project-scoped key (bootstrap: org key, D3–D5) | prod project-scoped key (bootstrap: org key, P2–P4) |
+| `NEON_PROJECT_ID`             | variable | Terraform output `neon_project_id` (D5)            | Terraform output `neon_project_id` (P4)             |
 | `NEON_ORG_API_KEY`            | secret   | _(unset; teardown only)_                           | _(unset; teardown only)_                            |
 
 ### Rotation environments
@@ -215,10 +216,10 @@ the only job that can assume the rotation role is one that runs there (its
 OIDC trust names exactly `…:environment:<env>-db-rotation`). Create them under
 **Settings → Environments → New environment**, with no reviewer:
 
-| Environment        | Deployment branches and tags                                    | Secret `NEON_API_KEY`   | Variable `DB_ROTATION_ROLE_ARN`    |
-| ------------------ | --------------------------------------------------------------- | ----------------------- | ---------------------------------- |
-| `dev-db-rotation`  | **Selected branches and tags** → branch `main`                  | dev project-scoped key  | dev output `db_rotation_role_arn`  |
-| `prod-db-rotation` | **Selected branches and tags** → branch `main` **and** tag `v*` | prod project-scoped key | prod output `db_rotation_role_arn` |
+| Environment        | Deployment branches and tags                                    | Secret `NEON_API_KEY`   | Variable `NEON_PROJECT_ID`    | Variable `DB_ROTATION_ROLE_ARN`    |
+| ------------------ | --------------------------------------------------------------- | ----------------------- | ----------------------------- | ---------------------------------- |
+| `dev-db-rotation`  | **Selected branches and tags** → branch `main`                  | dev project-scoped key  | dev output `neon_project_id`  | dev output `db_rotation_role_arn`  |
+| `prod-db-rotation` | **Selected branches and tags** → branch `main` **and** tag `v*` | prod project-scoped key | prod output `neon_project_id` | prod output `db_rotation_role_arn` |
 
 `prod-db-rotation` needs the `v*` tag rule because `deploy.yml`'s
 `rotate-prod` runs on release tags. `NEON_ORG_ID` and `AWS_REGION` come from
@@ -254,20 +255,24 @@ Create new**: **Organization** for the bootstrap and teardown key,
 after its use, e.g. `folio-sub-ledger-dev-ci`, so revoking the right one is
 easy.
 
-**Check each project-scoped key once, before relying on it.** CI finds the
-project by listing the organization's projects, and Neon does not document
-whether a project-scoped key may do that. From the repo root, with Node 20.19
-or later (for the Neon CLI) and the new key typed at the prompt:
+**CI finds the project by ID, not by name.** A project-scoped key cannot list
+the organization's projects ("not allowed to perform actions outside the
+project this key is scoped to"), so each environment holds the project's ID in
+`vars.NEON_PROJECT_ID`, from the Terraform output `neon_project_id`. Only
+teardown, which runs with an organization key, still finds the project by name.
+
+**Check each project-scoped key once, before relying on it.** From any
+directory, with Node 20.19 or later and the new key typed at the prompt:
 
 ```bash
 read -rs -p 'Project-scoped key: ' NEON_API_KEY && export NEON_API_KEY
-NEON_ORG_ID=org-… .github/scripts/neon-find-project.sh --name folio-sub-ledger-dev
+npx --yes neon@9.5.0 connection-string --project-id <project-id> --role-name folio_owner --database-name folio --no-analytics </dev/null >/dev/null && echo ok
 unset NEON_API_KEY
 ```
 
-It must print exactly one project ID. If it prints nothing or fails with 401 or
-403, **keep the organization key in place and do not revoke it**: the lookup
-must change to resolve the project by ID before project-scoped keys can work.
+It must print `ok`. The connection string goes to `/dev/null`, so the owner
+password never reaches your terminal. If it fails, **keep the organization key
+in place and do not revoke it**.
 
 > **Three roles, three privilege tiers** (all variables — an IAM role ARN isn't
 > a secret). Each pipeline step assumes the least-privileged role that still
@@ -367,12 +372,17 @@ apply role, so the app-deploy role exists after it — capture it before D7.
 Then swap the Neon key. D4 created the `folio-sub-ledger-dev` project, so:
 
 1. Create a project-scoped key for `folio-sub-ledger-dev` and run the check in
-   [Neon API keys](#neon-api-keys). Stop here if it fails.
-2. Set it as dev's `NEON_API_KEY`, replacing the organization key.
+   [Neon API keys](#neon-api-keys) with dev's `neon_project_id`. Stop here if
+   it fails.
+2. Set it as dev's `NEON_API_KEY`, replacing the organization key, and set
+   dev's `vars.NEON_PROJECT_ID` to `neon_project_id`. Delete the old
+   repo-level `NEON_PROJECT_ID` variable if it still exists: an environment
+   without its own value would fall back to it.
 3. Keep the organization key until P4 swaps prod's; revoke it then.
 4. Create the `dev-db-rotation` environment
    ([Rotation environments](#rotation-environments)) with the new
-   project-scoped key and `vars.DB_ROTATION_ROLE_ARN` (`db_rotation_role_arn`).
+   project-scoped key, `vars.NEON_PROJECT_ID` and `vars.DB_ROTATION_ROLE_ARN`
+   (`db_rotation_role_arn`).
 
 **D6 — Register the Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -447,11 +457,12 @@ bootstrap mode only applies + publishes Lambda versions.
 
 Then swap the Neon key: create a project-scoped key for
 `folio-sub-ledger-prod`, run the check in [Neon API keys](#neon-api-keys) with
-`--name folio-sub-ledger-prod`, and set it as prod's `NEON_API_KEY`. No
+prod's `neon_project_id`, and set it as prod's `NEON_API_KEY`. Set prod's
+`vars.NEON_PROJECT_ID` to `neon_project_id`. No
 environment holds the organization key any more, so **revoke it** in the Neon
 console. Then create `prod-db-rotation`
 ([Rotation environments](#rotation-environments)) with the prod
-project-scoped key and prod's `db_rotation_role_arn`.
+project-scoped key, prod's `neon_project_id` and its `db_rotation_role_arn`.
 
 **P5 — Register the prod Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -639,9 +650,9 @@ The Route53 **hosted zone** (org-owned — only the records go), the central ECR
 and the state bucket. The state object is left present and holding an empty
 state, which is exactly what makes the next `terraform apply` clean.
 
-The environment's project-scoped `NEON_API_KEY` does **not** survive: it dies
-with its project. Before the next apply, put an organization key in that
-environment's `NEON_API_KEY`, then
-swap in a new project-scoped key afterwards, exactly as in D5 / P4, and put
-it in `<env>-db-rotation` too. Until then the daily rotation fails for that
-environment ("found 0" Neon projects); that changes nothing.
+The environment's project-scoped `NEON_API_KEY` and `NEON_PROJECT_ID` do
+**not** survive: they die with the project. Before the next apply, put an
+organization key in that environment's `NEON_API_KEY`. Afterwards, swap in a
+new project-scoped key and the new `neon_project_id`, exactly as in D5 / P4,
+in both `<env>` and `<env>-db-rotation`. Until then the daily rotation fails
+for that environment; that changes nothing.
