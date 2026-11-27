@@ -125,8 +125,12 @@ const PLACEHOLDER_ROWS = [
 ]
 
 export const MemberListSkeleton = () => (
-  <section className="flex flex-col gap-4">
-    <div className="flex flex-col gap-1">
+  <section
+    aria-busy="true"
+    aria-label="Loading members"
+    className="flex flex-col gap-4"
+  >
+    <div aria-hidden="true" className="flex flex-col gap-1">
       <Skeleton className="h-9 w-40" />
       <Skeleton className="h-5 w-22" />
     </div>

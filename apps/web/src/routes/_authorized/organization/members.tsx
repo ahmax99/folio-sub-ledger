@@ -11,13 +11,14 @@ import { membersQueryOptions } from '@/features/organization/lib/queries'
 import { PROTECTED_ROUTES } from '@/lib/routes'
 
 const back = { to: PROTECTED_ROUTES.ORGANIZATION_HOME, label: 'Back to Firm' }
+// wide: at sm the Email column needs the room to show whole addresses.
 
 const MembersPage = () => {
   const { data } = useSuspenseQuery(membersQueryOptions)
   const { user } = Route.useRouteContext()
 
   return (
-    <PageTemplate back={back}>
+    <PageTemplate back={back} maxWidth="wide">
       <MemberList currentUserId={user.id} members={data} />
     </PageTemplate>
   )
@@ -32,12 +33,12 @@ export const Route = createFileRoute('/_authorized/organization/members')({
       description: "Your firm's members"
     }),
   pendingComponent: () => (
-    <PageTemplate back={back}>
+    <PageTemplate back={back} maxWidth="wide">
       <MemberListSkeleton />
     </PageTemplate>
   ),
   errorComponent: (props) => (
-    <PageTemplate back={back}>
+    <PageTemplate back={back} maxWidth="wide">
       <RouteError
         {...props}
         description="Check your connection and try again. If it keeps happening, sign out and back in."

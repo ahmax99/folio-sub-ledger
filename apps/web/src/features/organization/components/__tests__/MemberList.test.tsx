@@ -181,6 +181,11 @@ describe('MemberListSkeleton', () => {
     expect(rows()).toHaveLength(4)
     expect(screen.queryByRole('heading')).toBeNull()
     expect(
+      screen
+        .getByRole('region', { name: 'Loading members' })
+        .getAttribute('aria-busy')
+    ).toBe('true')
+    expect(
       document.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(4)
   })
