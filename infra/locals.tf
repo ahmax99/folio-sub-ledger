@@ -41,6 +41,9 @@ locals {
   # Only jobs in the environment's GitHub environment; the PR preview jobs run in dev-preview, so they get a different claim.
   github_deploy_subject = "${local.github_repo_ref}:environment:${var.environment}"
 
+  # The backend p99 duration alarm is derived from it
+  backend_timeout_seconds = 30
+
   # Maintenance switch
   provisioned_concurrent_executions = var.maintenance_mode ? 0 : local.env.provisioned_concurrent_executions
 
@@ -51,7 +54,7 @@ locals {
       reserved_concurrent_executions    = -1
       provisioned_concurrent_executions = 0
       deployment_config_name            = "CodeDeployDefault.LambdaAllAtOnce"
-      enable_alarms                     = false
+      alarms_gate_deployments           = false
       cognito_deletion_protection       = "INACTIVE"
       s3_logs_expiration_days           = 7
     }
@@ -60,7 +63,7 @@ locals {
       reserved_concurrent_executions    = 10
       provisioned_concurrent_executions = 2
       deployment_config_name            = "CodeDeployDefault.LambdaCanary10Percent5Minutes"
-      enable_alarms                     = true
+      alarms_gate_deployments           = true
       cognito_deletion_protection       = "ACTIVE"
       s3_logs_expiration_days           = 90
     }

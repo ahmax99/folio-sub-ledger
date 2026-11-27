@@ -26,6 +26,7 @@ backend_sentry_dsn = "https://your-backend-sentry-dsn"
 
 # Frontend Environment Variables
 contact_to_email    = "contact@example.com"
+alarm_email         = "oncall@example.com"
 from_email          = "no-reply@example.com"
 resend_api_key      = "" # Get from resend.com
 frontend_sentry_dsn = "https://your-frontend-sentry-dsn"

@@ -181,6 +181,7 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `TF_PLAN_ROLE_ARN`         | org repo output `plan_role_arn` (read-only; plans only run on dev)       |
 | `TF_VAR_root_domain`       | e.g. `ahmax99.online`                                                    |
 | `TF_VAR_contact_to_email`  | contact-form recipient                                                   |
+| `TF_VAR_alarm_email`       | operator inbox for CloudWatch alarms (confirm the two SNS emails)        |
 | `TF_VAR_from_email`        | sender address (on the root domain)                                      |
 | `AUTOMATION_APP_CLIENT_ID` | Client ID from step 5 above                                              |
 | `NEON_ORG_ID`              | the Neon organization ID (`org-…`, Neon console → Organization settings) |
@@ -482,6 +483,124 @@ stable org/Terraform output already captured, or a secret set once during
 setup. Steady-state Terraform changes flow through PRs: a PR touching
 `infra/**` gets a dev plan comment; merge applies dev; a `v*` tag
 applies prod behind the reviewer gate.
+
+## Alarms
+
+Every CloudWatch alarm emails `TF_VAR_alarm_email`. After the first apply in
+an environment, AWS sends two subscription emails, one for
+`<project>-<env>-alarms` (the main region) and one for
+`<project>-<env>-edge-alarms` (`us-east-1`, the CloudFront alarm). Confirm
+both, or no alarm reaches you.
+
+Run each query in **CloudWatch → Logs Insights**, in the main region, on the
+log group named. Each one finds the failing requests, then the `requestId` of
+one of them. To follow that request through the BFF and the API, run the
+last query with that id on both log groups.
+
+```
+fields @timestamp, requestId, level, msg
+| filter requestId = "<requestId>"
+| sort @timestamp asc
+```
+
+### backend-errors
+
+The API Lambda alias returned an invocation error: an unhandled crash, an
+init failure or a timeout. In prod it also rolls back a canary in progress.
+Log group `/aws/lambda/<project>-<env>-backend`:
+
+```
+fields @timestamp, requestId, @message
+| filter level >= 50 or @message like /Task timed out|Runtime exited|INIT_REPORT/
+| sort @timestamp desc
+| limit 50
+```
+
+### backend-throttles
+
+Lambda rejected API invocations because the function hit its reserved
+concurrency (prod: 10). Check whether traffic or duration went up first.
+Log group `/aws/lambda/<project>-<env>-backend`:
+
+```
+filter @type = "REPORT"
+| stats count(*) as invocations, max(@duration) as maxMs by bin(1m)
+| sort bin(1m) desc
+```
+
+### backend-p99-duration
+
+The API's p99 duration is above 80% of its 30 s timeout over 5 minutes, so
+requests are close to timing out. Find the slow invocations, then read the
+request lines logged in the same minutes to see which routes they were.
+Log group `/aws/lambda/<project>-<env>-backend`:
+
+```
+filter @type = "REPORT" and @duration > 20000
+| fields @timestamp, @requestId, @duration, @initDuration
+| sort @duration desc
+| limit 50
+```
+
+### frontend-errors
+
+The BFF Lambda alias returned an invocation error. In prod it also rolls
+back a canary in progress. Log group `/aws/lambda/<project>-<env>-frontend`:
+
+```
+fields @timestamp, requestId, @message
+| filter level >= 50 or @message like /Task timed out|Runtime exited|INIT_REPORT/
+| sort @timestamp desc
+| limit 50
+```
+
+### frontend-throttles
+
+Lambda rejected BFF invocations at its reserved concurrency. Users see
+CloudFront 5xx pages. Log group `/aws/lambda/<project>-<env>-frontend`:
+
+```
+filter @type = "REPORT"
+| stats count(*) as invocations, max(@duration) as maxMs by bin(1m)
+| sort bin(1m) desc
+```
+
+### cloudfront-5xx-rate
+
+More than 5% of CloudFront requests returned a 5xx over 5 minutes. The
+alarm lives in `us-east-1`. A 502 or 503 from CloudFront usually means an
+origin Lambda failed or throttled, so check the four Lambda alarms first.
+Then find the failing BFF requests. Log group
+`/aws/lambda/<project>-<env>-frontend`:
+
+```
+fields @timestamp, requestId, req.method, req.url, res.status
+| filter res.status >= 500
+| sort @timestamp desc
+| limit 50
+```
+
+CloudFront access logs are in the `<project>-<env>-logs` bucket. Their
+`x-edge-request-id` is the `x-amz-cf-id` the BFF reuses as `requestId`.
+
+### Sentry: new issue in production
+
+This rule lives in Sentry, not in Terraform. Create it once in each
+production Sentry project (backend and frontend): **Alerts → Create alert →
+Issues**, with these settings:
+
+| Setting         | Value                                        |
+| --------------- | -------------------------------------------- |
+| Environment     | `prod`                                       |
+| When            | A new issue is created                       |
+| If              | _(no filter)_                                |
+| Then            | Send a notification to the operator by email |
+| Action interval | 5 minutes                                    |
+| Name            | `New production issue`                       |
+
+The email links to the issue. Its event has `environment`, `release` and a
+trace id. Find the `requestId` in the issue's tags or breadcrumbs, then run
+the request query above.
 
 ## Database credentials
 

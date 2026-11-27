@@ -1,4 +1,5 @@
 locals {
+  # Error and throttle alarms on each alias; CodeDeploy rolls a canary back on these.
   alarms = {
     backend-errors = {
       function_name = var.backend_function_name
@@ -21,4 +22,6 @@ locals {
       metric_name   = "Throttles"
     }
   }
+
+  backend_p99_threshold_ms = var.backend_timeout_seconds * 1000 * 0.8
 }

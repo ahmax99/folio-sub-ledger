@@ -42,6 +42,7 @@ env:
   TF_VAR_aws_region: ${{ vars.AWS_REGION }}
   TF_VAR_root_domain: ${{ vars.TF_VAR_root_domain }}
   TF_VAR_contact_to_email: ${{ vars.TF_VAR_contact_to_email }}
+  TF_VAR_alarm_email: ${{ vars.TF_VAR_alarm_email }}
   TF_VAR_from_email: ${{ vars.TF_VAR_from_email }}
   TF_VAR_central_ecr_account_id: ${{ vars.CENTRAL_ECR_ACCOUNT_ID }}
   TF_VAR_github_org: ${{ github.repository_owner }}

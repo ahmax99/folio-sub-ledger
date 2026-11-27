@@ -32,6 +32,7 @@ jobs:
       TF_VAR_aws_region: ${{ vars.AWS_REGION }}
       TF_VAR_root_domain: ${{ vars.TF_VAR_root_domain }}
       TF_VAR_contact_to_email: ${{ vars.TF_VAR_contact_to_email }}
+      TF_VAR_alarm_email: ${{ vars.TF_VAR_alarm_email }}
       TF_VAR_from_email: ${{ vars.TF_VAR_from_email }}
       TF_VAR_google_client_id: ${{ secrets.TF_VAR_google_client_id }}
       TF_VAR_google_client_secret: ${{ secrets.TF_VAR_google_client_secret }}

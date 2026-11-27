@@ -212,7 +212,7 @@ module "backend" {
   ecr_repository_arn = local.ecr_backend_repository_arn
 
   memory_size                       = 512
-  timeout                           = 30
+  timeout                           = local.backend_timeout_seconds
   log_retention_days                = local.env.log_retention_days
   reserved_concurrent_executions    = local.env.reserved_concurrent_executions
   provisioned_concurrent_executions = local.provisioned_concurrent_executions
@@ -475,17 +475,25 @@ resource "aws_s3_object" "maintenance_index" {
 
 
 # -------------------
-# Monitoring — CloudWatch alarms that gate CodeDeploy canary rollback
+# Monitoring — alarms that notify the operator; in prod the Lambda ones also gate CodeDeploy canary rollback
 # -------------------
 module "monitoring" {
   source = "./modules/monitoring"
-  count  = local.env.enable_alarms ? 1 : 0
 
-  name_prefix            = local.name_prefix
-  backend_function_name  = module.backend.function_name
-  backend_alias_name     = module.backend.alias_name
-  frontend_function_name = module.frontend.function_name
-  frontend_alias_name    = module.frontend.alias_name
+  providers = {
+    aws           = aws
+    aws.us_east_1 = aws.us_east_1
+  }
+
+  name_prefix                   = local.name_prefix
+  alarm_email                   = var.alarm_email
+  backend_function_name         = module.backend.function_name
+  backend_alias_name            = module.backend.alias_name
+  backend_timeout_seconds       = local.backend_timeout_seconds
+  frontend_function_name        = module.frontend.function_name
+  frontend_alias_name           = module.frontend.alias_name
+  cloudfront_distribution_id    = module.cloudfront.distribution_id
+  cloudfront_5xx_rate_threshold = 5
 
   tags = merge(
     local.common_tags,
@@ -493,6 +501,12 @@ module "monitoring" {
       Name = "${local.name_prefix}-monitoring"
     }
   )
+}
+
+# Monitoring used to exist only where its alarms gated deploys (count = 0 or 1); prod's alarms move in place.
+moved {
+  from = module.monitoring[0]
+  to   = module.monitoring
 }
 
 # -------------------
@@ -609,7 +623,7 @@ module "codedeploy_backend" {
 
   enable_auto_rollback = true
   auto_rollback_events = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
-  alarm_names          = local.env.enable_alarms ? module.monitoring[0].backend_alarm_names : []
+  alarm_names          = local.env.alarms_gate_deployments ? module.monitoring.backend_alarm_names : []
 
   tags = merge(
     local.common_tags,
@@ -636,7 +650,7 @@ module "codedeploy_frontend" {
 
   enable_auto_rollback = true
   auto_rollback_events = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
-  alarm_names          = local.env.enable_alarms ? module.monitoring[0].frontend_alarm_names : []
+  alarm_names          = local.env.alarms_gate_deployments ? module.monitoring.frontend_alarm_names : []
 
   tags = merge(
     local.common_tags,

@@ -60,6 +60,16 @@ variable "contact_to_email" {
   type        = string
 }
 
+variable "alarm_email" {
+  description = "Operator email address that CloudWatch alarms notify (through the environment's SNS topics)"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", var.alarm_email))
+    error_message = "alarm_email must be an email address."
+  }
+}
+
 variable "from_email" {
   description = "Email address for sending emails"
   type        = string
