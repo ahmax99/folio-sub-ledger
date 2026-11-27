@@ -240,7 +240,7 @@ module "backend" {
   function_url_auth_type = "AWS_IAM"
   cors_allow_origins     = [local.frontend_url]
   cors_allow_methods     = ["*"]
-  cors_allow_headers     = ["Content-Type", "Authorization", "Accept", "X-Id-Token"]
+  cors_allow_headers     = ["accept", "authorization", "content-type", "x-id-token"] # AWS stores them lowercase; any other case shows as drift
   cors_max_age           = 86400
 
   create_alias = true
@@ -299,7 +299,7 @@ module "frontend" {
   function_url_auth_type = "AWS_IAM"
   cors_allow_origins     = [local.frontend_url]
   cors_allow_methods     = ["*"]
-  cors_allow_headers     = ["Content-Type", "Authorization", "Accept", "X-Id-Token"]
+  cors_allow_headers     = ["accept", "authorization", "content-type", "x-id-token"] # AWS stores them lowercase; any other case shows as drift
   cors_max_age           = 86400
 
   create_alias = true
