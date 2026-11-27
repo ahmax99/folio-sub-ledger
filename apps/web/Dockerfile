@@ -71,6 +71,10 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.0.0 /lambda-adapter /opt
 # Nitro bundles the server and its dependencies into .output, so no node_modules are needed at runtime
 COPY --from=builder /app/apps/web/.output ./apps/web/.output
 
+# Sentry release: the image tag, passed by deploy.yml and read from the environment at runtime
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+
 # Lambda Web Adapter configuration
 ENV PORT=3000
 ENV NODE_ENV=production

@@ -10,7 +10,11 @@ export const env = createEnv({
     FRONTEND_URL: z.url(),
     NODE_ENV: z.enum(['development', 'production']),
     S3_BUCKET_NAME: z.string().min(1),
-    SENTRY_DSN: z.url()
+    SENTRY_DSN: z.url(),
+    SENTRY_ENVIRONMENT: z.string().min(1).default('local'),
+    // Baked into the image from its tag at build time, read here at runtime.
+    SENTRY_RELEASE: z.string().min(1).optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0)
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true

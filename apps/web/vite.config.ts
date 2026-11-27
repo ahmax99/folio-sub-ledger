@@ -21,6 +21,8 @@ export default defineConfig(({ command }) => ({
   server: { port: 3000 },
   resolve: { tsconfigPaths: true },
   ...(command === 'build' && { ssr: { noExternal: true } }),
+  // Maps without a sourceMappingURL comment: deploy uploads them to Sentry and never to the public bucket.
+  build: { sourcemap: 'hidden' },
   plugins: [
     devtools(),
     tailwindcss(),

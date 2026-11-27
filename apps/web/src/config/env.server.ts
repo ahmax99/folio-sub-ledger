@@ -14,6 +14,10 @@ export const env = createEnv({
     NODE_ENV: z.enum(['development', 'production']).default('production'),
     RESEND_API_KEY: z.string().min(1).default('dummy-key'),
     SENTRY_DSN: z.url().optional(),
+    SENTRY_ENVIRONMENT: z.string().min(1).default('local'),
+    // Baked into the image from its tag at build time, read here at runtime.
+    SENTRY_RELEASE: z.string().min(1).optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     SESSION_SECRET: z.string().min(32)
   },
   runtimeEnv: process.env,

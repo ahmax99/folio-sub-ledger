@@ -213,6 +213,7 @@ jobs:
             ${{ env.ECR_REGISTRY }}/${{ github.event.repository.name }}-backend:latest
           build-args: |
             DATABASE_URL=postgresql://placeholder:placeholder@placeholder:5432/placeholder?schema=public
+            SENTRY_RELEASE=${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -260,6 +261,8 @@ jobs:
           tags: |
             ${{ env.ECR_REGISTRY }}/${{ github.event.repository.name }}-frontend:${{ env.IMAGE_TAG }}
             ${{ env.ECR_REGISTRY }}/${{ github.event.repository.name }}-frontend:latest
+          build-args: |
+            SENTRY_RELEASE=${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -350,6 +353,10 @@ jobs:
           cloudfront-distribution-id: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
           aws-region: ${{ env.AWS_REGION }}
           central-ecr-account-id: ${{ vars.CENTRAL_ECR_ACCOUNT_ID }}
+          release: ${{ env.IMAGE_TAG }}
+          sentry-auth-token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          sentry-org: ${{ vars.SENTRY_ORG }}
+          sentry-project: ${{ vars.SENTRY_FRONTEND_PROJECT }}
 
       - name: Deploy frontend Lambda
         uses: ./.github/actions/deploy-lambda
@@ -575,6 +582,10 @@ jobs:
           cloudfront-distribution-id: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
           aws-region: ${{ env.AWS_REGION }}
           central-ecr-account-id: ${{ vars.CENTRAL_ECR_ACCOUNT_ID }}
+          release: ${{ env.IMAGE_TAG }}
+          sentry-auth-token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          sentry-org: ${{ vars.SENTRY_ORG }}
+          sentry-project: ${{ vars.SENTRY_FRONTEND_PROJECT }}
 
       - name: Deploy frontend Lambda
         uses: ./.github/actions/deploy-lambda

@@ -1,3 +1,5 @@
+// Must stay the first import: Sentry instruments modules as they load.
+import '@/instrument.js'
 import { cors } from '@elysiajs/cors'
 import { Elysia } from 'elysia'
 import { helmet } from 'elysia-helmet'

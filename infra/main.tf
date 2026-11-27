@@ -226,14 +226,16 @@ module "backend" {
   ]
 
   environment_variables = {
-    BACKEND_PORT             = "4000"
-    COGNITO_CLIENT_ID        = module.cognito.client_id
-    COGNITO_USERPOOL_ID      = module.cognito.user_pool_id
-    DATABASE_URL_SECRET_NAME = module.database_secret.secret_name
-    FRONTEND_URL             = local.frontend_url
-    NODE_ENV                 = "production"
-    S3_BUCKET_NAME           = local.s3_uploads_bucket_name
-    SENTRY_DSN               = var.backend_sentry_dsn
+    BACKEND_PORT              = "4000"
+    COGNITO_CLIENT_ID         = module.cognito.client_id
+    COGNITO_USERPOOL_ID       = module.cognito.user_pool_id
+    DATABASE_URL_SECRET_NAME  = module.database_secret.secret_name
+    FRONTEND_URL              = local.frontend_url
+    NODE_ENV                  = "production"
+    S3_BUCKET_NAME            = local.s3_uploads_bucket_name
+    SENTRY_DSN                = var.backend_sentry_dsn
+    SENTRY_ENVIRONMENT        = var.environment
+    SENTRY_TRACES_SAMPLE_RATE = tostring(local.env.sentry_traces_sample_rate)
   }
 
   enable_function_url    = true
@@ -282,17 +284,19 @@ module "frontend" {
   secrets_arns = []
 
   environment_variables = {
-    BACKEND_INTERNAL_URL = "${trimsuffix(module.backend.function_url, "/")}/api/v1"
-    BASE_URL             = local.frontend_url
-    COGNITO_CLIENT_ID    = module.cognito.client_id
-    COGNITO_DOMAIN       = module.cognito.user_pool_domain
-    COGNITO_USERPOOL_ID  = module.cognito.user_pool_id
-    CONTACT_TO_EMAIL     = var.contact_to_email
-    FROM_EMAIL           = var.from_email
-    NODE_ENV             = "production"
-    RESEND_API_KEY       = var.resend_api_key
-    SENTRY_DSN           = var.frontend_sentry_dsn
-    SESSION_SECRET       = random_password.session_secret.result
+    BACKEND_INTERNAL_URL      = "${trimsuffix(module.backend.function_url, "/")}/api/v1"
+    BASE_URL                  = local.frontend_url
+    COGNITO_CLIENT_ID         = module.cognito.client_id
+    COGNITO_DOMAIN            = module.cognito.user_pool_domain
+    COGNITO_USERPOOL_ID       = module.cognito.user_pool_id
+    CONTACT_TO_EMAIL          = var.contact_to_email
+    FROM_EMAIL                = var.from_email
+    NODE_ENV                  = "production"
+    RESEND_API_KEY            = var.resend_api_key
+    SENTRY_DSN                = var.frontend_sentry_dsn
+    SENTRY_ENVIRONMENT        = var.environment
+    SENTRY_TRACES_SAMPLE_RATE = tostring(local.env.sentry_traces_sample_rate)
+    SESSION_SECRET            = random_password.session_secret.result
   }
 
   enable_function_url    = true
