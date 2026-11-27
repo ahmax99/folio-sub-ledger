@@ -24,13 +24,13 @@ const MembersPage = () => {
 }
 
 export const Route = createFileRoute('/_authorized/organization/members')({
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(membersQueryOptions),
   head: () =>
     generatePageMetadata({
       title: 'Members',
       description: "Your firm's members"
     }),
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(membersQueryOptions),
   pendingComponent: () => (
     <PageTemplate back={back}>
       <MemberListSkeleton />
