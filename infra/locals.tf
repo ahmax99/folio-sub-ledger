@@ -50,6 +50,7 @@ locals {
       enable_alarms                     = false
       cognito_deletion_protection       = "INACTIVE"
       s3_logs_expiration_days           = 7
+      neon_history_retention_seconds    = 21600
     }
     prod = {
       log_retention_days                = 30
@@ -59,8 +60,11 @@ locals {
       enable_alarms                     = true
       cognito_deletion_protection       = "ACTIVE"
       s3_logs_expiration_days           = 90
+      neon_history_retention_seconds    = 21600
     }
   }
 
   env = local.env_config[var.environment]
+
+  neon_region_id = "aws-ap-southeast-1"
 }

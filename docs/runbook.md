@@ -172,39 +172,88 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 
 ### Repo-level variables (shared by both environments)
 
-| Name                       | Value                                                              |
-| -------------------------- | ------------------------------------------------------------------ |
-| `AWS_REGION`               | e.g. `ap-northeast-1`                                              |
-| `CENTRAL_ECR_ACCOUNT_ID`   | org output `shared_services_account_id`                            |
-| `ECR_PUSH_ROLE_ARN`        | org repo output `ecr_push_role_arn`                                |
-| `ECR_PURGE_ROLE_ARN`       | org repo output `ecr_purge_role_arn` (teardown only)               |
-| `TF_PLAN_ROLE_ARN`         | org repo output `plan_role_arn` (read-only; plans only run on dev) |
-| `TF_VAR_root_domain`       | e.g. `ahmax99.online`                                              |
-| `TF_VAR_contact_to_email`  | contact-form recipient                                             |
-| `TF_VAR_from_email`        | sender address (on the root domain)                                |
-| `AUTOMATION_APP_CLIENT_ID` | Client ID from step 5 above                                        |
+| Name                       | Value                                                                    |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `AWS_REGION`               | e.g. `ap-northeast-1`                                                    |
+| `CENTRAL_ECR_ACCOUNT_ID`   | org output `shared_services_account_id`                                  |
+| `ECR_PUSH_ROLE_ARN`        | org repo output `ecr_push_role_arn`                                      |
+| `ECR_PURGE_ROLE_ARN`       | org repo output `ecr_purge_role_arn` (teardown only)                     |
+| `TF_PLAN_ROLE_ARN`         | org repo output `plan_role_arn` (read-only; plans only run on dev)       |
+| `TF_VAR_root_domain`       | e.g. `ahmax99.online`                                                    |
+| `TF_VAR_contact_to_email`  | contact-form recipient                                                   |
+| `TF_VAR_from_email`        | sender address (on the root domain)                                      |
+| `AUTOMATION_APP_CLIENT_ID` | Client ID from step 5 above                                              |
+| `NEON_ORG_ID`              | the Neon organization ID (`org-…`, Neon console → Organization settings) |
 
 ### Repo-level secrets
 
-| Name                         | Value                                              |
-| ---------------------------- | -------------------------------------------------- |
-| `AUTOMATION_APP_PRIVATE_KEY` | Full contents of the `.pem` file from step 5 above |
+| Name                         | Value                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `AUTOMATION_APP_PRIVATE_KEY` | Full contents of the `.pem` file from step 5 above                                        |
+| `NEON_API_KEY`               | the **dev** project-scoped Neon key (see [Neon API keys](#neon-api-keys)); unset until D5 |
 
 ### Per-environment values
 
-| Name                          | Kind     | `dev`                              | `prod`                                 |
-| ----------------------------- | -------- | ---------------------------------- | -------------------------------------- |
-| `TF_APPLY_ROLE_ARN`           | variable | org output `dev_deploy_role_arn`   | org output `prod_deploy_role_arn`      |
-| `APP_DEPLOY_ROLE_ARN`         | variable | Terraform output after first apply | Terraform output after first apply     |
-| `DNS_ACCOUNT_ROLE_ARN`        | variable | _(leave unset)_                    | org output `dns_apex_manager_role_arn` |
-| `STATIC_ASSETS_BUCKET`        | variable | Terraform output after first apply | Terraform output after first apply     |
-| `CLOUDFRONT_DISTRIBUTION_ID`  | variable | Terraform output after first apply | Terraform output after first apply     |
-| `TF_VAR_database_url`         | secret   | dev Neon connection string         | prod Neon connection string            |
-| `TF_VAR_google_client_id`     | secret   | dev OAuth client                   | separate prod OAuth client             |
-| `TF_VAR_google_client_secret` | secret   | dev OAuth client                   | prod OAuth client                      |
-| `TF_VAR_resend_api_key`       | secret   | Resend key                         | prod Resend key                        |
-| `TF_VAR_backend_sentry_dsn`   | secret   | dev backend Sentry project         | prod backend Sentry project            |
-| `TF_VAR_frontend_sentry_dsn`  | secret   | dev frontend Sentry project        | prod frontend Sentry project           |
+| Name                          | Kind     | `dev`                                              | `prod`                                              |
+| ----------------------------- | -------- | -------------------------------------------------- | --------------------------------------------------- |
+| `TF_APPLY_ROLE_ARN`           | variable | org output `dev_deploy_role_arn`                   | org output `prod_deploy_role_arn`                   |
+| `APP_DEPLOY_ROLE_ARN`         | variable | Terraform output after first apply                 | Terraform output after first apply                  |
+| `DNS_ACCOUNT_ROLE_ARN`        | variable | _(leave unset)_                                    | org output `dns_apex_manager_role_arn`              |
+| `STATIC_ASSETS_BUCKET`        | variable | Terraform output after first apply                 | Terraform output after first apply                  |
+| `CLOUDFRONT_DISTRIBUTION_ID`  | variable | Terraform output after first apply                 | Terraform output after first apply                  |
+| `TF_VAR_database_url`         | secret   | dev Neon connection string                         | prod Neon connection string                         |
+| `TF_VAR_google_client_id`     | secret   | dev OAuth client                                   | separate prod OAuth client                          |
+| `TF_VAR_google_client_secret` | secret   | dev OAuth client                                   | prod OAuth client                                   |
+| `TF_VAR_resend_api_key`       | secret   | Resend key                                         | prod Resend key                                     |
+| `TF_VAR_backend_sentry_dsn`   | secret   | dev backend Sentry project                         | prod backend Sentry project                         |
+| `TF_VAR_frontend_sentry_dsn`  | secret   | dev frontend Sentry project                        | prod frontend Sentry project                        |
+| `NEON_API_KEY`                | secret   | dev project-scoped key (bootstrap: org key, D3–D5) | prod project-scoped key (bootstrap: org key, P2–P4) |
+| `NEON_ORG_API_KEY`            | secret   | _(unset; teardown only)_                           | _(unset; teardown only)_                            |
+
+### Neon API keys
+
+Neon has no read-only API key. The narrowest key is **project-scoped**: Editor
+access to one project. It can change and delete everything _inside_ that
+project (branches, roles, databases), but it cannot delete the project, create
+a project, or read any other project. So:
+
+- **Steady state, every Neon caller holds only its own environment's
+  project-scoped key.** The `dev` and `prod` environments each hold their own
+  `NEON_API_KEY`. The repo-level `NEON_API_KEY` (preview branches in
+  `neon-workflow.yml`, which run without an environment) is the **dev** key. PR
+  plans run in the `dev` environment, so they get the dev key too. A leaked
+  dev key cannot touch prod, and no standing key can delete a project.
+- **Creating a project needs an organization key, once.** A project-scoped key
+  can only be minted for a project that already exists, and it cannot create
+  one. So the first apply of each environment runs with an organization key in
+  that environment's `NEON_API_KEY` (the bootstrap), and you swap in the
+  project-scoped key right after. Use one organization key for the whole
+  bring-up and revoke it after the last swap.
+- **Deleting a project needs an organization key too.** A teardown reads it
+  from `NEON_ORG_API_KEY`, which you add just before dispatching `destroy.yml`
+  and delete afterwards (see [Teardown](#teardown)). A teardown also kills the
+  environment's project-scoped key, so the next apply is a bootstrap again.
+
+Create keys in the Neon console under **Organization settings → API keys →
+Create new**: **Organization** for the bootstrap and teardown key,
+**Project-scoped** (pick the project) for the steady-state keys. Name each key
+after its use, e.g. `folio-sub-ledger-dev-ci`, so revoking the right one is
+easy.
+
+**Check each project-scoped key once, before relying on it.** CI finds the
+project by listing the organization's projects, and Neon does not document
+whether a project-scoped key may do that. From the repo root, with Node 20.19
+or later (for the Neon CLI) and the new key typed at the prompt:
+
+```bash
+read -rs -p 'Project-scoped key: ' NEON_API_KEY && export NEON_API_KEY
+NEON_ORG_ID=org-… .github/scripts/neon-find-project.sh --name folio-sub-ledger-dev
+unset NEON_API_KEY
+```
+
+It must print exactly one project ID. If it prints nothing or fails with 401 or
+403, **keep the organization key in place and do not revoke it**: the lookup
+must change to resolve the project by ID before project-scoped keys can work.
 
 > **Three roles, three privilege tiers** (all variables — an IAM role ARN isn't
 > a secret). Each pipeline step assumes the least-privileged role that still
@@ -265,6 +314,9 @@ terraform apply -var="project_name=folio-sub-ledger" -var="environment=dev" -aut
 rules), then set the repo-level variables and dev's per-environment values per
 the tables above. Skip the three Terraform-output rows for now
 (`STATIC_ASSETS_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, `APP_DEPLOY_ROLE_ARN`).
+Set dev's `NEON_API_KEY` to the bootstrap **organization** key: D4 creates the
+Neon project, and a project-scoped key cannot. Leave the repo-level
+`NEON_API_KEY` unset for now.
 
 **D4 — First dev apply**: run `Deploy` (`deploy.yml`) via **workflow_dispatch**
 with `scope: infra-only` (leave `apply_prod` unchecked — it's ignored for this
@@ -284,6 +336,14 @@ manual delegation step.
 `vars.CLOUDFRONT_DISTRIBUTION_ID` (`cloudfront_distribution_id`),
 `vars.APP_DEPLOY_ROLE_ARN` (`app_deploy_role_arn`). D4 ran under the admin
 apply role, so the app-deploy role exists after it — capture it before D7.
+
+Then swap the Neon key. D4 created the `folio-sub-ledger-dev` project, so:
+
+1. Create a project-scoped key for `folio-sub-ledger-dev` and run the check in
+   [Neon API keys](#neon-api-keys). Stop here if it fails.
+2. Set it as dev's `NEON_API_KEY`, replacing the organization key, and as the
+   repo-level `NEON_API_KEY`.
+3. Keep the organization key until P4 swaps prod's; revoke it then.
 
 **D6 — Register the Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -313,7 +373,8 @@ terraform apply -var="project_name=folio-sub-ledger" -var="environment=prod" -au
 **Required reviewer** under deployment protection rules (without it, prod
 deploys run unattended). Set prod's per-environment values per the table —
 including `vars.DNS_ACCOUNT_ROLE_ARN` (the `dns-apex-manager` role), which dev
-doesn't set.
+doesn't set. Set prod's `NEON_API_KEY` to the bootstrap **organization** key:
+P3 creates the prod Neon project.
 
 **P3 — First prod apply**: run `Deploy` (`deploy.yml`) via **workflow_dispatch**
 with `scope: infra-only` and `apply_prod: true`, and approve the reviewer
@@ -352,6 +413,12 @@ bootstrap mode only applies + publishes Lambda versions.
 `vars.STATIC_ASSETS_BUCKET`, `vars.CLOUDFRONT_DISTRIBUTION_ID`,
 `vars.APP_DEPLOY_ROLE_ARN` (`app_deploy_role_arn`).
 
+Then swap the Neon key: create a project-scoped key for
+`folio-sub-ledger-prod`, run the check in [Neon API keys](#neon-api-keys) with
+`--name folio-sub-ledger-prod`, and set it as prod's `NEON_API_KEY`. No
+environment holds the organization key any more, so **revoke it** in the Neon
+console.
+
 **P5 — Register the prod Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
 output) on the prod OAuth client.
@@ -385,15 +452,13 @@ touch: S3 object versions, the Cognito user pool and its users, the Secrets
 Manager name reservation, and Lambda@Edge replicas. Afterwards a fresh
 `terraform apply` succeeds with no manual cleanup.
 
-**The database is reset, not deleted.** The Neon branch and its compute endpoint
-survive — every table in `public`, including `_prisma_migrations`, is dropped, so
-`TF_VAR_database_url` stays valid but the schema itself is gone. This relies on
-`deploy.yml`'s `migrate-dev`/`migrate-prod` jobs (see
-[`deployment-environments.md`](deployment-environments.md#rollback)) running
-`prisma migrate deploy` on the next redeploy to rebuild the schema from
-`prisma/migrations` — there is no manual migration step to remember, same as
-before, just rebuilt from source instead of preserved. Nothing here touches the
-`preview/pr-*` branches `neon-workflow.yml` manages.
+**The Neon project is deleted.** Its `prevent_destroy` would fail a plain
+destroy, so the workflow first removes `module.database` from state, destroys
+everything else, then deletes the project with the Neon CLI. Every branch
+goes with it, the `preview/pr-*` ones included. The next apply creates a fresh
+project, and `deploy.yml`'s `migrate-dev`/`migrate-prod` jobs (see
+[`deployment-environments.md`](deployment-environments.md#rollback)) rebuild
+the schema from `prisma/migrations`.
 
 ### Read this first
 
@@ -410,9 +475,9 @@ Two more consequences worth expecting:
 - **`APP_DEPLOY_ROLE_ARN` dangles.** Teardown destroys `module.app_deploy_role`,
   so `deploy.yml`'s deploy jobs fail until someone re-applies Terraform and
   re-captures the output.
-- **A prod teardown prompts the required reviewer up to three times** — once each
-  for `destroy`, `db-reset`, and `ecr-purge`. Same behaviour `deploy.yml`
-  already has with `apply-prod` plus its two prod deploy jobs; not a bug.
+- **A prod teardown prompts the required reviewer up to two times** — once each
+  for `destroy` and `ecr-purge`. Same behaviour `deploy.yml` already has with
+  `apply-prod` plus its two prod deploy jobs; not a bug.
 
 ### Preconditions
 
@@ -420,9 +485,13 @@ Two more consequences worth expecting:
   as a repo-level variable. Without it `ecr-purge` **fails** while the teardown
   itself succeeds, leaving images behind — deliberate, so it can't pass
   unnoticed. Re-dispatch once the variable is set, or purge by hand.
-- The database step needs only the `TF_VAR_database_url` secret each environment
-  already sets for Terraform. Teardown does **not** use the Neon API, so no
-  `NEON_*` variable or key is involved.
+- **Add an organization Neon key as the environment's `NEON_ORG_API_KEY`
+  secret.** The environment's `NEON_API_KEY` is project-scoped and cannot
+  delete the project. Without it, the last step ("Delete the Neon project")
+  fails after everything else is destroyed; add the key and re-dispatch, and
+  the delete finds the project by name. Delete the secret and revoke the key
+  once the teardown is green.
+- `NEON_ORG_ID` is set (repo-level variable).
 
 ### Procedure
 
@@ -438,8 +507,15 @@ Two more consequences worth expecting:
 2. Approve the `prod` environment gate when prompted (prod only).
 3. Expect **30–90 minutes**. Most of it is CloudFront disabling-then-deleting and
    Lambda@Edge replicas releasing their functions.
-4. The run is green only if the final **Assert the state is empty** step passes;
-   it fails the job if anything survives in state.
+4. The run is green only if **Assert the state is empty** and **Delete the Neon
+   project** both pass. The assert fails the job if anything survives in state.
+
+**A failed run after "Release the Neon project" leaves the project outside
+Terraform.** It keeps running and billing until a re-dispatch deletes it. The
+re-dispatch finds no project in state, so it looks the project up by name
+(`<repository>-<environment>`) and deletes that. Re-dispatch every failed
+teardown, even one you plan to abandon, or delete the project in the Neon
+console.
 
 ### When the retry loop exhausts
 
@@ -464,3 +540,8 @@ The Route53 **hosted zone** (org-owned — only the records go), the central ECR
 **repositories** (only the images inside them are purged), `infra/bootstrap/`,
 and the state bucket. The state object is left present and holding an empty
 state, which is exactly what makes the next `terraform apply` clean.
+
+The environment's project-scoped `NEON_API_KEY` does **not** survive: it dies
+with its project. Before the next apply, put an organization key in that
+environment's `NEON_API_KEY` (and, for dev, remove the repo-level one), then
+swap in a new project-scoped key afterwards, exactly as in D5 / P4.
