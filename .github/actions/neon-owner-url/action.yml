@@ -52,11 +52,11 @@ runs:
         POOLED: ${{ inputs.pooled }}
       run: |
         set -euo pipefail
-        # The default branch's read-write endpoint.
-        url=$("$GITHUB_WORKSPACE/.github/scripts/neon-api.sh" GET \
-          "/projects/${PROJECT_ID}/connection_uri?database_name=folio&role_name=folio_owner&pooled=${POOLED}" |
-          jq -r '.uri // empty')
-        case "$url" in postgresql://* | postgres://*) ;; *) echo "::error::The Neon API returned no connection URI"; exit 1 ;; esac
+        # The default branch's read-write endpoint; the CLI reads NEON_API_KEY from the environment.
+        url=$(npx --yes neon@9.5.0 connection-string --project-id "$PROJECT_ID" \
+          --role-name folio_owner --database-name folio --endpoint-type read_write \
+          --pooled="$POOLED" --no-analytics </dev/null)
+        case "$url" in postgresql://* | postgres://*) ;; *) echo "::error::The Neon CLI returned no connection string"; exit 1 ;; esac
         password="${url#*://*:}"
         echo "::add-mask::${password%%@*}"
         echo "::add-mask::${url}"
