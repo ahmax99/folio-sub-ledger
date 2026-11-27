@@ -26,7 +26,7 @@ BACKEND_PORT="4000"
 FRONTEND_URL="http://localhost:3000"
 NODE_ENV="development"
 
-# Database (local development only; Lambda builds it from the rotated runtime secret)
+# Database (local development only; Lambda builds it from the runtime secret)
 DATABASE_URL="postgresql://folio_owner:<password>@<host>/folio?sslmode=require"
 
 # Monitoring
@@ -39,7 +39,7 @@ For `DATABASE_URL`, print the dev project's owner connection string with the [Ne
 neon connection-string main --project-id <dev-project-id> --role-name folio_owner --database-name folio
 ```
 
-Locally the API connects as `folio_owner`, and `db.run` still switches to `folio_app`, so row-level security applies. The deployed API never sees this password: it logs in as a rotated runtime user.
+Locally the API connects as `folio_owner`, and `db.run` still switches to `folio_app`, so row-level security applies. The deployed API never sees this password: it logs in as a runtime user whose password lives only in Secrets Manager.
 
 ## Development
 

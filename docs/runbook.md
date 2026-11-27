@@ -209,22 +209,6 @@ Set under **Settings → Secrets and variables → Actions** (repo level) and
 | `NEON_PROJECT_ID`             | variable | Terraform output `neon_project_id` (D5)            | Terraform output `neon_project_id` (P4)             |
 | `NEON_ORG_API_KEY`            | secret   | _(unset; teardown only)_                           | _(unset; teardown only)_                            |
 
-### Rotation environments
-
-`rotate-db-credentials.yml` runs in its own GitHub environment per stage, so
-the only job that can assume the rotation role is one that runs there (its
-OIDC trust names exactly `…:environment:<env>-db-rotation`). Create them under
-**Settings → Environments → New environment**, with no reviewer:
-
-| Environment        | Deployment branches and tags                                    | Secret `NEON_API_KEY`   | Variable `NEON_PROJECT_ID`    | Variable `DB_ROTATION_ROLE_ARN`    |
-| ------------------ | --------------------------------------------------------------- | ----------------------- | ----------------------------- | ---------------------------------- |
-| `dev-db-rotation`  | **Selected branches and tags** → branch `main`                  | dev project-scoped key  | dev output `neon_project_id`  | dev output `db_rotation_role_arn`  |
-| `prod-db-rotation` | **Selected branches and tags** → branch `main` **and** tag `v*` | prod project-scoped key | prod output `neon_project_id` | prod output `db_rotation_role_arn` |
-
-`prod-db-rotation` needs the `v*` tag rule because `deploy.yml`'s
-`rotate-prod` runs on release tags. `NEON_ORG_ID` and `AWS_REGION` come from
-the repo-level variables. Never put an organization key here.
-
 ### Neon API keys
 
 Neon has no read-only API key. The narrowest key is **project-scoped**: Editor
@@ -314,17 +298,16 @@ they cannot drift.
 
 ## Neon bring-up order
 
-Three gates thread through the dev and prod steps below. Do them in this
+Two gates thread through the dev and prod steps below. Do them in this
 order:
 
-| Gate                       | Dev             | Prod            | What you do                                                                                                                                                                           |
-| -------------------------- | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A — bootstrap key**      | D3              | P2              | Put an **organization** Neon key in the environment's `NEON_API_KEY` (Settings → Environments → `<env>` → Add environment secret)                                                     |
-| **B — project-scoped key** | D5, after D4    | P4, after P3    | Mint a project-scoped key, run the [check](#neon-api-keys), swap it in; revoke the organization key after P4                                                                          |
-| **C — rotation**           | D5, after B; D7 | P4, after B; P6 | Create `<env>-db-rotation` ([Rotation environments](#rotation-environments)); the next backend deploy's `rotate-<env>`, or a dispatch of **Rotate DB Credentials**, writes the secret |
+| Gate                       | Dev          | Prod         | What you do                                                                                                                       |
+| -------------------------- | ------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| **A — bootstrap key**      | D3           | P2           | Put an **organization** Neon key in the environment's `NEON_API_KEY` (Settings → Environments → `<env>` → Add environment secret) |
+| **B — project-scoped key** | D5, after D4 | P4, after P3 | Mint a project-scoped key, run the [check](#neon-api-keys), swap it in; revoke the organization key after P4                      |
 
-Until gate C's first rotation, the backend cannot start: the runtime secret
-has no valid value yet.
+Until the first deploy after gate B (D7, P6), the backend cannot start: the
+runtime secret has no valid value yet. That deploy's migrate job writes it.
 
 ## Dev environment setup
 
@@ -379,10 +362,6 @@ Then swap the Neon key. D4 created the `folio-sub-ledger-dev` project, so:
    repo-level `NEON_PROJECT_ID` variable if it still exists: an environment
    without its own value would fall back to it.
 3. Keep the organization key until P4 swaps prod's; revoke it then.
-4. Create the `dev-db-rotation` environment
-   ([Rotation environments](#rotation-environments)) with the new
-   project-scoped key, `vars.NEON_PROJECT_ID` and `vars.DB_ROTATION_ROLE_ARN`
-   (`db_rotation_role_arn`).
 
 **D6 — Register the Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -390,10 +369,10 @@ output) on the dev OAuth client.
 
 **D7 — Verify**: push to `main` (or dispatch `Deploy` with `scope: apps-only`,
 now that D5's app-deploy vars exist) — builds push to the central registry and
-deploy to dev. `migrate-dev` builds the schema, `rotate-dev` writes the first
-runtime credential, then the backend deploys. App is live at
-`https://<project>.dev.<root_domain>`. Check the credential with
-[Database credentials → Check the expiry](#check-the-expiry).
+deploy to dev. `migrate-dev` builds the schema and writes the first runtime
+credential, then the backend deploys. App is live at
+`https://<project>.dev.<root_domain>`. `migrate-dev`'s log ends with
+`folio_runtime_a logs in through …`.
 
 ## Prod environment setup
 
@@ -460,9 +439,7 @@ Then swap the Neon key: create a project-scoped key for
 prod's `neon_project_id`, and set it as prod's `NEON_API_KEY`. Set prod's
 `vars.NEON_PROJECT_ID` to `neon_project_id`. No
 environment holds the organization key any more, so **revoke it** in the Neon
-console. Then create `prod-db-rotation`
-([Rotation environments](#rotation-environments)) with the prod
-project-scoped key, prod's `neon_project_id` and its `db_rotation_role_arn`.
+console.
 
 **P5 — Register the prod Google OAuth redirect URI**
 (`https://<cognito_domain>.auth.ap-northeast-1.amazoncognito.com/oauth2/idpresponse`, from the `cognito_domain`
@@ -471,8 +448,7 @@ output) on the prod OAuth client.
 **P6 — Cut the first release**: merge the release PR / push a `v*` tag.
 `deploy.yml` builds once, then (behind the reviewer gate) applies prod
 Terraform via `apply-prod`, then (behind the reviewer gate again) migrates the
-schema (`migrate-prod`), writes the first runtime credential (`rotate-prod`)
-and deploys that image URI to prod — backend first, then frontend, all in the same
+schema and writes the first runtime credential (`migrate-prod`), and deploys that image URI to prod — backend first, then frontend, all in the same
 workflow run. Dev is untouched by the release; it already runs the tagged
 commit from the branch push that carried it. App is live at
 `https://<project>.<root_domain>`.
@@ -480,9 +456,8 @@ commit from the branch push that carried it. App is live at
 ## Steady state (after bring-up)
 
 ```
-push to main            → build → migrate → credential check → deploy dev
-merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: migrate → credential check → deploy backend → frontend] → prod live
-daily 03:17 UTC         → rotate-db-credentials.yml rotates dev and prod
+push to main            → build → migrate + credential check → deploy dev
+merge Release PR → v*   → build → [prod reviewer: apply-prod] → [prod reviewer: migrate + credential check → deploy backend → frontend] → prod live
 ```
 
 No manual variable wrangling — every value used after bring-up is either a
@@ -495,48 +470,26 @@ applies prod behind the reviewer gate.
 
 The API logs in as one of two runtime users, `folio_runtime_a` and
 `folio_runtime_b`. The runtime secret (`<project>-<env>/database-url`) names
-the `active` one and holds both passwords. Each rotation gives the **inactive**
-user a new password valid for 14 days and makes it active; the other user
-keeps its password, so running Lambdas keep working. The daily schedule
-rotates each user every second day. A deploy doesn't rotate: `rotate-<env>`
-writes the secret only when it is missing or invalid (a new or rebuilt
-project), and otherwise checks that the active user logs in. Design:
-[`decisions/2026-11-21-rotated-runtime-database-credentials.md`](decisions/2026-11-21-rotated-runtime-database-credentials.md).
+the `active` one and holds both passwords. The passwords do not expire and are
+not rotated. `migrate-<env>` runs `set-up-runtime-credential.sh` after each
+migration with the app-deploy role: when the secret is missing or invalid (a
+new or rebuilt project), it gives both users a new password and writes the
+secret; otherwise it only checks that the active user logs in. Design:
+[`decisions/2026-11-27-static-runtime-database-credentials.md`](decisions/2026-11-27-static-runtime-database-credentials.md).
 
-### Rotate now
+### Replace the credential
 
-**Actions → Rotate DB Credentials → Run workflow**, pick the environment. Use
-it after a suspected leak of the secret, or to test. Dispatch **twice** to
-replace both passwords: the first run rotates one user, the second the other.
+Use it after a suspected leak of the secret. Make the secret invalid, then
+deploy:
 
-### Check the expiry
-
-In the Neon console, open the project → **SQL Editor**, database `folio`:
-
-```sql
-SELECT rolname, rolvaliduntil FROM pg_roles WHERE rolname LIKE 'folio_runtime_%';
+```bash
+aws secretsmanager put-secret-value --secret-id <project>-<env>/database-url --secret-string '{}'
 ```
 
-Both rows should show a time in the future, the newer one about 14 days out.
-
-### An expired credential
-
-If no rotation ran for 14 days, both passwords have expired and every new
-Lambda connection fails with `password authentication failed`. Dispatch the
-rotation **twice** (above): the first run makes one user valid and active, the
-second makes the other valid too, so Lambdas pinned to either user reconnect
-within 5 minutes without a redeploy. Until then, every backend deploy stops at
-`rotate-<env>` with `cannot log in`.
-
-### A lost schedule
-
-GitHub disables scheduled workflows in a repository with no activity for 60
-days. If **Actions → Rotate DB Credentials** shows "This scheduled workflow is
-disabled", select **Enable workflow**, then dispatch once per environment and
-[check the expiry](#check-the-expiry). A failed run in the log needs a
-re-dispatch as soon as the cause is fixed: if it failed after `ALTER ROLE` but
-before writing the secret, Lambdas pinned to that user cannot open new
-connections until a run writes its new password.
+Then dispatch `Deploy` with `scope: apps-only` (prod: cut a release). Its
+migrate job gives both users new passwords. Running Lambdas keep their cached
+password until it changes, then reconnect with the new one within 5 minutes
+(`DATABASE_PASSWORD_TTL_MS`).
 
 ## Changing the Postgres major
 
@@ -653,6 +606,4 @@ state, which is exactly what makes the next `terraform apply` clean.
 The environment's project-scoped `NEON_API_KEY` and `NEON_PROJECT_ID` do
 **not** survive: they die with the project. Before the next apply, put an
 organization key in that environment's `NEON_API_KEY`. Afterwards, swap in a
-new project-scoped key and the new `neon_project_id`, exactly as in D5 / P4,
-in both `<env>` and `<env>-db-rotation`. Until then the daily rotation fails
-for that environment; that changes nothing.
+new project-scoped key and the new `neon_project_id`, exactly as in D5 / P4.
