@@ -2,7 +2,8 @@
 # Rotates the API's runtime database credential (docs/decisions/2026-11-21-rotated-runtime-database-credentials.md).
 # Gives the inactive runtime user a new expiring password, makes it the active user in the secret, and checks it logs in.
 # The previously active user keeps its password, so Lambdas pinned to it at cold start keep working.
-# Env: OWNER_URL (folio_owner, pooled), SECRET_ID. Never run with `set -x`: the variables hold passwords.
+# With FIRST_RUN_ONLY=true it changes nothing once the secret is set up, and only checks that the active user logs in.
+# Env: OWNER_URL (folio_owner, pooled), SECRET_ID, FIRST_RUN_ONLY (default false). Never run with `set -x`: the variables hold passwords.
 set -euo pipefail
 
 : "${OWNER_URL:?OWNER_URL is required}"
@@ -26,6 +27,15 @@ set_password() {
 \getenv until VALID_UNTIL
 ALTER ROLE :"role" PASSWORD :'pw' VALID UNTIL :'until';
 SQL
+}
+
+# The Lambda connects through the pooled host as the active user; prove that works now, not at its next cold start.
+check_login() {
+  if ! PGUSER="$1" PGPASSWORD="$2" psql --no-psqlrc --quiet -v ON_ERROR_STOP=1 -tAc 'SELECT 1' >/dev/null; then
+    echo "::error::$1 cannot log in through ${PGHOST}. Dispatch Rotate DB Credentials for this environment."
+    exit 1
+  fi
+  echo "$1 logs in through ${PGHOST}."
 }
 
 # Split the owner URL into libpq variables, so it never reaches argv either.
@@ -60,6 +70,11 @@ if jq -e "$valid_secret" <<<"$current" >/dev/null 2>&1; then
     echo "::add-mask::$(jq -r --arg u "$user" '.passwords[$u]' <<<"$current")"
   done
   previous=$(jq -r '.active' <<<"$current")
+  if [ "${FIRST_RUN_ONLY:-false}" = true ]; then
+    check_login "$previous" "$(jq -r --arg u "$previous" '.passwords[$u]' <<<"$current")"
+    echo "The secret is already set up; the daily rotation keeps it fresh."
+    exit 0
+  fi
   if [ "$previous" = folio_runtime_a ]; then active=folio_runtime_b; else active=folio_runtime_a; fi
   new_password
   set_password "$active" "$password"
@@ -82,7 +97,4 @@ PASSWORDS="$passwords" jq -n --arg host "$PGHOST" --arg database "$PGDATABASE" -
   aws secretsmanager put-secret-value --secret-id "$SECRET_ID" --secret-string file:///dev/stdin >/dev/null
 echo "Secret updated: ${active} is active until $(date -u -d "+${VALIDITY_DAYS} days" +%F)."
 
-# The Lambda connects through the pooled host as the active user; prove that works now, not at its next cold start.
-login_password=$(jq -r --arg u "$active" '.[$u]' <<<"$passwords")
-PGUSER="$active" PGPASSWORD="$login_password" psql --no-psqlrc --quiet -v ON_ERROR_STOP=1 -tAc 'SELECT 1' >/dev/null
-echo "${active} logs in through ${PGHOST}."
+check_login "$active" "$(jq -r --arg u "$active" '.[$u]' <<<"$passwords")"
