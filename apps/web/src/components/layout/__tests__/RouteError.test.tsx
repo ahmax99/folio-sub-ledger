@@ -52,6 +52,26 @@ describe('RouteError', () => {
     expect(screen.queryByRole('button', { name: /reload page/i })).toBeNull()
     expect(document.querySelector('a[href]')).toBeNull()
   })
+
+  it('fills the viewport by default, so the root error view centres on screen', async () => {
+    await renderWithProviders(
+      <RouteError error={new Error('down')} reset={vi.fn()} />
+    )
+
+    expect(
+      document.querySelector('[data-slot="route-error"]')?.className
+    ).toContain('min-h-[calc(100vh-4rem)]')
+  })
+
+  it('with fill="parent", drops the viewport height so a PageTemplate page does not scroll', async () => {
+    await renderWithProviders(
+      <RouteError error={new Error('down')} fill="parent" reset={vi.fn()} />
+    )
+
+    expect(
+      document.querySelector('[data-slot="route-error"]')?.className
+    ).not.toContain('min-h-')
+  })
 })
 
 describe('NotFound', () => {
