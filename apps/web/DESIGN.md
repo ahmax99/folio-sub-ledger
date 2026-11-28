@@ -217,7 +217,8 @@ maximalism.
   trail margin)
 - Every numeral in Geist Mono, right-aligned, signed with "−", with its unit
 - Two density tiers: compact 32px rows for work surfaces, comfortable 40px for
-  setup and reports
+  setup and reports (below `sm`, the stacked members row is 52px; see Tables and
+  grids)
 - Firm, client and period are always visible in the `ContextBar`
 - Every visual value flows from `src/styles/tokens/`; components consume
   semantic classes (`bg-primary`, `text-status-confirmed`) exclusively
@@ -504,7 +505,7 @@ The file follows the **Ledger** direction (approved 2026-11-15): a well-kept wor
 - **"Unclassified"** is the label for no evidence: muted fill, CircleHelp icon, and no proposer glyph.
 - **No confidence figure anywhere.** Model proposals show evidence and precedents only.
 - **Source Serif 4** is a deliberate exception to the old One Family Rule (now the Two Faces Rule in section 3), for report and statement surfaces only. The app UI stays Geist, and Geist Mono carries every numeral.
-- **Two density tiers only:** compact 32 for the queue and grids (at least 25 rows at 1440×900) and comfortable 40 for setup and the client report. There is no 28px row tier.
+- **Two density tiers only:** compact 32 for the queue and grids (at least 25 rows at 1440×900) and comfortable 40 for setup and the client report. There is no 28px row tier. The one exception: below `sm`, the stacked members row is 52px (see Tables and grids).
 - Approved rows keep the green StatusBadge for now, to be revisited after the review-queue proof. `radius.base` changes from 8 to 6.
 
 ### Status vocabulary (pencil and ink)
