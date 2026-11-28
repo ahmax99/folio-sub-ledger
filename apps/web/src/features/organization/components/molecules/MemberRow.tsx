@@ -18,7 +18,7 @@ export const MemberRow = ({
   isCaller
 }: Readonly<{ member: MemberListItem; isCaller: boolean }>) => (
   <TableRow>
-    <TableCell>
+    <TableCell className="max-sm:py-2">
       <div className="flex min-w-0 items-center gap-2">
         <Avatar size="sm">
           <AvatarFallback className="group-data-[size=sm]/avatar:text-xs">

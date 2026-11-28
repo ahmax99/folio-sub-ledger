@@ -23,7 +23,7 @@ export const MemberListSkeleton = () => (
     <MemberTable>
       {PLACEHOLDER_ROWS.map((row) => (
         <TableRow key={row.name}>
-          <TableCell>
+          <TableCell className="max-sm:py-2">
             <div className="flex items-center gap-2">
               <Skeleton className="size-6 rounded-full" />
               <div className="flex flex-col gap-1">
