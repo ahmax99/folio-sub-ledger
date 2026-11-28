@@ -3,15 +3,12 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { PageTemplate, RouteError } from '@/components/layout'
 import { generatePageMetadata } from '@/features/metadata/utils/generatePageMetadata'
-import {
-  MemberList,
-  MemberListSkeleton
-} from '@/features/organization/components/MemberList'
+import { MemberList } from '@/features/organization/components/organisms/MemberList'
+import { MemberListSkeleton } from '@/features/organization/components/organisms/MemberListSkeleton'
 import { membersQueryOptions } from '@/features/organization/lib/queries'
 import { PROTECTED_ROUTES } from '@/lib/routes'
 
 const back = { to: PROTECTED_ROUTES.ORGANIZATION_HOME, label: 'Back to Firm' }
-// wide: at sm the Email column needs the room to show whole addresses.
 
 const MembersPage = () => {
   const { data } = useSuspenseQuery(membersQueryOptions)

@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
 
-import { MemberList, MemberListSkeleton } from '../MemberList'
+import { MemberList } from '../MemberList'
+import { MemberListSkeleton } from '../MemberListSkeleton'
 
 const member = (
   index: number,
