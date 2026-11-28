@@ -28,18 +28,21 @@ Design runs alongside the build, not as a separate phase. R0 sets up the foundat
   - Penpot file with Foundations and Components pages that mirror `DESIGN.md` tokens and the atomic component layers (`product-designer` agent)
   - Personas for Owner (Priya), Analyst (Sam) and Reviewer (Dana) and their main journeys in `docs/research/` (`ux-researcher` agent)
 
-## R1 · Foundation: tests, CI checks and tenancy
+## R1 · Foundation: tests, CI checks, tenancy and observability
 
 - Status: now
-- Outcome: A firm signs up and its data is provably isolated from every other firm.
+- Outcome: A firm signs up and its data is provably isolated from every other firm, and every production error and alarm reaches a human with enough context to trace it.
 - Depends on: none
-- Rough size: 4 to 6 weekends
+- Rough size: 6 to 8 weekends
 - Scope:
   - Vitest with a test database, and a CI workflow that runs type-check, lint, format and tests on every PR (enabler for the proofs below)
   - Remove the Post/Comment/image boilerplate and reset the `init` migration
   - Organization, and Owner/Analyst/Reviewer roles as `orgId` and `role` on User; signup creates the user, firm and Owner in one transaction (story 1.1)
   - `orgId` on every domain table, CASL built from org and role, two-firm test expecting 404 (story 1.3)
   - Postgres row-level security proven by a raw cross-tenant query test (story 1.3); prototype on Neon first
+  - Sentry initialised in the API, BFF server and browser with `environment` and `release`, web source maps uploaded per release, and scrubbing of auth headers, request bodies, wallet addresses and emails (moved from R7)
+  - One request id and Sentry trace carried from the BFF through to the API, on every log line in both apps
+  - Lambda and CloudFront alarms that notify a human through SNS, a Sentry alert for new production issues, and a runbook entry per alarm
   - Design: signup, firm creation, member invites and role management screens
 
 ## R2 · Data in
@@ -108,8 +111,8 @@ Design runs alongside the build, not as a separate phase. R0 sets up the foundat
 - Depends on: R6
 - Rough size: 2 to 4 weekends
 - Scope:
-  - Reversible canary deploys (story 9.7), alarms and runbooks
-  - Content-Security-Policy header and Sentry scrubbing of request bodies, wallet addresses and emails
+  - Reversible canary deploys (story 9.7)
+  - Content-Security-Policy header
   - Per-org retention setting and full-org deletion
 
 ## R8 · After MVP

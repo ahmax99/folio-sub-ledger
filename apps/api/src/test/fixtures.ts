@@ -1,6 +1,6 @@
-import { prisma } from '@shared/neon'
 import { v7 as uuidv7 } from 'uuid'
 
+import { ownerPrisma } from '@/test/db.js'
 import { identities, type Token } from '@/test/identities.js'
 
 const userOf = (token: Token) => {
@@ -12,7 +12,7 @@ export const seedOwner = (
   token: Token = 'test-token',
   organizationName = 'Test Firm'
 ) =>
-  prisma.user.create({
+  ownerPrisma.user.create({
     data: {
       ...userOf(token),
       role: 'OWNER',
@@ -21,12 +21,12 @@ export const seedOwner = (
   })
 
 export const addAnalyst = (orgId: string) =>
-  prisma.user.create({
+  ownerPrisma.user.create({
     data: { ...userOf('analyst-token'), role: 'ANALYST', orgId }
   })
 
 export const addReviewer = (orgId: string) =>
-  prisma.user.create({
+  ownerPrisma.user.create({
     data: { ...userOf('reviewer-token'), role: 'REVIEWER', orgId }
   })
 
@@ -35,7 +35,7 @@ export const addMembers = (
   orgId: string,
   rows: { name: string; email: string }[]
 ) =>
-  prisma.user.createMany({
+  ownerPrisma.user.createMany({
     data: rows.map((row) => ({
       ...row,
       cognitoSub: `seed-${uuidv7()}`,
