@@ -1,17 +1,72 @@
 'use client'
 
+import {
+  createContext,
+  type Dispatch,
+  type SetStateAction,
+  use,
+  useRef,
+  useState
+} from 'react'
+
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
 
 import { cn } from '@/utils/mergeClass'
 
-function Tooltip({ ...props }: Readonly<TooltipPrimitive.Root.Props>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+// Base UI opens a tooltip on mouse hover and keyboard focus only. A touch or
+// pen tap opens it here too; an outside tap or Escape closes it through Base
+// UI's own dismiss handling.
+const TooltipOpenContext = createContext<Dispatch<SetStateAction<boolean>>>(
+  () => {}
+)
+
+function Tooltip({
+  ...props
+}: Readonly<
+  Omit<TooltipPrimitive.Root.Props, 'open' | 'defaultOpen' | 'onOpenChange'>
+>) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <TooltipOpenContext value={setOpen}>
+      <TooltipPrimitive.Root
+        data-slot="tooltip"
+        onOpenChange={setOpen}
+        open={open}
+        {...props}
+      />
+    </TooltipOpenContext>
+  )
 }
 
+const TAP_POINTERS = new Set(['touch', 'pen'])
+
 function TooltipTrigger({
+  onPointerDown,
+  onClick,
   ...props
 }: Readonly<TooltipPrimitive.Trigger.Props>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+  const setOpen = use(TooltipOpenContext)
+  // The click event's own pointerType isn't reliable across browsers.
+  const pointerType = useRef('')
+
+  return (
+    <TooltipPrimitive.Trigger
+      data-slot="tooltip-trigger"
+      onClick={(event) => {
+        onClick?.(event)
+        if (!TAP_POINTERS.has(pointerType.current)) return
+        // Base UI closes a tooltip on a trigger press; for a tap the press is what opens it.
+        event.preventBaseUIHandler()
+        setOpen(true)
+      }}
+      onPointerDown={(event) => {
+        pointerType.current = event.pointerType
+        onPointerDown?.(event)
+      }}
+      {...props}
+    />
+  )
 }
 
 // No arrow: DESIGN.md's Tooltip leaves out TooltipArrow.
