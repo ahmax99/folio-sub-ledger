@@ -68,7 +68,7 @@ export const RouteError = ({
 
 export const NotFound = () => (
   <article className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 px-4 text-center">
-    <h1 className="text-2xl font-semibold">Page not found</h1>
+    <h1 className="text-3xl font-semibold">Page not found</h1>
     <ButtonLink to="/">Go home</ButtonLink>
   </article>
 )

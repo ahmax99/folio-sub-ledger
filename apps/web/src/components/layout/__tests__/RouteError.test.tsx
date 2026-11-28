@@ -74,9 +74,12 @@ describe('RouteError', () => {
 })
 
 describe('NotFound', () => {
-  it('links home', async () => {
+  it('shows its title at the Headline size and links home', async () => {
     await renderWithProviders(<NotFound />)
 
+    expect(
+      screen.getByRole('heading', { name: 'Page not found' }).className
+    ).toContain('text-3xl')
     expect(
       screen.getByRole('button', { name: /go home/i }).getAttribute('href')
     ).toBe('/')
