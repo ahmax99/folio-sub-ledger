@@ -164,6 +164,16 @@ describe('MemberList', () => {
     ).toContain('bg-card')
   })
 
+  it('pads the stacked member cell below sm only, so phone rows grow to 52px', async () => {
+    await renderWithProviders(
+      <MemberList currentUserId={owner.id} members={[owner]} />
+    )
+
+    const classes = (rowAt(0).querySelector('td')?.className ?? '').split(' ')
+    expect(classes).toContain('max-sm:py-2')
+    expect(classes).not.toContain('py-2')
+  })
+
   it('keeps the API order', async () => {
     await renderWithProviders(
       <MemberList
@@ -194,6 +204,15 @@ describe('MemberList', () => {
 })
 
 describe('MemberListSkeleton', () => {
+  it('pads the stacked placeholder cell below sm, like a member row', async () => {
+    await renderWithProviders(<MemberListSkeleton />)
+
+    const firstCells = rows().map((row) => row.querySelector('td')?.className)
+    expect(firstCells.every((c) => c?.split(' ').includes('max-sm:py-2'))).toBe(
+      true
+    )
+  })
+
   it('keeps the three column headers and draws four placeholder rows and no heading text', async () => {
     await renderWithProviders(<MemberListSkeleton />)
 
