@@ -43,3 +43,16 @@ describe('Form before hydration', () => {
     expect(form.method).toBe('post')
   })
 })
+
+describe('Form layout', () => {
+  it('spaces the fields and the button inside the contents fieldset', () => {
+    const { form } = ssr()
+    const classes = form.className.split(' ')
+
+    expect(form.querySelector('fieldset')?.className).toBe('contents')
+    expect(classes).toEqual(
+      expect.arrayContaining(['flex', 'flex-col', 'gap-4'])
+    )
+    expect(classes).not.toContain('space-y-4')
+  })
+})

@@ -48,7 +48,7 @@ const Form = ({ action, className, children }: Readonly<FormProps>) => {
   return (
     <form
       action={action}
-      className={cn('space-y-4', className)}
+      className={cn('flex flex-col gap-4', className)}
       encType={action ? 'multipart/form-data' : undefined}
       method={action ? 'post' : undefined}
       noValidate
