@@ -84,4 +84,13 @@ describe('NotFound', () => {
       screen.getByRole('button', { name: /go home/i }).getAttribute('href')
     ).toBe('/')
   })
+
+  it('fills the whole screen, because it renders outside the layouts and their header', async () => {
+    await renderWithProviders(<NotFound />)
+
+    const className =
+      document.querySelector('[data-slot="not-found"]')?.className ?? ''
+    expect(className).toContain('min-h-screen')
+    expect(className).not.toContain('4rem')
+  })
 })

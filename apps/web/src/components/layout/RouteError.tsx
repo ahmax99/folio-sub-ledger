@@ -66,8 +66,12 @@ export const RouteError = ({
   )
 }
 
+// The root route renders this outside the layouts, so there is no header to subtract.
 export const NotFound = () => (
-  <article className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 px-4 text-center">
+  <article
+    className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center"
+    data-slot="not-found"
+  >
     <h1 className="text-3xl font-semibold">Page not found</h1>
     <ButtonLink to="/">Go home</ButtonLink>
   </article>
