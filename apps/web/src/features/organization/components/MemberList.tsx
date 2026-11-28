@@ -10,7 +10,10 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
 } from '@/components/molecules'
 
 import { ROLE_LABELS } from '../constants/role'
@@ -37,6 +40,28 @@ const MemberTable = ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <TableBody>{children}</TableBody>
     </Table>
   </div>
+)
+
+// A focusable span, not a button: the tooltip shows the full email on keyboard
+// focus as well as hover, without announcing an action.
+const MemberEmail = ({
+  email,
+  className
+}: Readonly<{ email: string; className: string }>) => (
+  <Tooltip>
+    <TooltipTrigger
+      render={
+        <span
+          className={`text-muted-foreground focus-visible:ring-ring/50 truncate rounded-sm outline-none focus-visible:ring-[3px] ${className}`}
+          data-slot="member-email"
+          tabIndex={0}
+        />
+      }
+    >
+      {email}
+    </TooltipTrigger>
+    <TooltipContent>{email}</TooltipContent>
+  </Tooltip>
 )
 
 const MemberRow = ({
@@ -67,22 +92,15 @@ const MemberRow = ({
               </>
             )}
           </span>
-          <span
-            className="text-muted-foreground truncate text-xs leading-4 sm:hidden"
-            title={member.email}
-          >
-            {member.email}
-          </span>
+          <MemberEmail
+            className="text-xs leading-4 sm:hidden"
+            email={member.email}
+          />
         </div>
       </div>
     </TableCell>
     <TableCell className="hidden sm:table-cell">
-      <span
-        className="text-muted-foreground block truncate text-sm"
-        title={member.email}
-      >
-        {member.email}
-      </span>
+      <MemberEmail className="block text-sm" email={member.email} />
     </TableCell>
     <TableCell>
       <Badge className="h-5" variant="secondary">

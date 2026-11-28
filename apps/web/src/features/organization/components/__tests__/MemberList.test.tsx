@@ -1,5 +1,5 @@
 import type { MemberList as Members, Role } from '@shared/config'
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
@@ -126,7 +126,7 @@ describe('MemberList', () => {
       expect(screen.queryAllByRole(role)).toHaveLength(0)
   })
 
-  it('truncates the email and keeps the full value in title', async () => {
+  it('truncates the email and shows the full value in a tooltip on keyboard focus', async () => {
     const long = member(2, {
       email: 'a.very.long.email.address.for.testing@accounting-firm.test'
     })
@@ -135,11 +135,18 @@ describe('MemberList', () => {
     )
 
     const emails = screen.getAllByText(long.email)
-    expect(emails.length).toBeGreaterThan(0)
+    expect(emails).toHaveLength(2)
     for (const email of emails) {
       expect(email.className).toContain('truncate')
-      expect(email.getAttribute('title')).toBe(long.email)
+      expect(email.tabIndex).toBe(0)
     }
+
+    act(() => emails[1]?.focus())
+
+    const tooltip = await screen.findByText(long.email, {
+      selector: '[data-slot="tooltip-content"]'
+    })
+    expect(tooltip.textContent).toBe(long.email)
   })
 
   it('keeps the API order', async () => {
