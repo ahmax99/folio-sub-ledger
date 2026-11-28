@@ -12,7 +12,6 @@ import { ButtonLink } from '../atoms/ButtonLink'
 
 type RouteErrorFill = 'viewport' | 'parent'
 
-// Inside a PageTemplate, a viewport-height error pushes the page past the screen.
 const FILL_CLASSES: Record<RouteErrorFill, string> = {
   viewport: 'min-h-[calc(100vh-4rem)] justify-center px-4',
   parent: 'pt-6'
@@ -64,7 +63,6 @@ export const RouteError = ({
   )
 }
 
-// The root route renders this outside the layouts, so there is no header to subtract.
 export const NotFound = () => (
   <article
     className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center"
