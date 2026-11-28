@@ -20,7 +20,7 @@ describe('RouteError', () => {
     expect(screen.getByRole('button', { name: /reload page/i })).toBeDefined()
   })
 
-  it('renders the given title and description', async () => {
+  it('renders the given title at the Headline size, and the description', async () => {
     await renderWithProviders(
       <RouteError
         description="Check your connection and try again."
@@ -30,11 +30,10 @@ describe('RouteError', () => {
       />
     )
 
-    expect(
-      screen.getByRole('heading', {
-        name: "We couldn't load your firm's members"
-      })
-    ).toBeDefined()
+    const heading = screen.getByRole('heading', {
+      name: "We couldn't load your firm's members"
+    })
+    expect(heading.className).toContain('text-3xl')
     expect(
       screen.getByText('Check your connection and try again.')
     ).toBeDefined()

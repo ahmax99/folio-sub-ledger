@@ -53,7 +53,7 @@ export const RouteError = ({
       )}
       data-slot="route-error"
     >
-      <h1 className="text-2xl font-semibold">{title}</h1>
+      <h1 className="text-3xl font-semibold">{title}</h1>
       <p className="text-muted-foreground max-w-md">{description}</p>
       {retry ? (
         <Button onClick={() => router.invalidate()}>Retry</Button>
