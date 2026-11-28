@@ -5,7 +5,7 @@ import type { AppAbility } from '@/lib/casl'
 
 export const getUserPermissions = (
   user?: Pick<User, 'id' | 'orgId' | 'role'>
-): AppAbility => {
+) => {
   const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility)
 
   if (!user) return build()

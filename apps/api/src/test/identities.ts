@@ -13,6 +13,11 @@ export const identities = {
     sub: 'analyst-sub',
     email: 'analyst@example.com',
     name: 'Analyst User'
+  },
+  'reviewer-token': {
+    sub: 'reviewer-sub',
+    email: 'reviewer@example.com',
+    name: 'Reviewer User'
   }
 }
 

@@ -16,7 +16,7 @@ export interface OrganizationDb {
   ) => ResultAsync<T, AppError>
 }
 
-export const organizationDb = (scope: OrganizationScope): OrganizationDb => ({
+export const organizationDb = (scope: OrganizationScope) => ({
   run: <T>(query: (tx: Prisma.TransactionClient) => Promise<T>) =>
     catchAsyncError(
       prisma.$transaction(

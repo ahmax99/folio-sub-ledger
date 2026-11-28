@@ -2,7 +2,16 @@ import { z } from 'zod'
 
 import { OrganizationModel } from './organization.model.js'
 
+const memberListItem = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  email: z.string(),
+  role: OrganizationModel.role
+})
+
 export const UserModel = {
+  memberListItem,
+  memberList: z.array(memberListItem),
   user: z.object({
     id: z.uuid(),
     orgId: z.uuid(),
@@ -35,6 +44,8 @@ export const UserModel = {
 }
 
 export type User = z.infer<typeof UserModel.user>
+export type MemberListItem = z.infer<typeof UserModel.memberListItem>
+export type MemberList = z.infer<typeof UserModel.memberList>
 export type UserIdParams = z.infer<typeof UserModel.userIdParams>
 export type UpdateUserBody = z.infer<typeof UserModel.updateUserBody>
 export type UploadImageQuery = z.infer<typeof UserModel.uploadImageQuery>

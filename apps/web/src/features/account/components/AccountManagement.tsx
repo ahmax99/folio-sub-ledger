@@ -71,7 +71,7 @@ export const AccountManagement = ({
         value="danger-zone"
       >
         <h2 className="text-2xl font-medium">Danger Zone</h2>
-        <Card className="border-destructive flex flex-row items-center justify-between">
+        <Card className="border-destructive sm:flex-row sm:items-center sm:justify-between">
           <CardContent>
             <h3 className="text-lg font-medium">Delete this account</h3>
             <p>

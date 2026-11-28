@@ -12,3 +12,7 @@ export const setupOrganization = createServerFn({ method: 'POST' })
   .handler(async ({ data }) =>
     handleApiError(catchAsyncError(organizationApi.setupOrganization(data)))
   )
+
+export const fetchMembers = createServerFn().handler(async () =>
+  handleApiError(catchAsyncError(organizationApi.listMembers()))
+)

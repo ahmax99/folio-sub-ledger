@@ -4,6 +4,7 @@ import type { UpdateUserBody, UserIdParams } from '@shared/config'
 import { errAsync, okAsync } from 'neverthrow'
 
 import { env } from '@/config/env.js'
+import { MEMBER_LIST_LIMIT } from '@/constants/index.js'
 import { AppError } from '@/error/lib/AppError.js'
 import { catchAsyncError } from '@/error/utils/catchError.js'
 import { authorizeResource } from '@/lib/authorizeResource.js'
@@ -32,18 +33,32 @@ export const UserService = {
       }
     ),
 
-  getAll: (db: OrganizationDb, ability: AppAbility) =>
+  listMembers: (db: OrganizationDb, ability: AppAbility) =>
     authorizeResource(ability, {
       forbidden: 'Cannot list users',
       can: (granted) => granted.can('read', 'User')
-    }).andThen(() =>
-      db.run((tx) =>
-        tx.user.findMany({
-          where: accessibleBy(ability).ofType('User'),
-          orderBy: { createdAt: 'desc' }
-        })
+    })
+      .andThen(() =>
+        db.run((tx) =>
+          tx.user.findMany({
+            where: accessibleBy(ability).ofType('User'),
+            select: { id: true, name: true, email: true, role: true },
+            orderBy: [{ name: 'asc' }, { email: 'asc' }],
+            // One past the limit tells "at the limit" from "over it" without a count query.
+            take: MEMBER_LIST_LIMIT + 1
+          })
+        )
       )
-    ),
+      .andThen((members) =>
+        members.length > MEMBER_LIST_LIMIT
+          ? errAsync(
+              new AppError(
+                'INTERNAL_ERROR',
+                'This firm has more members than the list can show'
+              )
+            )
+          : okAsync(members)
+      ),
 
   getById: (id: UserIdParams['id'], db: OrganizationDb, ability: AppAbility) =>
     UserService.findUser(id, db, ability, 'read'),

@@ -46,4 +46,18 @@ describe('AccountManagement', () => {
       screen.getByRole('button', { name: 'Delete Account Permanently' })
     ).toBeDefined()
   })
+
+  it('stacks the delete action under its text on phones, side by side from sm', async () => {
+    await renderWithProviders(
+      <AccountManagement activeTab="danger-zone" onTabChange={vi.fn()} />
+    )
+
+    const classes = (
+      screen
+        .getByRole('button', { name: 'Delete Account Permanently' })
+        .closest('[data-slot="card"]')?.className ?? ''
+    ).split(' ')
+    expect(classes).toContain('sm:flex-row')
+    expect(classes).not.toContain('flex-row')
+  })
 })

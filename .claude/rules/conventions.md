@@ -13,6 +13,7 @@ The concrete "how to write code here" rules. `architecture.md` covers _where thi
 ## Code Style
 
 - Prefer `const` arrow functions over `function` declarations: `const fn = () => {}` not `function fn() {}`. **Exception:** TypeScript function overloads require the `function` keyword (e.g., a utility with multiple call signatures); the `function` keyword is acceptable only in that case.
+- Let TypeScript infer return types: no `): Type =>` on functions or components. Annotate one only when inference fails type-checking (e.g. `withRequestLogging`, where the return type gives the inner handler's parameters their types).
 - Prefer `switch-case` over `else-if` chains when 3 or more branches test the same discriminant expression. For simple value-to-value mappings, prefer a `Record<K, V>` lookup table over both (exhaustiveness is enforced by the type).
 
 ## Tests

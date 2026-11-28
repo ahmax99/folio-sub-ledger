@@ -1,5 +1,5 @@
-import type { Organization, SetupOrganizationBody } from '@shared/config'
-import { errAsync, okAsync, type ResultAsync } from 'neverthrow'
+import type { SetupOrganizationBody } from '@shared/config'
+import { errAsync, okAsync } from 'neverthrow'
 import { v7 as uuidv7 } from 'uuid'
 
 import { logger } from '@/config/logger.js'
@@ -21,9 +21,7 @@ export const OrganizationService = {
       })
     ),
 
-  findOrganization: ({
-    orgId
-  }: Member): ResultAsync<Organization | null, AppError> =>
+  findOrganization: ({ orgId }: Member) =>
     organizationDb({ orgId }).run((tx) =>
       tx.organization.findUnique({ where: { id: orgId }, select })
     ),
@@ -31,7 +29,7 @@ export const OrganizationService = {
   createOrganization: (
     { cognitoSub, email, name }: Identity,
     { name: organizationName }: SetupOrganizationBody
-  ): ResultAsync<Organization, AppError> => {
+  ) => {
     const orgId = uuidv7()
 
     return organizationDb({ orgId })
@@ -80,7 +78,7 @@ export const OrganizationService = {
     identity: Identity,
     member: Member | null,
     input: SetupOrganizationBody
-  ): ResultAsync<Organization, AppError> =>
+  ) =>
     (member
       ? OrganizationService.findOrganization(member)
       : okAsync(null)
