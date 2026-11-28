@@ -2,7 +2,6 @@ import { env } from '@/config/env.js'
 
 export const SIGNED_URL_EXPIRATION = 3600 // 1 hour
 export const IMAGE_CACHE_MAX_AGE = 31_536_000 // 1 year
-// Above this the members page errors instead of showing a silently cut list.
 export const MEMBER_LIST_LIMIT = 200
 
 // A credential rotation reaches warm Lambdas within this long.

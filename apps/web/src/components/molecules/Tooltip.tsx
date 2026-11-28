@@ -13,9 +13,6 @@ import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
 
 import { cn } from '@/utils/mergeClass'
 
-// Base UI opens a tooltip on mouse hover and keyboard focus only. A touch or
-// pen tap opens it here too; an outside tap or Escape closes it through Base
-// UI's own dismiss handling.
 const TooltipOpenContext = createContext<Dispatch<SetStateAction<boolean>>>(
   () => {}
 )
@@ -69,14 +66,12 @@ function TooltipTrigger({
   )
 }
 
-// No arrow: DESIGN.md's Tooltip leaves out TooltipArrow.
 function TooltipContent({
   className,
   side = 'top',
   sideOffset = 4,
   align = 'center',
   alignOffset = 0,
-  // 16 keeps the page's 16px gutter between a tooltip and the screen edge.
   collisionPadding = 16,
   ...props
 }: Readonly<

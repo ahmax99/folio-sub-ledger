@@ -21,9 +21,7 @@ const FILL_CLASSES: Record<RouteErrorFill, string> = {
 type RouteErrorProps = ErrorComponentProps & {
   title?: string
   description?: string
-  // Re-run the route's loaders in place instead of reloading the document.
   retry?: boolean
-  // 'parent' when rendered inside a PageTemplate, which sets the page's width and padding.
   fill?: RouteErrorFill
 }
 

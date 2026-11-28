@@ -35,7 +35,6 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   )
 }
 
-// No hover highlight: rows aren't interactive, and a hover state would suggest they are.
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   return (
     <tr
@@ -59,8 +58,6 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   )
 }
 
-// No vertical padding: the row's h-10 sets the height and align-middle centres
-// the content, so a 24px avatar or a two-line cell can't grow a row past 40px.
 function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   return (
     <td

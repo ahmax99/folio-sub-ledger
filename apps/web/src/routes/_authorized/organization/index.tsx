@@ -9,7 +9,6 @@ const OrganizationHomePage = () => {
   const { user } = Route.useRouteContext()
 
   return (
-    // wide, like the members page, so content doesn't shift between the two.
     <PageTemplate maxWidth="wide">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold break-words">

@@ -1,7 +1,7 @@
 import { AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider'
 import { accessibleBy } from '@casl/prisma'
-import type { MemberList, UpdateUserBody, UserIdParams } from '@shared/config'
-import { errAsync, okAsync, type ResultAsync } from 'neverthrow'
+import type { UpdateUserBody, UserIdParams } from '@shared/config'
+import { errAsync, okAsync } from 'neverthrow'
 
 import { env } from '@/config/env.js'
 import { MEMBER_LIST_LIMIT } from '@/constants/index.js'
@@ -33,10 +33,7 @@ export const UserService = {
       }
     ),
 
-  listMembers: (
-    db: OrganizationDb,
-    ability: AppAbility
-  ): ResultAsync<MemberList, AppError> =>
+  listMembers: (db: OrganizationDb, ability: AppAbility) =>
     authorizeResource(ability, {
       forbidden: 'Cannot list users',
       can: (granted) => granted.can('read', 'User')

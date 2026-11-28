@@ -2,11 +2,9 @@ import { z } from 'zod'
 
 import { OrganizationModel } from './organization.model.js'
 
-// An allowlist: the members page needs these four fields and nothing internal.
 const memberListItem = z.object({
   id: z.uuid(),
   name: z.string(),
-  // Stored as Cognito sent it, never validated on write: one odd value must not fail the whole list.
   email: z.string(),
   role: OrganizationModel.role
 })
