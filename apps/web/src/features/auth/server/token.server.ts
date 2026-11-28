@@ -21,7 +21,7 @@ const isInvalidGrant = (error: unknown) =>
   'error' in error &&
   error.error === 'invalid_grant'
 
-const refreshTokens = async (): Promise<Tokens> => {
+const refreshTokens = async () => {
   const [session, config] = await Promise.all([getSession(), getOIDCClient()])
 
   if (!session.refreshToken) {

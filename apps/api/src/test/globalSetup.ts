@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 
 import { RUNTIME_ROLE, RUNTIME_TEST_PASSWORD } from './runtimeRole.js'
 
-const abort = (message: string): never => {
+const abort = (message: string) => {
   const error = new Error(message)
   error.stack = `${error.name}: ${error.message}`
   throw error

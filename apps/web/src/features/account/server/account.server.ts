@@ -10,11 +10,11 @@ import { serverAuthApiClient } from '@/lib/serverApiClient.server'
 export const updateUser = async (
   userId: UserIdParams['id'],
   data: UpdateUserBody
-): Promise<void> => {
+) => {
   await serverAuthApiClient.put(`users/${userId}`, { json: data })
 }
 
-export const deleteUser = async (userId: UserIdParams['id']): Promise<void> => {
+export const deleteUser = async (userId: UserIdParams['id']) => {
   await serverAuthApiClient.delete(`users/${userId}`)
 }
 

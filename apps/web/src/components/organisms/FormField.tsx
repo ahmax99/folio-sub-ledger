@@ -28,7 +28,7 @@ type ControlProps<T extends React.ElementType> = Omit<
 
 type ServerErrorMap = { fields?: Record<string, unknown> } | undefined
 
-const toErrorItems = (errors: unknown[]): FieldErrorItem[] =>
+const toErrorItems = (errors: unknown[]) =>
   errors
     .flat()
     .map((error) =>
