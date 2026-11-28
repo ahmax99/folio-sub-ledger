@@ -24,7 +24,11 @@ describe('Tooltip', () => {
     act(() => trigger.focus())
 
     const content = await screen.findByText('Full value')
-    expect(content.closest('[data-slot="tooltip-content"]')).not.toBeNull()
+    const popup = content.closest('[data-slot="tooltip-content"]')
+    expect(popup).not.toBeNull()
+    // Long values wrap at word boundaries; break-all split words anywhere.
+    expect(popup?.className).toContain('break-words')
+    expect(popup?.className).not.toContain('break-all')
   })
 
   it('opens on a touch tap (pointerdown then click), which Base UI alone closes', async () => {

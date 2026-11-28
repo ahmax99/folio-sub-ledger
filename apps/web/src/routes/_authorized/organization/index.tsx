@@ -9,9 +9,10 @@ const OrganizationHomePage = () => {
   const { user } = Route.useRouteContext()
 
   return (
-    <PageTemplate>
+    // wide, like the members page, so content doesn't shift between the two.
+    <PageTemplate maxWidth="wide">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold break-words">
+        <h1 className="text-3xl font-semibold break-words">
           {user.organization.name}
         </h1>
         <p className="text-muted-foreground">

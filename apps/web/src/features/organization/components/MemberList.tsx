@@ -22,7 +22,7 @@ import { getInitials } from '../utils/initials'
 // table-fixed lets long names and emails truncate instead of widening the page.
 // Emails run longer than names, so at sm: Email takes the width left over.
 const MemberTable = ({ children }: Readonly<{ children: React.ReactNode }>) => (
-  <div className="overflow-hidden rounded-lg border">
+  <div className="bg-card overflow-hidden rounded-lg border">
     <Table className="table-fixed">
       <TableHeader className="bg-muted [&_th]:text-muted-foreground">
         <TableRow>
@@ -47,22 +47,31 @@ const MemberTable = ({ children }: Readonly<{ children: React.ReactNode }>) => (
 const MemberEmail = ({
   email,
   className
-}: Readonly<{ email: string; className: string }>) => (
-  <Tooltip>
-    <TooltipTrigger
-      render={
-        <span
-          className={`text-muted-foreground focus-visible:ring-ring/50 truncate rounded-sm outline-none focus-visible:ring-[3px] ${className}`}
-          data-slot="member-email"
-          tabIndex={0}
-        />
-      }
-    >
-      {email}
-    </TooltipTrigger>
-    <TooltipContent>{email}</TooltipContent>
-  </Tooltip>
-)
+}: Readonly<{ email: string; className: string }>) => {
+  const domainStart = email.lastIndexOf('@') + 1
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span
+            className={`text-muted-foreground focus-visible:ring-ring/50 truncate rounded-sm outline-none focus-visible:ring-[3px] ${className}`}
+            data-slot="member-email"
+            tabIndex={0}
+          />
+        }
+      >
+        {email}
+      </TooltipTrigger>
+      {/* The <wbr> lets a long email wrap after the @ instead of inside the domain. */}
+      <TooltipContent>
+        {email.slice(0, domainStart)}
+        <wbr />
+        {email.slice(domainStart)}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
 
 const MemberRow = ({
   member,

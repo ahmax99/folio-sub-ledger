@@ -76,12 +76,14 @@ function TooltipContent({
   sideOffset = 4,
   align = 'center',
   alignOffset = 0,
+  // 16 keeps the page's 16px gutter between a tooltip and the screen edge.
+  collisionPadding = 16,
   ...props
 }: Readonly<
   TooltipPrimitive.Popup.Props &
     Pick<
       TooltipPrimitive.Positioner.Props,
-      'align' | 'alignOffset' | 'side' | 'sideOffset'
+      'align' | 'alignOffset' | 'collisionPadding' | 'side' | 'sideOffset'
     >
 >) {
   return (
@@ -90,12 +92,13 @@ function TooltipContent({
         align={align}
         alignOffset={alignOffset}
         className="isolate z-50"
+        collisionPadding={collisionPadding}
         side={side}
         sideOffset={sideOffset}
       >
         <TooltipPrimitive.Popup
           className={cn(
-            'data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 z-50 w-fit max-w-xs origin-(--transform-origin) rounded-md bg-foreground px-3 py-1.5 text-background text-xs break-all duration-100 data-closed:animate-out data-open:animate-in',
+            'data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 z-50 w-fit max-w-xs origin-(--transform-origin) rounded-md bg-foreground px-3 py-1.5 text-background text-xs break-words duration-100 data-closed:animate-out data-open:animate-in',
             className
           )}
           data-slot="tooltip-content"

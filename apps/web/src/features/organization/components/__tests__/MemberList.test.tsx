@@ -147,6 +147,20 @@ describe('MemberList', () => {
       selector: '[data-slot="tooltip-content"]'
     })
     expect(tooltip.textContent).toBe(long.email)
+    // A long email wraps after the @, not mid-domain.
+    expect(tooltip.querySelector('wbr')?.previousSibling?.textContent).toBe(
+      'a.very.long.email.address.for.testing@'
+    )
+  })
+
+  it('draws the table on the card surface', async () => {
+    await renderWithProviders(
+      <MemberList currentUserId={owner.id} members={[owner]} />
+    )
+
+    expect(
+      screen.getByRole('table').closest('.rounded-lg')?.className
+    ).toContain('bg-card')
   })
 
   it('keeps the API order', async () => {
